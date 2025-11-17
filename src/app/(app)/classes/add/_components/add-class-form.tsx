@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const addClassSchema = z.object({
   course_name: z.string().min(1, { message: 'Course name is required.' }),
@@ -41,7 +42,7 @@ export function AddClassForm() {
   const form = useForm<AddClassFormValues>({
     resolver: zodResolver(addClassSchema),
     defaultValues: {
-      payment_status: 'month',
+      payment_status: 'monthly',
     },
   });
 
@@ -164,10 +165,19 @@ export function AddClassForm() {
                         <FormItem>
                           <FormLabel>Payment Status</FormLabel>
                            <div className="relative">
-                             <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                             <FormControl>
-                                <Input placeholder="e.g. month" {...field} className="pl-8" />
-                             </FormControl>
+                             <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="pl-8">
+                                  <SelectValue placeholder="Select a payment frequency" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="year">Yearly</SelectItem>
+                                <SelectItem value="once">Once</SelectItem>
+                              </SelectContent>
+                            </Select>
                            </div>
                           <FormMessage />
                         </FormItem>
