@@ -1,16 +1,25 @@
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { classes } from "@/lib/data";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 
 export default function ClassesPage() {
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">Classes</h1>
-        <p className="text-muted-foreground">Browse and manage class schedules and lessons.</p>
+      <header className="flex items-center justify-between gap-4">
+        <div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">Classes</h1>
+            <p className="text-muted-foreground">Browse and manage class schedules and lessons.</p>
+        </div>
+         <Button asChild>
+          <Link href="/classes/add">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Class
+          </Link>
+        </Button>
       </header>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {classes.map((cls) => (
