@@ -1,6 +1,12 @@
-"use client";
 
-import { Button } from "@/components/ui/button";
+'use client';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import axios from 'axios';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,80 +14,160 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
+} from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+const loginSchema = z.object({
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  password: z.string().min(1, { message: 'Password is required.' }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleLogin = (event: React.FormEvent) => {
-    event.preventDefault();
-    // In a real app, you'd have authentication logic here that
-    // verifies the user's credentials and their institute affiliation.
-    // For this demo, we'll simulate a successful login for the default institute.
-    
-    // 1. Authenticate user credentials (e.g., call Firebase Auth)
-    // 2. Look up the user's institute ID from your database.
-    // 3. Securely load data ONLY for that institute.
-    
-    toast({
-      title: "Login Successful",
-      description: "Loading your institute's dashboard.",
-    });
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-    router.push("/dashboard");
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsSubmitting(true);
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/login`,
+        data
+      );
+
+      if (response.data.status === 'success') {
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+
+        toast({
+          title: 'Login Successful',
+          description: "Loading your institute's dashboard.",
+        });
+        router.push('/dashboard');
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: response.data.message || 'An unknown error occurred.',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Error',
+        description:
+          error.response?.data?.message ||
+          'Could not connect to the server. Please try again later.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Card>
-      <form onSubmit={handleLogin}>
-        <CardHeader className="text-center">
-          <CardTitle>Institute Login</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your institute's account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="admin@institute.com" required />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center">
-              <Label htmlFor="password">Password</Label>
+      <CardHeader className="text-center">
+        <CardTitle>Institute Login</CardTitle>
+        <CardDescription>
+          Enter your email below to login to your institute's account.
+        </CardDescription>
+      </CardHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="admin@institute.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center">
+                    <FormLabel>Password</FormLabel>
+                    <Link
+                      href="#"
+                      className="ml-auto inline-block text-sm underline"
+                    >
+                      Forgot your password?
+                    </Link>
+                  </div>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+          <CardFooter className="flex flex-col gap-4">
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                'Log in'
+              )}
+            </Button>
+            <div className="text-center text-sm text-muted-foreground">
+              Don&apos;t have an institute account?{' '}
               <Link
-                href="#"
-                className="ml-auto inline-block text-sm underline"
+                href="/register"
+                className="font-semibold text-primary hover:underline"
               >
-                Forgot your password?
+                Register
               </Link>
             </div>
-            <Input id="password" type="password" required />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button type="submit" className="w-full">
-            Log in
-          </Button>
-          <div className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an institute account?{" "}
-            <Link href="/register" className="font-semibold text-primary hover:underline">
-              Register
-            </Link>
-          </div>
-           <div className="text-center text-sm text-muted-foreground mt-2">
-            Are you a student?{" "}
-            <Link href="#" className="font-semibold text-primary hover:underline">
-              Login here
-            </Link>
-          </div>
-        </CardFooter>
-      </form>
+            <div className="text-center text-sm text-muted-foreground mt-2">
+              Are you a student?{' '}
+              <Link
+                href="#"
+                className="font-semibold text-primary hover:underline"
+              >
+                Login here
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
+      </Form>
     </Card>
   );
 }
