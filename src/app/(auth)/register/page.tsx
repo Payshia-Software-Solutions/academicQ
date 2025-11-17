@@ -65,6 +65,7 @@ export default function RegisterPage() {
         created_by: null,
         created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
         updated_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        user_status: 'student',
       };
       
       const response = await api.post('/users', postData);
