@@ -1,12 +1,40 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { classes } from "@/lib/data";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Plus } from "lucide-react";
+import api from "@/lib/api";
+import type { Class } from "@/lib/types";
 
-export default function ClassesPage() {
+async function getClasses() {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/courses`);
+        if (!response.ok) {
+            console.error("Failed to fetch classes");
+            return [];
+        }
+        const data = await response.json();
+        
+        // Map API response to the Class type
+        return data.records.map((record: any) => ({
+            id: record.id,
+            name: record.course_name,
+            description: record.description,
+            teacher: 'N/A', // Not in API response
+            schedule: 'N/A', // Not in API response
+            studentIds: [], // Not in API response
+            imageUrl: 'https://placehold.co/600x400.png' // Placeholder image
+        }));
+    } catch (error) {
+        console.error("Error fetching classes:", error);
+        return [];
+    }
+}
+
+export default async function ClassesPage() {
+  const classes: Class[] = await getClasses();
+
   return (
     <div className="space-y-8">
       <header className="flex items-center justify-between gap-4">
@@ -22,15 +50,15 @@ export default function ClassesPage() {
         </Button>
       </header>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {classes.map((cls) => (
+        {classes.length > 0 ? classes.map((cls) => (
           <Card key={cls.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
             <CardHeader className="p-0">
               <div className="relative h-48 w-full">
                 <Image
                   src={cls.imageUrl}
                   alt={cls.name}
-                  layout="fill"
-                  objectFit="cover"
+                  fill
+                  style={{objectFit: "cover"}}
                   data-ai-hint="online course"
                 />
               </div>
@@ -52,8 +80,11 @@ export default function ClassesPage() {
               </Button>
             </CardFooter>
           </Card>
-        ))}
+        )) : (
+            <p className="col-span-full text-center text-muted-foreground">No classes found.</p>
+        )}
       </div>
     </div>
   );
 }
+
