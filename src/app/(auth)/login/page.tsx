@@ -30,7 +30,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 
 const loginSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  identifier: z.string().min(1, { message: 'Please enter your email or student number.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
 });
 
@@ -44,7 +44,7 @@ export default function LoginPage() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      identifier: '',
       password: '',
     },
   });
@@ -93,7 +93,7 @@ export default function LoginPage() {
       <CardHeader className="text-center">
         <CardTitle>Institute Login</CardTitle>
         <CardDescription>
-          Enter your email below to login to your institute's account.
+          Enter your credentials below to login to your institute's account.
         </CardDescription>
       </CardHeader>
       <Form {...form}>
@@ -101,14 +101,13 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             <FormField
               control={form.control}
-              name="email"
+              name="identifier"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email or Student Number</FormLabel>
                   <FormControl>
                     <Input
-                      type="email"
-                      placeholder="admin@institute.com"
+                      placeholder="admin@institute.com or ST-12345"
                       {...field}
                     />
                   </FormControl>
