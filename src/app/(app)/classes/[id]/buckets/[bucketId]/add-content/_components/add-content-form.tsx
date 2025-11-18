@@ -29,7 +29,7 @@ import { Switch } from '@/components/ui/switch';
 const addContentSchema = z.object({
   content_type: z.string().min(1, { message: 'Content type is required.' }),
   content_title: z.string().min(1, { message: 'Content title is required.' }),
-  content: z.string().url({ message: 'Please enter a valid URL.' }),
+  content: z.string().min(1, { message: 'Content is required.' }),
   is_active: z.boolean().default(true),
 });
 
@@ -52,6 +52,8 @@ export function AddContentForm() {
       is_active: true,
     },
   });
+
+  const contentType = form.watch('content_type');
 
   const onSubmit = async (data: AddContentFormValues) => {
     setIsSubmitting(true);
@@ -154,13 +156,26 @@ export function AddContentForm() {
                     name="content"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Content URL</FormLabel>
-                        <div className="relative">
-                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                            <Input type="url" placeholder="https://example.com/video.mp4" {...field} className="pl-8" />
+                        <FormLabel>Content</FormLabel>
+                         <FormControl>
+                            {contentType === 'TEXT' ? (
+                                <Textarea
+                                placeholder="Enter your text content here..."
+                                className="resize-none"
+                                {...field}
+                                />
+                            ) : (
+                                <div className="relative">
+                                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input 
+                                        type={contentType === 'LINK' || contentType === 'PDF' || contentType === 'VIDEO' || contentType === 'IMAGE' ? 'url' : 'text'}
+                                        placeholder="Enter URL or content" 
+                                        {...field} 
+                                        className="pl-8" 
+                                    />
+                                </div>
+                            )}
                         </FormControl>
-                        </div>
                         <FormMessage />
                     </FormItem>
                     )}
