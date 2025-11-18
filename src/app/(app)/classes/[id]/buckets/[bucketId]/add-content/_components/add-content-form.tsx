@@ -138,8 +138,10 @@ export function AddContentForm() {
                             </FormControl>
                             <SelectContent>
                             <SelectItem value="VIDEO">Video</SelectItem>
-                            <SelectItem value="DOCUMENT">Document</SelectItem>
-                            <SelectItem value="OTHER">Other</SelectItem>
+                            <SelectItem value="IMAGE">Image</SelectItem>
+                            <SelectItem value="LINK">Link</SelectItem>
+                            <SelectItem value="PDF">PDF</SelectItem>
+                            <SelectItem value="TEXT">Text</SelectItem>
                             </SelectContent>
                         </Select>
                         </div>
