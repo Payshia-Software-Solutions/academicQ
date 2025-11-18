@@ -120,6 +120,29 @@ export function AddContentForm() {
                 </FormItem>
                 )}
             />
+            
+            <FormField
+                control={form.control}
+                name="is_active"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                        Activate Content
+                        </FormLabel>
+                        <FormDescription>
+                        Make this content immediately available.
+                        </FormDescription>
+                    </div>
+                    <FormControl>
+                        <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        />
+                    </FormControl>
+                    </FormItem>
+                )}
+                />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
@@ -168,29 +191,6 @@ export function AddContentForm() {
                     )}
                 />
             </div>
-            
-            <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                        Activate Content
-                        </FormLabel>
-                        <FormDescription>
-                        Make this content immediately available.
-                        </FormDescription>
-                    </div>
-                    <FormControl>
-                        <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        />
-                    </FormControl>
-                    </FormItem>
-                )}
-                />
             </CardContent>
             <CardFooter className="flex justify-between">
             <Button variant="outline" asChild>
