@@ -72,7 +72,7 @@ export default async function ClassesPage() {
                 <p className="text-xs text-muted-foreground">{cls.schedule}</p>
               </div>
               <Button asChild size="sm" className="w-full sm:w-auto">
-                <Link href={`/classes/${cls.id}/create-bucket?name=${encodeURIComponent(cls.name)}&description=${encodeURIComponent(cls.description)}`}>
+                <Link href={`/classes/${cls.id}`}>
                   View Class
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>

@@ -38,23 +38,29 @@ export function LessonDetailsClient({ lesson, enrolledStudents, otherLessons, cl
             <CardDescription>Select a student to see their access status.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Select onValueChange={setSelectedStudentId} defaultValue={selectedStudentId || undefined}>
-              <SelectTrigger id="student-view" aria-label="View as student">
-                <SelectValue placeholder="View as..." />
-              </SelectTrigger>
-              <SelectContent>
-                {enrolledStudents.map(student => (
-                  <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedStudent && (
-              <div className="mt-4 flex items-center gap-2 text-sm">
-                {isPaid ? <Unlock className="h-4 w-4 text-green-500" /> : <Lock className="h-4 w-4 text-destructive" />}
-                <span className={isPaid ? 'text-green-600' : 'text-destructive'}>
-                  {selectedStudent.name} has {isPaid ? 'paid' : 'a pending payment'}.
-                </span>
-              </div>
+            {enrolledStudents.length > 0 ? (
+                <>
+                <Select onValueChange={setSelectedStudentId} defaultValue={selectedStudentId || undefined}>
+                  <SelectTrigger id="student-view" aria-label="View as student">
+                    <SelectValue placeholder="View as..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {enrolledStudents.map(student => (
+                      <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedStudent && (
+                  <div className="mt-4 flex items-center gap-2 text-sm">
+                    {isPaid ? <Unlock className="h-4 w-4 text-green-500" /> : <Lock className="h-4 w-4 text-destructive" />}
+                    <span className={isPaid ? 'text-green-600' : 'text-destructive'}>
+                      {selectedStudent.name} has {isPaid ? 'paid' : 'a pending payment'}.
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No students enrolled in this class.</p>
             )}
           </CardContent>
         </Card>
