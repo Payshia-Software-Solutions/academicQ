@@ -53,8 +53,6 @@ export function AddContentForm() {
     },
   });
 
-  const contentType = form.watch('content_type');
-
   const onSubmit = async (data: AddContentFormValues) => {
     setIsSubmitting(true);
     try {
@@ -158,24 +156,12 @@ export function AddContentForm() {
                     <FormItem>
                         <FormLabel>Content</FormLabel>
                          <FormControl>
-                            {contentType === 'TEXT' ? (
-                                <Textarea
-                                placeholder="Enter your text content here..."
-                                className="resize-none"
-                                rows={4}
-                                {...field}
-                                />
-                            ) : (
-                                <div className="relative">
-                                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input 
-                                        type="text"
-                                        placeholder="Enter URL" 
-                                        {...field} 
-                                        className="pl-8" 
-                                    />
-                                </div>
-                            )}
+                            <Textarea
+                              placeholder="Enter content or URL..."
+                              className="resize-none"
+                              rows={4}
+                              {...field}
+                            />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
