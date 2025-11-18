@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Plus } from "lucide-react";
-import api from "@/lib/api";
 import type { Class } from "@/lib/types";
 
 async function getClasses() {
@@ -73,7 +72,7 @@ export default async function ClassesPage() {
                 <p className="text-xs text-muted-foreground">{cls.schedule}</p>
               </div>
               <Button asChild size="sm" className="w-full sm:w-auto">
-                <Link href={`/classes/${cls.id}`}>
+                <Link href={`/classes/${cls.id}/create-bucket?name=${encodeURIComponent(cls.name)}&description=${encodeURIComponent(cls.description)}`}>
                   View Class
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -87,4 +86,3 @@ export default async function ClassesPage() {
     </div>
   );
 }
-
