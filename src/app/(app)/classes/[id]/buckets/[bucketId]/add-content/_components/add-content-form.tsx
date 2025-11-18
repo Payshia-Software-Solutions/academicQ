@@ -162,14 +162,15 @@ export function AddContentForm() {
                                 <Textarea
                                 placeholder="Enter your text content here..."
                                 className="resize-none"
+                                rows={4}
                                 {...field}
                                 />
                             ) : (
                                 <div className="relative">
                                     <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input 
-                                        type={contentType === 'LINK' || contentType === 'PDF' || contentType === 'VIDEO' || contentType === 'IMAGE' ? 'url' : 'text'}
-                                        placeholder="Enter URL or content" 
+                                        type="text"
+                                        placeholder="Enter URL" 
                                         {...field} 
                                         className="pl-8" 
                                     />
