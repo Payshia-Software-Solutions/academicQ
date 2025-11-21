@@ -11,9 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from 'next/link';
 import { users, payments as allPayments } from "@/lib/data";
-import { DollarSign, Receipt, AlertCircle, Search, ArrowRight, Plus, ChevronDown } from "lucide-react";
+import { DollarSign, Receipt, AlertCircle, Search, ArrowRight } from "lucide-react";
 import { format } from 'date-fns';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 type PaymentStatus = "All" | "Paid" | "Pending";
 
@@ -63,23 +62,6 @@ export default function PaymentsPage() {
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">Payments</h1>
             <p className="text-muted-foreground">Track and manage all student payments.</p>
         </div>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Payment
-                    <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                    <Link href="/payments/add">Student Payment</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link href="/payments/request">Payment Request</Link>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -14,13 +14,14 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { useToast } from '@/hooks/use-toast';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -84,17 +85,30 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive('/payments')}
-                tooltip="Payments"
-              >
-                <Link href="/payments">
-                  <CreditCard />
-                  <span className="group-data-[state=collapsed]:hidden">Payments</span>
-                </Link>
-              </SidebarMenuButton>
+             <SidebarMenuItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton
+                      isActive={isActive('/payments')}
+                      tooltip="Payments"
+                      className="justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <CreditCard />
+                        <span className="group-data-[state=collapsed]:hidden">Payments</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 group-data-[state=collapsed]:hidden" />
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 ml-4">
+                     <DropdownMenuItem asChild>
+                        <Link href="/payments/add">Student Payment</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href="/payments/request">Payment Request</Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
