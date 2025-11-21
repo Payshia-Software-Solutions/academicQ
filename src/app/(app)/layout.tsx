@@ -102,7 +102,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 ml-4">
                      <DropdownMenuItem asChild>
-                        <Link href="/payments/add">Student Payment</Link>
+                        <Link href="/payments/course-payment">Student Payment</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                         <Link href="/payments/request">Payment Request</Link>
