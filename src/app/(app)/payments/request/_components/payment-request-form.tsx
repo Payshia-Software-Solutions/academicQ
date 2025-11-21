@@ -82,6 +82,7 @@ export function PaymentRequestForm() {
     formData.append('bank', data.bank);
     formData.append('branch', data.branch);
     formData.append('ref', data.ref);
+    formData.append('request_status', 'pending');
     if (data.payment_slip && data.payment_slip.length > 0) {
         formData.append('payment_slip', data.payment_slip[0]);
     }
@@ -272,3 +273,5 @@ export function PaymentRequestForm() {
     </Form>
   );
 }
+
+    
