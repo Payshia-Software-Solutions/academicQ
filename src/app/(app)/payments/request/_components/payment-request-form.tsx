@@ -77,12 +77,18 @@ export function PaymentRequestForm() {
     }
 
     const formData = new FormData();
-    formData.append('student_number', selectedStudent.studentNumber);
-    formData.append('payment_amount', data.payment_amount);
-    formData.append('bank', data.bank);
-    formData.append('branch', data.branch);
-    formData.append('ref', data.ref);
-    formData.append('request_status', 'pending');
+    
+    const paymentData = {
+        student_number: selectedStudent.studentNumber,
+        payment_amount: data.payment_amount,
+        bank: data.bank,
+        branch: data.branch,
+        ref: data.ref,
+        request_status: 'pending'
+    };
+
+    formData.append('data', JSON.stringify(paymentData));
+
     if (data.payment_slip && data.payment_slip.length > 0) {
         formData.append('payment_slip', data.payment_slip[0]);
     }
@@ -273,5 +279,3 @@ export function PaymentRequestForm() {
     </Form>
   );
 }
-
-    
