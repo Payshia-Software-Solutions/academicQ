@@ -38,9 +38,9 @@ const requestPaymentSchema = z.object({
   bank: z.string().min(1, { message: "Bank name is required."}),
   branch: z.string().min(1, { message: "Branch name is required."}),
   ref: z.string().min(1, { message: "Reference is required."}),
-  attachment: z
+  payment_slip: z
     .any()
-    .refine((files) => files?.length == 1, "Attachment is required.")
+    .refine((files) => files?.length == 1, "Payment slip is required.")
     .refine((files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type), ".jpg, .jpeg, .png and .webp files are accepted.")
 });
 
@@ -55,7 +55,7 @@ export function PaymentRequestForm() {
     resolver: zodResolver(requestPaymentSchema),
   });
   
-  const fileRef = form.register("attachment");
+  const fileRef = form.register("payment_slip");
 
   const onSubmit = async (data: RequestPaymentFormValues) => {
     setIsSubmitting(true);
@@ -77,8 +77,8 @@ export function PaymentRequestForm() {
     formData.append('bank', data.bank);
     formData.append('branch', data.branch);
     formData.append('ref', data.ref);
-    if (data.attachment && data.attachment.length > 0) {
-        formData.append('attachment', data.attachment[0]);
+    if (data.payment_slip && data.payment_slip.length > 0) {
+        formData.append('payment_slip', data.payment_slip[0]);
     }
 
     try {
@@ -224,7 +224,7 @@ export function PaymentRequestForm() {
                 />
                  <FormField
                   control={form.control}
-                  name="attachment"
+                  name="payment_slip"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Attach Payment Slip</FormLabel>
@@ -267,3 +267,5 @@ export function PaymentRequestForm() {
     </Form>
   );
 }
+
+    
