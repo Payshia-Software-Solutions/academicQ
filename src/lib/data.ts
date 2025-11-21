@@ -1,12 +1,12 @@
 import type { User, Class, Lesson, Institute, Payment } from './types';
 
 export const users: User[] = [
-  { id: '1', name: 'Alice Johnson', email: 'alice@example.com', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Paid', classIds: ['c1', 'c3'], role: 'Student' },
-  { id: '2', name: 'Bob Williams', email: 'bob@example.com', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Pending', classIds: ['c1', 'c2'], role: 'Student' },
-  { id: '3', name: 'Charlie Brown', email: 'charlie@example.com', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Paid', classIds: ['c2'], role: 'Student' },
-  { id: '4', name: 'Diana Miller', email: 'diana@example.com', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Paid', classIds: ['c3'], role: 'Student' },
-  { id: '5', name: 'Ethan Davis', email: 'ethan@example.com', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Pending', classIds: ['c1'], role: 'Student' },
-  { id: '6', name: 'Fiona Garcia', email: 'fiona@example.com', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Paid', classIds: ['c2', 'c3'], role: 'Student' },
+  { id: '1', name: 'Alice Johnson', email: 'alice@example.com', studentNumber: 'STU001', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Paid', classIds: ['c1', 'c3'], role: 'Student' },
+  { id: '2', name: 'Bob Williams', email: 'bob@example.com', studentNumber: 'STU002', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Pending', classIds: ['c1', 'c2'], role: 'Student' },
+  { id: '3', name: 'Charlie Brown', email: 'charlie@example.com', studentNumber: 'STU003', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Paid', classIds: ['c2'], role: 'Student' },
+  { id: '4', name: 'Diana Miller', email: 'diana@example.com', studentNumber: 'STU004', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Paid', classIds: ['c3'], role: 'Student' },
+  { id: '5', name: 'Ethan Davis', email: 'ethan@example.com', studentNumber: 'STU005', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Pending', classIds: ['c1'], role: 'Student' },
+  { id: '6', name: 'Fiona Garcia', email: 'fiona@example.com', studentNumber: 'STU006', avatarUrl: 'https://placehold.co/100x100.png', paymentStatus: 'Paid', classIds: ['c2', 'c3'], role: 'Student' },
 ];
 
 export const payments: Payment[] = [

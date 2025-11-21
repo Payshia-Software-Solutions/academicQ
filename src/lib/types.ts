@@ -12,6 +12,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  studentNumber?: string;
   avatarUrl: string;
   classIds: string[];
   role: UserRole;

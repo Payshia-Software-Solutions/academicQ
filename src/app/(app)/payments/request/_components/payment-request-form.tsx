@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Select,
   SelectContent,
@@ -24,28 +23,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { users as allUsers } from '@/lib/data';
-import { Loader2, DollarSign, CalendarIcon, Info, ArrowLeft, Users, FileImage, Paperclip } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { Loader2, DollarSign, Info, ArrowLeft, Users, Paperclip, Building, GitBranch } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Textarea } from '@/components/ui/textarea';
+import api from '@/lib/api';
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const requestPaymentSchema = z.object({
   studentId: z.string({ required_error: 'Please select a student.' }),
-  amount: z.coerce.number().positive({ message: 'Amount must be a positive number.' }),
-  dueDate: z.date({ required_error: 'Please select a due date.' }),
-  description: z.string().min(1, { message: "Description is required."}),
+  payment_amount: z.coerce.number().positive({ message: 'Amount must be a positive number.' }),
+  bank: z.string().min(1, { message: "Bank name is required."}),
+  branch: z.string().min(1, { message: "Branch name is required."}),
+  ref: z.string().min(1, { message: "Reference is required."}),
   attachment: z
     .any()
     .refine((files) => files?.length == 1, "Attachment is required.")
     .refine((files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type), ".jpg, .jpeg, .png and .webp files are accepted.")
-    .optional(),
 });
 
 type RequestPaymentFormValues = z.infer<typeof requestPaymentSchema>;
@@ -58,21 +54,65 @@ export function PaymentRequestForm() {
   const form = useForm<RequestPaymentFormValues>({
     resolver: zodResolver(requestPaymentSchema),
   });
+  
+  const fileRef = form.register("attachment");
 
   const onSubmit = async (data: RequestPaymentFormValues) => {
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    const selectedStudent = allUsers.find(u => u.id === data.studentId);
-
-    toast({
-      title: 'Payment Request Sent (Simulation)',
-      description: `Request for $${data.amount} sent to ${selectedStudent?.name}.`,
-    });
     
-    setIsSubmitting(false);
-    form.reset();
-    router.push('/payments');
+    const selectedStudent = allUsers.find(u => u.id === data.studentId);
+    if (!selectedStudent || !selectedStudent.studentNumber) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Selected student does not have a student number.',
+        });
+        setIsSubmitting(false);
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('student_number', selectedStudent.studentNumber);
+    formData.append('payment_amount', data.payment_amount.toString());
+    formData.append('bank', data.bank);
+    formData.append('branch', data.branch);
+    formData.append('ref', data.ref);
+    if (data.attachment && data.attachment.length > 0) {
+        formData.append('attachment', data.attachment[0]);
+    }
+
+    try {
+        const response = await api.post('/payment_requests', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        });
+
+        if (response.status === 201 || response.status === 200) {
+            toast({
+                title: 'Payment Request Sent',
+                description: `Request for $${data.payment_amount} sent to ${selectedStudent?.name}.`,
+            });
+            form.reset();
+            router.push('/payments');
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Request Failed',
+                description: response.data.message || 'An unknown error occurred.',
+            });
+        }
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Submission Error',
+            description:
+            error.response?.data?.message ||
+            'Could not connect to the server. Please try again later.',
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   return (
@@ -100,7 +140,7 @@ export function PaymentRequestForm() {
                         <SelectContent>
                           {allUsers.map(user => (
                             <SelectItem key={user.id} value={user.id}>
-                              {user.name}
+                              {user.name} ({user.studentNumber})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -110,60 +150,52 @@ export function PaymentRequestForm() {
                   )}
                 />
             
+                <FormField
+                  control={form.control}
+                  name="payment_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Amount</FormLabel>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                            <Input type="number" step="0.01" placeholder="e.g. 1500.00" {...field} className="pl-8" />
+                          </FormControl>
+                        </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="amount"
+                      name="bank"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Amount</FormLabel>
+                          <FormLabel>Bank</FormLabel>
                            <div className="relative">
-                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                             <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                              <FormControl>
-                                <Input type="number" step="0.01" placeholder="e.g. 150.00" {...field} className="pl-8" />
+                                <Input placeholder="e.g. ABC Bank" {...field} className="pl-8" />
                              </FormControl>
                            </div>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <FormField
+                     <FormField
                       control={form.control}
-                      name="dueDate"
+                      name="branch"
                       render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Due Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP")
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) =>
-                                  date < new Date()
-                                }
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
+                        <FormItem>
+                          <FormLabel>Branch</FormLabel>
+                           <div className="relative">
+                             <GitBranch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                             <FormControl>
+                                <Input placeholder="e.g. Main Street Branch" {...field} className="pl-8" />
+                             </FormControl>
+                           </div>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -172,17 +204,20 @@ export function PaymentRequestForm() {
 
                 <FormField
                   control={form.control}
-                  name="description"
+                  name="ref"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description / Notes</FormLabel>
-                       <FormControl>
-                        <Textarea
-                          placeholder="e.g., Monthly fee for Web Development course..."
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
+                      <FormLabel>Reference</FormLabel>
+                       <div className="relative">
+                         <Info className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., REF-XYZ-789"
+                              {...field}
+                               className="pl-8"
+                            />
+                          </FormControl>
+                       </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -192,14 +227,14 @@ export function PaymentRequestForm() {
                   name="attachment"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Attach Image (Optional)</FormLabel>
+                      <FormLabel>Attach Payment Slip</FormLabel>
                       <FormControl>
                         <div className="relative">
                            <Paperclip className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input 
                                 type="file" 
                                 className="pl-10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                                onChange={(e) => field.onChange(e.target.files)}
+                                {...fileRef}
                             />
                         </div>
                       </FormControl>
