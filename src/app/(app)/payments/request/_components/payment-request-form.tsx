@@ -34,7 +34,9 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 
 const requestPaymentSchema = z.object({
   studentId: z.string({ required_error: 'Please select a student.' }),
-  payment_amount: z.coerce.number().positive({ message: 'Amount must be a positive number.' }),
+  payment_amount: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    message: "Amount must be a positive number.",
+  }),
   bank: z.string().min(1, { message: "Bank name is required."}),
   branch: z.string().min(1, { message: "Branch name is required."}),
   ref: z.string().min(1, { message: "Reference is required."}),
@@ -53,6 +55,9 @@ export function PaymentRequestForm() {
 
   const form = useForm<RequestPaymentFormValues>({
     resolver: zodResolver(requestPaymentSchema),
+    defaultValues: {
+        payment_amount: '',
+    }
   });
   
   const fileRef = form.register("payment_slip");
@@ -73,7 +78,7 @@ export function PaymentRequestForm() {
 
     const formData = new FormData();
     formData.append('student_number', selectedStudent.studentNumber);
-    formData.append('payment_amount', data.payment_amount.toString());
+    formData.append('payment_amount', data.payment_amount);
     formData.append('bank', data.bank);
     formData.append('branch', data.branch);
     formData.append('ref', data.ref);
@@ -267,5 +272,3 @@ export function PaymentRequestForm() {
     </Form>
   );
 }
-
-    
