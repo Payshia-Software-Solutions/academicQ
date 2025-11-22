@@ -1,3 +1,7 @@
+
+'use client';
+
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -6,18 +10,79 @@ import { Users, BookOpen, AlertCircle, ArrowRight, Building } from "lucide-react
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface CurrentUser {
+  user_status: 'admin' | 'student';
+  f_name: string;
+  l_name: string;
+  [key: string]: any;
+}
 
 export default function DashboardPage() {
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+
   const totalStudents = users.length;
   const totalClasses = classes.length;
   const pendingPayments = users.filter(s => s.paymentStatus === 'Pending');
   const institute = institutes[0]; // In a real app, this would come from the user's session
 
+  const getDashboardTitle = () => {
+    if (!user) return 'Dashboard';
+    if (user.user_status === 'admin') {
+      return `${institute.name} Admin Dashboard`;
+    }
+    if (user.user_status === 'student') {
+      return `Welcome, ${user.f_name} ${user.l_name}!`;
+    }
+    return `${institute.name} Dashboard`;
+  };
+
+  const getDashboardDescription = () => {
+    if (!user) return "Welcome! Here's an overview of your institute's activity.";
+    if (user.user_status === 'admin') {
+      return "Here's an overview of your institute's activity.";
+    }
+    if (user.user_status === 'student') {
+      return "Here is an overview of your classes and payment status.";
+    }
+    return "Welcome! Here's an overview of your institute's activity.";
+  }
+
+  if (loading) {
+    return (
+        <div className="space-y-4">
+             <header>
+                <Skeleton className="h-10 w-3/4 mb-2" />
+                <Skeleton className="h-6 w-1/2" />
+            </header>
+             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-28 w-full" />
+                <Skeleton className="h-28 w-full" />
+                <Skeleton className="h-28 w-full" />
+            </div>
+             <div className="grid gap-4 md:grid-cols-3">
+                <Skeleton className="md:col-span-2 h-96 w-full" />
+                <Skeleton className="md:col-span-1 h-48 w-full" />
+            </div>
+        </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{institute.name} Dashboard</h1>
-        <p className="text-muted-foreground">Welcome! Here's an overview of your institute's activity.</p>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{getDashboardTitle()}</h1>
+        <p className="text-muted-foreground">{getDashboardDescription()}</p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
