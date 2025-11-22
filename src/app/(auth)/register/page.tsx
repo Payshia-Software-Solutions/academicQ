@@ -36,6 +36,7 @@ const registerSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
   phone_number: z.string().min(1, { message: 'Phone number is required.' }),
+  nic: z.string().min(1, { message: 'NIC is required.' }),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -53,6 +54,7 @@ export default function RegisterPage() {
       email: '',
       password: '',
       phone_number: '',
+      nic: '',
     },
   });
 
@@ -162,19 +164,34 @@ export default function RegisterPage() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="phone_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="123-456-7890" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="phone_number"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                        <Input placeholder="123-456-7890" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="nic"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>NIC</FormLabel>
+                    <FormControl>
+                        <Input placeholder="Your NIC" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+              />
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isSubmitting}>
