@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -36,7 +35,7 @@ const registerSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
   phone_number: z.string().min(1, { message: 'Phone number is required.' }),
-  nic: z.string().min(1, { message: 'NIC is required.' }),
+  nic: z.string().optional(),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -183,7 +182,7 @@ export default function RegisterPage() {
                 name="nic"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>NIC</FormLabel>
+                    <FormLabel>NIC (Optional)</FormLabel>
                     <FormControl>
                         <Input placeholder="Your NIC" {...field} />
                     </FormControl>
