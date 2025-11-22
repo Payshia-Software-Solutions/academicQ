@@ -22,6 +22,13 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { useEffect, useState } from 'react';
+
+interface CurrentUser {
+  user_status: 'admin' | 'student';
+  [key: string]: any;
+}
+
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -29,9 +36,18 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const { state } = useSidebar();
   const isActive = (path: string) => pathname.startsWith(path);
+  const [user, setUser] = useState<CurrentUser | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const handleSignOut = () => {
-    // In a real app, you would also clear session/authentication state here
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
     toast({
       title: 'Signed Out',
       description: 'You have been successfully signed out.',
@@ -39,6 +55,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
+  const isAdmin = !user || user.user_status === 'admin';
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar>
@@ -49,30 +67,34 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/dashboard'}
-                tooltip="Dashboard"
-              >
-                <Link href="/dashboard">
-                  <LayoutDashboard />
-                  <span className="group-data-[state=collapsed]:hidden">Dashboard</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive('/students')}
-                tooltip="Students"
-              >
-                <Link href="/students">
-                  <Users />
-                  <span className="group-data-[state=collapsed]:hidden">Students</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {isAdmin && (
+               <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/dashboard'}
+                  tooltip="Dashboard"
+                >
+                  <Link href="/dashboard">
+                    <LayoutDashboard />
+                    <span className="group-data-[state=collapsed]:hidden">Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+            {isAdmin && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive('/students')}
+                  tooltip="Students"
+                >
+                  <Link href="/students">
+                    <Users />
+                    <span className="group-data-[state=collapsed]:hidden">Students</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
@@ -86,29 +108,42 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton
-                      isActive={isActive('/payments')}
-                      tooltip="Payments"
-                      className="justify-between"
+                {isAdmin ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuButton
+                        isActive={isActive('/payments')}
+                        tooltip="Payments"
+                        className="justify-between"
+                      >
+                        <div className="flex items-center gap-3">
+                          <CreditCard />
+                          <span className="group-data-[state=collapsed]:hidden">Payments</span>
+                        </div>
+                        <ChevronDown className="h-4 w-4 group-data-[state=collapsed]:hidden" />
+                      </SidebarMenuButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 ml-4">
+                      <DropdownMenuItem asChild>
+                          <Link href="/payments/course-payment">Student Payment</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                          <Link href="/payments/request">Payment Request</Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                   <SidebarMenuButton
+                      asChild
+                      isActive={isActive('/payments/request')}
+                      tooltip="Payment Request"
                     >
-                      <div className="flex items-center gap-3">
+                      <Link href="/payments/request">
                         <CreditCard />
-                        <span className="group-data-[state=collapsed]:hidden">Payments</span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 group-data-[state=collapsed]:hidden" />
+                        <span className="group-data-[state=collapsed]:hidden">Payment Request</span>
+                      </Link>
                     </SidebarMenuButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 ml-4">
-                     <DropdownMenuItem asChild>
-                        <Link href="/payments/course-payment">Student Payment</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link href="/payments/request">Payment Request</Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                )}
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
@@ -124,8 +159,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 tooltip={{
                     children: (
                         <div>
-                            <p className="text-sm font-semibold text-sidebar-footer-foreground">System Administrator</p>
-                            <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">hmdilipkf@gmail.com</p>
+                            <p className="text-sm font-semibold text-sidebar-footer-foreground">{user?.f_name} {user?.l_name}</p>
+                            <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">{user?.email}</p>
                         </div>
                     ),
                     className: "bg-sidebar-footer border-none p-2"
@@ -137,12 +172,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
            >
             <div className={cn("flex items-center gap-3")}>
                 <Avatar className="h-9 w-9">
-                    <AvatarImage src="https://placehold.co/100x100.png" alt="System Administrator" data-ai-hint="person avatar" />
-                    <AvatarFallback>SA</AvatarFallback>
+                    <AvatarImage src="https://placehold.co/100x100.png" alt={user?.f_name} data-ai-hint="person avatar" />
+                    <AvatarFallback>{user?.f_name?.charAt(0)}{user?.l_name?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="group-data-[state=collapsed]:hidden">
-                    <p className="text-sm font-semibold text-sidebar-footer-foreground">System Administrator</p>
-                    <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">hmdilipkf@gmail.com</p>
+                    <p className="text-sm font-semibold text-sidebar-footer-foreground">{user?.f_name} {user?.l_name}</p>
+                    <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">{user?.email}</p>
                 </div>
             </div>
            </SidebarMenuButton>
