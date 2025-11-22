@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,15 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { users as allUsers } from '@/lib/data';
-import { Loader2, DollarSign, Info, ArrowLeft, Users, Paperclip, Building, GitBranch } from 'lucide-react';
+import { Loader2, DollarSign, Info, ArrowLeft, Paperclip, Building, GitBranch } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -33,7 +25,6 @@ import api from '@/lib/api';
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const requestPaymentSchema = z.object({
-  studentId: z.string({ required_error: 'Please select a student.' }),
   payment_amount: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
     message: "Amount must be a positive number.",
   }),
@@ -48,10 +39,23 @@ const requestPaymentSchema = z.object({
 
 type RequestPaymentFormValues = z.infer<typeof requestPaymentSchema>;
 
+interface LoggedInUser {
+    student_number?: string;
+    [key: string]: any;
+}
+
 export function PaymentRequestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [user, setUser] = useState<LoggedInUser | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+        setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const form = useForm<RequestPaymentFormValues>({
     resolver: zodResolver(requestPaymentSchema),
@@ -65,12 +69,11 @@ export function PaymentRequestForm() {
   const onSubmit = async (data: RequestPaymentFormValues) => {
     setIsSubmitting(true);
     
-    const selectedStudent = allUsers.find(u => u.id === data.studentId);
-    if (!selectedStudent || !selectedStudent.studentNumber) {
+    if (!user || !user.student_number) {
         toast({
             variant: 'destructive',
             title: 'Error',
-            description: 'Selected student does not have a student number.',
+            description: 'Could not find student number. Please log in again.',
         });
         setIsSubmitting(false);
         return;
@@ -79,7 +82,7 @@ export function PaymentRequestForm() {
     const formData = new FormData();
     
     const paymentData = {
-        student_number: selectedStudent.studentNumber,
+        student_number: user.student_number,
         payment_amount: data.payment_amount,
         bank: data.bank,
         branch: data.branch,
@@ -103,7 +106,7 @@ export function PaymentRequestForm() {
         if (response.status === 201 || response.status === 200) {
             toast({
                 title: 'Payment Request Sent',
-                description: `Request for $${data.payment_amount} sent to ${selectedStudent?.name}.`,
+                description: `Request for $${data.payment_amount} has been sent.`,
             });
             form.reset();
             router.push('/payments');
@@ -133,34 +136,15 @@ export function PaymentRequestForm() {
         <Card>
             <CardHeader>
             <CardTitle>Payment Request Details</CardTitle>
-                <CardDescription>Fill in the details below to send a payment request to a student.</CardDescription>
+                <CardDescription>Fill in the details below to send a payment request.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                 <FormField
-                  control={form.control}
-                  name="studentId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Student</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <Users className="mr-2 h-4 w-4 text-muted-foreground" />
-                            <SelectValue placeholder="Select a student..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {allUsers.map(user => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.name} ({user.studentNumber})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {user && user.student_number && (
+                    <div className="p-3 rounded-md bg-muted text-sm">
+                        <span className="font-medium text-muted-foreground">Student Number: </span>
+                        <span className="font-mono">{user.student_number}</span>
+                    </div>
+                )}
             
                 <FormField
                   control={form.control}
@@ -279,3 +263,5 @@ export function PaymentRequestForm() {
     </Form>
   );
 }
+
+    
