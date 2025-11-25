@@ -32,6 +32,7 @@ interface Course {
 interface Bucket {
   id: string;
   name: string;
+  course_id: string;
 }
 interface Student {
   id: string;
@@ -49,7 +50,7 @@ export function SubmissionsList() {
     const { toast } = useToast();
 
     const [courses, setCourses] = useState<Course[]>([]);
-    const [buckets, setBuckets] = useState<Bucket[]>([]);
+    const [allBuckets, setAllBuckets] = useState<Bucket[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
 
@@ -61,14 +62,16 @@ export function SubmissionsList() {
     useEffect(() => {
         async function fetchInitialData() {
             try {
-                const [coursesRes, studentsRes, assignmentsRes] = await Promise.all([
+                const [coursesRes, studentsRes, assignmentsRes, bucketsRes] = await Promise.all([
                     api.get('/courses'),
                     api.get('/users'),
                     api.get('/assignments'),
+                    api.get('/course_buckets'), // Fetch all buckets
                 ]);
                 setCourses(coursesRes.data.records || []);
                 setStudents(studentsRes.data.records.filter((u: any) => u.user_status === 'student' && u.student_number) || []);
                 setAssignments(assignmentsRes.data.data || []);
+                setAllBuckets(bucketsRes.data.data || []); // Store all buckets
             } catch (error) {
                 toast({
                 variant: 'destructive',
@@ -79,28 +82,13 @@ export function SubmissionsList() {
         }
         fetchInitialData();
     }, [toast]);
-
-    useEffect(() => {
+    
+    const courseBuckets = useMemo(() => {
         if (!selectedCourse || selectedCourse === 'all-courses') {
-            setBuckets([]);
-            setSelectedBucket('all-buckets');
-            return;
+            return [];
         }
-        async function fetchBuckets() {
-            try {
-                const response = await api.get(`/course_buckets/course/${selectedCourse}`);
-                setBuckets(response.data.data || []);
-            } catch (error) {
-                toast({
-                    variant: 'destructive',
-                    title: 'Failed to load buckets',
-                    description: 'Could not fetch buckets for the selected course.',
-                });
-                setBuckets([]);
-            }
-        }
-        fetchBuckets();
-  }, [selectedCourse, toast]);
+        return allBuckets.filter(b => b.course_id === selectedCourse);
+    }, [selectedCourse, allBuckets]);
 
 
     useEffect(() => {
@@ -151,7 +139,7 @@ export function SubmissionsList() {
         return courses.find(c => c.id === courseId)?.course_name || courseId;
     };
     const getBucketName = (bucketId: string) => {
-        return buckets.find(b => b.id === bucketId)?.name || bucketId;
+        return allBuckets.find(b => b.id === bucketId)?.name || bucketId;
     };
     const getAssignmentTitle = (assignmentId: string) => {
         return assignments.find(a => a.id === assignmentId)?.content_title || assignmentId;
@@ -187,7 +175,7 @@ export function SubmissionsList() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all-buckets">All Buckets</SelectItem>
-                            {buckets.map(bucket => (
+                            {courseBuckets.map(bucket => (
                                 <SelectItem key={bucket.id} value={bucket.id}>{bucket.name}</SelectItem>
                             ))}
                         </SelectContent>
