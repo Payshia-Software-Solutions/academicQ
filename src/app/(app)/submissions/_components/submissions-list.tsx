@@ -106,11 +106,6 @@ export function SubmissionsList() {
                     setSubmissions(response.data.data || []);
                 } else {
                     setSubmissions([]);
-                    toast({
-                        variant: 'destructive',
-                        title: 'Failed to load submissions',
-                        description: response.data.message || 'An unknown error occurred.',
-                    });
                 }
             } catch (error: any) {
                 setSubmissions([]);
@@ -136,14 +131,38 @@ export function SubmissionsList() {
         return students.find(s => s.student_number === studentNumber)?.name || studentNumber;
     };
     const getCourseName = (courseId: string) => {
-        return courses.find(c => c.id.toString() === courseId.toString())?.course_name || courseId;
+        return courses.find(c => c.id.toString() === courseId.toString())?.course_name || `Course #${courseId}`;
     };
     const getBucketName = (bucketId: string) => {
-        return allBuckets.find(b => b.id.toString() === bucketId.toString())?.name || bucketId;
+        return allBuckets.find(b => b.id.toString() === bucketId.toString())?.name || `Bucket #${bucketId}`;
     };
     const getAssignmentTitle = (assignmentId: string) => {
-        return assignments.find(a => a.id.toString() === assignmentId.toString())?.content_title || assignmentId;
+        return assignments.find(a => a.id.toString() === assignmentId.toString())?.content_title || `Assignment #${assignmentId}`;
     }
+
+    const handleDownload = async (url: string, filename: string) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const blob = await response.blob();
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = filename || url.split('/').pop() || 'download';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(link.href);
+        } catch (error) {
+            console.error('Download failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Download Failed',
+                description: 'Could not download the file.',
+            });
+        }
+    };
 
 
     return (
@@ -226,11 +245,9 @@ export function SubmissionsList() {
                                         <TableCell>{getBucketName(sub.course_bucket_id)}</TableCell>
                                         <TableCell>{getAssignmentTitle(sub.assigment_id)}</TableCell>
                                         <TableCell className="flex gap-2">
-                                            <Button asChild variant="outline" size="sm">
-                                                <Link href={getFullUrl(sub.file_path)} download>
-                                                    <Download className="mr-2 h-3 w-3" />
-                                                    Download
-                                                </Link>
+                                            <Button variant="outline" size="sm" onClick={() => handleDownload(getFullUrl(sub.file_path), `submission-${sub.id}`)}>
+                                                <Download className="mr-2 h-3 w-3" />
+                                                Download
                                             </Button>
                                             <Button asChild variant="outline" size="sm">
                                                 <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
