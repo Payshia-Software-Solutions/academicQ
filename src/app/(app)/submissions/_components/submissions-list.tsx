@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Users, Link as LinkIcon, Download } from 'lucide-react';
+import { BookOpen, Inbox, Users, Link as LinkIcon, Download, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -215,11 +215,17 @@ export function SubmissionsList() {
                                         <TableCell>{sub.course_id}</TableCell>
                                         <TableCell>{sub.course_bucket_id}</TableCell>
                                         <TableCell>{sub.assigment_id}</TableCell>
-                                        <TableCell>
+                                        <TableCell className="flex gap-2">
                                             <Button asChild variant="outline" size="sm">
                                                 <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
                                                     <Download className="mr-2 h-3 w-3" />
                                                     Download
+                                                </Link>
+                                            </Button>
+                                            <Button asChild variant="outline" size="sm">
+                                                <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
+                                                    <Eye className="mr-2 h-3 w-3" />
+                                                    View
                                                 </Link>
                                             </Button>
                                         </TableCell>
