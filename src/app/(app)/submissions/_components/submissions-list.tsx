@@ -227,7 +227,7 @@ export function SubmissionsList() {
                                         <TableCell>{getAssignmentTitle(sub.assigment_id)}</TableCell>
                                         <TableCell className="flex gap-2">
                                             <Button asChild variant="outline" size="sm">
-                                                <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
+                                                <Link href={getFullUrl(sub.file_path)} download>
                                                     <Download className="mr-2 h-3 w-3" />
                                                     Download
                                                 </Link>
