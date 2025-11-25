@@ -47,9 +47,9 @@ export function SubmissionsList() {
     const [buckets, setBuckets] = useState<Bucket[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
 
-    const [selectedCourse, setSelectedCourse] = useState('');
-    const [selectedBucket, setSelectedBucket] = useState('');
-    const [selectedStudent, setSelectedStudent] = useState('');
+    const [selectedCourse, setSelectedCourse] = useState('all-courses');
+    const [selectedBucket, setSelectedBucket] = useState('all-buckets');
+    const [selectedStudent, setSelectedStudent] = useState('all-students');
 
     useEffect(() => {
         async function fetchInitialData() {
@@ -72,9 +72,9 @@ export function SubmissionsList() {
     }, [toast]);
 
     useEffect(() => {
-        if (!selectedCourse) {
+        if (!selectedCourse || selectedCourse === 'all-courses') {
             setBuckets([]);
-            setSelectedBucket('');
+            setSelectedBucket('all-buckets');
             return;
         }
         async function fetchBuckets() {
@@ -99,9 +99,9 @@ export function SubmissionsList() {
             setIsLoading(true);
             try {
                 const params = new URLSearchParams();
-                if (selectedCourse) params.append('course_id', selectedCourse);
-                if (selectedBucket) params.append('course_bucket_id', selectedBucket);
-                if (selectedStudent) params.append('student_number', selectedStudent);
+                if (selectedCourse && selectedCourse !== 'all-courses') params.append('course_id', selectedCourse);
+                if (selectedBucket && selectedBucket !== 'all-buckets') params.append('course_bucket_id', selectedBucket);
+                if (selectedStudent && selectedStudent !== 'all-students') params.append('student_number', selectedStudent);
 
                 const response = await api.get(`/assignment-submissions/filter?${params.toString()}`);
                 
@@ -151,19 +151,19 @@ export function SubmissionsList() {
                             <SelectValue placeholder="Filter by course..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">All Courses</SelectItem>
+                            <SelectItem value="all-courses">All Courses</SelectItem>
                             {courses.map(course => (
                                 <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-                     <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={!selectedCourse}>
+                     <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={!selectedCourse || selectedCourse === 'all-courses'}>
                         <SelectTrigger>
                             <Inbox className="mr-2 h-4 w-4" />
                             <SelectValue placeholder="Filter by bucket..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">All Buckets</SelectItem>
+                            <SelectItem value="all-buckets">All Buckets</SelectItem>
                             {buckets.map(bucket => (
                                 <SelectItem key={bucket.id} value={bucket.id}>{bucket.name}</SelectItem>
                             ))}
@@ -175,7 +175,7 @@ export function SubmissionsList() {
                             <SelectValue placeholder="Filter by student..." />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">All Students</SelectItem>
+                             <SelectItem value="all-students">All Students</SelectItem>
                             {students.map(student => (
                                 <SelectItem key={student.id} value={student.student_number}>{student.name}</SelectItem>
                             ))}
