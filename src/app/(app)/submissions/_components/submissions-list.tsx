@@ -136,13 +136,13 @@ export function SubmissionsList() {
         return students.find(s => s.student_number === studentNumber)?.name || studentNumber;
     };
     const getCourseName = (courseId: string) => {
-        return courses.find(c => c.id === courseId)?.course_name || courseId;
+        return courses.find(c => c.id.toString() === courseId.toString())?.course_name || courseId;
     };
     const getBucketName = (bucketId: string) => {
-        return allBuckets.find(b => b.id === bucketId)?.name || bucketId;
+        return allBuckets.find(b => b.id.toString() === bucketId.toString())?.name || bucketId;
     };
     const getAssignmentTitle = (assignmentId: string) => {
-        return assignments.find(a => a.id === assignmentId)?.content_title || assignmentId;
+        return assignments.find(a => a.id.toString() === assignmentId.toString())?.content_title || assignmentId;
     }
 
 
