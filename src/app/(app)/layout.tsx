@@ -14,7 +14,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, FilePenLine } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { useToast } from '@/hooks/use-toast';
@@ -107,6 +107,20 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {isAdmin && (
+              <SidebarMenuItem>
+                  <SidebarMenuButton
+                      asChild
+                      isActive={isActive('/assignments')}
+                      tooltip="Assignments"
+                  >
+                      <Link href="/assignments/add">
+                          <FilePenLine />
+                          <span className="group-data-[state=collapsed]:hidden">Assignments</span>
+                      </Link>
+                  </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
              <SidebarMenuItem>
                 {isAdmin ? (
                   <DropdownMenu>
