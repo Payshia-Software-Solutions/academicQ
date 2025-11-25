@@ -28,7 +28,7 @@ const ACCEPTED_FILE_TYPES = ["application/pdf", "application/msword", "applicati
 const assignmentSubmissionSchema = z.object({
   course_id: z.string({ required_error: 'Please select a course.' }),
   course_bucket_id: z.string({ required_error: 'Please select a bucket.' }),
-  assignment_id: z.string({ required_error: 'Please select an assignment.' }),
+  assigment_id: z.string({ required_error: 'Please select an assignment.' }),
   assignment_file: z
     .any()
     .refine((files) => files?.length == 1, "Assignment file is required.")
@@ -103,7 +103,7 @@ export function AssignmentSubmissionForm() {
       setBuckets([]);
       setAssignments([]);
       form.resetField('course_bucket_id');
-      form.resetField('assignment_id');
+      form.resetField('assigment_id');
       return;
     }
     async function fetchBuckets() {
@@ -125,7 +125,7 @@ export function AssignmentSubmissionForm() {
   useEffect(() => {
     if (!selectedBucketId) {
         setAssignments([]);
-        form.resetField('assignment_id');
+        form.resetField('assigment_id');
         return;
     }
     async function fetchAssignments() {
@@ -170,7 +170,7 @@ export function AssignmentSubmissionForm() {
     const submissionData = {
       student_number: user.student_number,
       course_bucket_id: parseInt(data.course_bucket_id),
-      assignment_id: parseInt(data.assignment_id),
+      assigment_id: parseInt(data.assigment_id),
       grade: null,
       created_by: user.id,
       is_active: 1
@@ -287,7 +287,7 @@ export function AssignmentSubmissionForm() {
             
                 <FormField
                     control={form.control}
-                    name="assignment_id"
+                    name="assigment_id"
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Assignment</FormLabel>
