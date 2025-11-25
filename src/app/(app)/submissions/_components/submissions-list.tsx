@@ -140,31 +140,6 @@ export function SubmissionsList() {
         return assignments.find(a => a.id.toString() === assignmentId.toString())?.content_title || `Assignment #${assignmentId}`;
     }
 
-    const handleDownload = async (url: string, filename: string) => {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const blob = await response.blob();
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = filename || url.split('/').pop() || 'download';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(link.href);
-        } catch (error) {
-            console.error('Download failed:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Download Failed',
-                description: 'Could not download the file.',
-            });
-        }
-    };
-
-
     return (
         <Card>
             <CardHeader>
@@ -245,9 +220,11 @@ export function SubmissionsList() {
                                         <TableCell>{getBucketName(sub.course_bucket_id)}</TableCell>
                                         <TableCell>{getAssignmentTitle(sub.assigment_id)}</TableCell>
                                         <TableCell className="flex gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => handleDownload(getFullUrl(sub.file_path), `submission-${sub.id}`)}>
-                                                <Download className="mr-2 h-3 w-3" />
-                                                Download
+                                            <Button asChild variant="outline" size="sm">
+                                                <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
+                                                    <Download className="mr-2 h-3 w-3" />
+                                                    Download
+                                                </Link>
                                             </Button>
                                             <Button asChild variant="outline" size="sm">
                                                 <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
