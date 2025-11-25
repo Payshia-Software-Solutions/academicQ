@@ -1,0 +1,244 @@
+
+'use client';
+
+import { useEffect, useState, useMemo } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import api from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BookOpen, Inbox, Users, Link as LinkIcon, Download } from 'lucide-react';
+import Link from 'next/link';
+
+interface Submission {
+    id: string;
+    student_number: string;
+    course_bucket_id: string;
+    assigment_id: string;
+    file_path: string;
+    grade: string | null;
+    created_at: string;
+    course_id: string;
+}
+
+interface Course {
+  id: string;
+  course_name: string;
+}
+interface Bucket {
+  id: string;
+  name: string;
+}
+interface Student {
+  id: string;
+  student_number: string;
+  name: string;
+}
+
+export function SubmissionsList() {
+    const [submissions, setSubmissions] = useState<Submission[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
+
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [buckets, setBuckets] = useState<Bucket[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);
+
+    const [selectedCourse, setSelectedCourse] = useState('');
+    const [selectedBucket, setSelectedBucket] = useState('');
+    const [selectedStudent, setSelectedStudent] = useState('');
+
+    useEffect(() => {
+        async function fetchInitialData() {
+            try {
+                const [coursesRes, studentsRes] = await Promise.all([
+                api.get('/courses'),
+                api.get('/users'),
+                ]);
+                setCourses(coursesRes.data.records || []);
+                setStudents(studentsRes.data.records.filter((u: any) => u.user_status === 'student' && u.student_number) || []);
+            } catch (error) {
+                toast({
+                variant: 'destructive',
+                title: 'Failed to load filters',
+                description: 'Could not fetch courses or students.',
+                });
+            }
+        }
+        fetchInitialData();
+    }, [toast]);
+
+    useEffect(() => {
+        if (!selectedCourse) {
+            setBuckets([]);
+            setSelectedBucket('');
+            return;
+        }
+        async function fetchBuckets() {
+            try {
+                const response = await api.get(`/course_buckets/course/${selectedCourse}`);
+                setBuckets(response.data.data || []);
+            } catch (error) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Failed to load buckets',
+                    description: 'Could not fetch buckets for the selected course.',
+                });
+                setBuckets([]);
+            }
+        }
+        fetchBuckets();
+  }, [selectedCourse, toast]);
+
+
+    useEffect(() => {
+        async function fetchSubmissions() {
+            setIsLoading(true);
+            try {
+                const params = new URLSearchParams();
+                if (selectedCourse) params.append('course_id', selectedCourse);
+                if (selectedBucket) params.append('course_bucket_id', selectedBucket);
+                if (selectedStudent) params.append('student_number', selectedStudent);
+
+                const response = await api.get(`/assignment-submissions/filter?${params.toString()}`);
+                
+                if (response.data.status === 'success') {
+                    setSubmissions(response.data.data || []);
+                } else {
+                    setSubmissions([]);
+                    toast({
+                        variant: 'destructive',
+                        title: 'Failed to load submissions',
+                        description: response.data.message || 'An unknown error occurred.',
+                    });
+                }
+            } catch (error: any) {
+                setSubmissions([]);
+                toast({
+                    variant: 'destructive',
+                    title: 'API Error',
+                    description: error.message || 'Could not fetch submissions.',
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchSubmissions();
+    }, [toast, selectedCourse, selectedBucket, selectedStudent]);
+    
+    const getFullUrl = (filePath: string) => {
+       if (!filePath) return '#';
+        // The file path from the API is already a full URL, so no need to prepend the base URL
+        return filePath;
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Filter Submissions</CardTitle>
+                <CardDescription>
+                    Select filters to narrow down the list of submissions.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                     <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                        <SelectTrigger>
+                            <BookOpen className="mr-2 h-4 w-4" />
+                            <SelectValue placeholder="Filter by course..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="">All Courses</SelectItem>
+                            {courses.map(course => (
+                                <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                     <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={!selectedCourse}>
+                        <SelectTrigger>
+                            <Inbox className="mr-2 h-4 w-4" />
+                            <SelectValue placeholder="Filter by bucket..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="">All Buckets</SelectItem>
+                            {buckets.map(bucket => (
+                                <SelectItem key={bucket.id} value={bucket.id}>{bucket.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                     <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                        <SelectTrigger>
+                            <Users className="mr-2 h-4 w-4" />
+                            <SelectValue placeholder="Filter by student..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                             <SelectItem value="">All Students</SelectItem>
+                            {students.map(student => (
+                                <SelectItem key={student.id} value={student.student_number}>{student.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                 <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Submission ID</TableHead>
+                                <TableHead>Student No.</TableHead>
+                                <TableHead>Course ID</TableHead>
+                                <TableHead>Bucket ID</TableHead>
+                                <TableHead>Assignment ID</TableHead>
+                                <TableHead>File</TableHead>
+                                <TableHead>Grade</TableHead>
+                                <TableHead>Date</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {isLoading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell colSpan={8}>
+                                            <Skeleton className="h-8 w-full" />
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : submissions.length > 0 ? (
+                                submissions.map((sub) => (
+                                    <TableRow key={sub.id}>
+                                        <TableCell className="font-mono text-xs">#{sub.id}</TableCell>
+                                        <TableCell>{sub.student_number}</TableCell>
+                                        <TableCell>{sub.course_id}</TableCell>
+                                        <TableCell>{sub.course_bucket_id}</TableCell>
+                                        <TableCell>{sub.assigment_id}</TableCell>
+                                        <TableCell>
+                                            <Button asChild variant="outline" size="sm">
+                                                <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
+                                                    <Download className="mr-2 h-3 w-3" />
+                                                    Download
+                                                </Link>
+                                            </Button>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={sub.grade ? 'secondary' : 'outline'}>{sub.grade || 'Not Graded'}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-xs">{format(new Date(sub.created_at), 'PP p')}</TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                                    No submissions found for the selected filters.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                 </div>
+            </CardContent>
+        </Card>
+    );
+}
