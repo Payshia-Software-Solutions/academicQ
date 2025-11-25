@@ -38,6 +38,10 @@ interface Student {
   student_number: string;
   name: string;
 }
+interface Assignment {
+    id: string;
+    content_title: string;
+}
 
 export function SubmissionsList() {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -47,6 +51,8 @@ export function SubmissionsList() {
     const [courses, setCourses] = useState<Course[]>([]);
     const [buckets, setBuckets] = useState<Bucket[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
+    const [assignments, setAssignments] = useState<Assignment[]>([]);
+
 
     const [selectedCourse, setSelectedCourse] = useState('all-courses');
     const [selectedBucket, setSelectedBucket] = useState('all-buckets');
@@ -55,17 +61,19 @@ export function SubmissionsList() {
     useEffect(() => {
         async function fetchInitialData() {
             try {
-                const [coursesRes, studentsRes] = await Promise.all([
-                api.get('/courses'),
-                api.get('/users'),
+                const [coursesRes, studentsRes, assignmentsRes] = await Promise.all([
+                    api.get('/courses'),
+                    api.get('/users'),
+                    api.get('/assignments'),
                 ]);
                 setCourses(coursesRes.data.records || []);
                 setStudents(studentsRes.data.records.filter((u: any) => u.user_status === 'student' && u.student_number) || []);
+                setAssignments(assignmentsRes.data.data || []);
             } catch (error) {
                 toast({
                 variant: 'destructive',
                 title: 'Failed to load filters',
-                description: 'Could not fetch courses or students.',
+                description: 'Could not fetch initial data.',
                 });
             }
         }
@@ -136,6 +144,20 @@ export function SubmissionsList() {
         return filePath;
     }
 
+    const getStudentName = (studentNumber: string) => {
+        return students.find(s => s.student_number === studentNumber)?.name || studentNumber;
+    };
+    const getCourseName = (courseId: string) => {
+        return courses.find(c => c.id === courseId)?.course_name || courseId;
+    };
+    const getBucketName = (bucketId: string) => {
+        return buckets.find(b => b.id === bucketId)?.name || bucketId;
+    };
+    const getAssignmentTitle = (assignmentId: string) => {
+        return assignments.find(a => a.id === assignmentId)?.content_title || assignmentId;
+    }
+
+
     return (
         <Card>
             <CardHeader>
@@ -189,10 +211,10 @@ export function SubmissionsList() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Submission ID</TableHead>
-                                <TableHead>Student No.</TableHead>
-                                <TableHead>Course ID</TableHead>
-                                <TableHead>Bucket ID</TableHead>
-                                <TableHead>Assignment ID</TableHead>
+                                <TableHead>Student</TableHead>
+                                <TableHead>Course</TableHead>
+                                <TableHead>Bucket</TableHead>
+                                <TableHead>Assignment</TableHead>
                                 <TableHead>File</TableHead>
                                 <TableHead>Grade</TableHead>
                                 <TableHead>Date</TableHead>
@@ -211,10 +233,10 @@ export function SubmissionsList() {
                                 submissions.map((sub) => (
                                     <TableRow key={sub.id}>
                                         <TableCell className="font-mono text-xs">#{sub.id}</TableCell>
-                                        <TableCell>{sub.student_number}</TableCell>
-                                        <TableCell>{sub.course_id}</TableCell>
-                                        <TableCell>{sub.course_bucket_id}</TableCell>
-                                        <TableCell>{sub.assigment_id}</TableCell>
+                                        <TableCell>{getStudentName(sub.student_number)}</TableCell>
+                                        <TableCell>{getCourseName(sub.course_id)}</TableCell>
+                                        <TableCell>{getBucketName(sub.course_bucket_id)}</TableCell>
+                                        <TableCell>{getAssignmentTitle(sub.assigment_id)}</TableCell>
                                         <TableCell className="flex gap-2">
                                             <Button asChild variant="outline" size="sm">
                                                 <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
