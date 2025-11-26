@@ -5,15 +5,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus, Tag, DollarSign, Info } from "lucide-react";
+import { ChevronRight, Plus, Tag, DollarSign, Info, FileText, BookOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 interface Course {
   id: string;
   course_name: string;
   description: string;
+}
+
+interface Content {
+    id: string;
+    content_title: string;
+    content_type: string;
+}
+
+interface Assignment {
+    id: string;
+    content_title: string;
+    content_type: string;
 }
 
 interface Bucket {
@@ -23,6 +37,8 @@ interface Bucket {
   payment_amount: string;
   payment_type: string;
   is_active: string;
+  contents: Content[];
+  assignments: Assignment[];
 }
 
 interface CurrentUser {
@@ -97,10 +113,10 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                 </header>
                 <section>
                     <Skeleton className="h-8 w-1/3 mb-4" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <Skeleton className="h-48 w-full" />
-                        <Skeleton className="h-48 w-full" />
-                        <Skeleton className="h-48 w-full" />
+                    <div className="space-y-4">
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
+                        <Skeleton className="h-16 w-full" />
                     </div>
                 </section>
             </div>
@@ -111,30 +127,107 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     notFound();
   }
 
-  const BucketCard = ({ bucket }: { bucket: Bucket }) => {
+  const BucketAccordion = ({ bucket }: { bucket: Bucket }) => {
+    const totalContent = bucket.contents?.length || 0;
+    const totalAssignments = bucket.assignments?.length || 0;
     return (
-      <Link href={`/classes/${course.id}/buckets/${bucket.id}`} className="block hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-         <Card className="h-full">
-            <CardHeader>
-            <CardTitle>{bucket.name}</CardTitle>
-            <CardDescription>{bucket.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">${parseFloat(bucket.payment_amount).toFixed(2)}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-                <Tag className="h-4 w-4 text-muted-foreground" />
-                <span className="capitalize">{bucket.payment_type || 'N/A'}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-                <Info className="h-4 w-4 text-muted-foreground" />
-                <span>Status: {bucket.is_active === "1" ? "Active" : "Inactive"}</span>
-            </div>
-            </CardContent>
-        </Card>
-      </Link>
+        <AccordionItem value={`bucket-${bucket.id}`}>
+            <AccordionTrigger className="hover:no-underline">
+                <div className="flex-1 text-left">
+                    <h3 className="font-semibold text-lg">{bucket.name}</h3>
+                    <p className="text-sm text-muted-foreground">{bucket.description}</p>
+                    <div className="flex items-center gap-4 text-xs mt-2">
+                        <div className="flex items-center gap-1">
+                            <DollarSign className="h-3 w-3 text-muted-foreground" />
+                            <span className="font-medium">${parseFloat(bucket.payment_amount).toFixed(2)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Tag className="h-3 w-3 text-muted-foreground" />
+                            <span className="capitalize">{bucket.payment_type || 'N/A'}</span>
+                        </div>
+                         <div className="flex items-center gap-1">
+                            <Info className="h-3 w-3 text-muted-foreground" />
+                            <span>Status: {bucket.is_active === "1" ? "Active" : "Inactive"}</span>
+                        </div>
+                    </div>
+                </div>
+            </AccordionTrigger>
+            <AccordionContent>
+                <Tabs defaultValue="content" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="content">Content ({totalContent})</TabsTrigger>
+                        <TabsTrigger value="assignments">Assignments ({totalAssignments})</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="content" className="mt-4">
+                        <div className="flex justify-end mb-4">
+                            {isAdmin && (
+                                <Button asChild size="sm" variant="outline">
+                                     <Link href={`/classes/${course.id}/buckets/${bucket.id}/add-content`}>
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Content
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
+                        {totalContent > 0 ? (
+                             <ul className="space-y-3">
+                                {bucket.contents.map(item => (
+                                <li key={`content-${item.id}`}>
+                                    <Link href={`/classes/${course.id}/buckets/${bucket.id}/content/${item.id}`}>
+                                        <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-2 bg-accent/10 rounded-lg">
+                                                    <BookOpen className="h-5 w-5 text-accent" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold">{item.content_title}</p>
+                                                    <Badge variant="outline" className="capitalize text-xs">{item.content_type}</Badge>
+                                                </div>
+                                            </div>
+                                            <ChevronRight className="h-5 w-5 text-muted-foreground"/>
+                                        </div>
+                                    </Link>
+                                </li>
+                                ))}
+                            </ul>
+                        ) : (
+                             <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                <p className="text-muted-foreground">No content has been added to this bucket yet.</p>
+                            </div>
+                        )}
+                    </TabsContent>
+                    <TabsContent value="assignments" className="mt-4">
+                       {totalAssignments > 0 ? (
+                             <ul className="space-y-3">
+                                {bucket.assignments.map(item => (
+                                <li key={`assignment-${item.id}`}>
+                                    <Link href="#">
+                                        <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-2 bg-primary/10 rounded-lg">
+                                                    <FileText className="h-5 w-5 text-primary" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold">{item.content_title}</p>
+                                                    <Badge variant="secondary" className="capitalize text-xs">{item.content_type}</Badge>
+                                                </div>
+                                            </div>
+                                            <ChevronRight className="h-5 w-5 text-muted-foreground"/>
+                                        </div>
+                                    </Link>
+                                </li>
+                                ))}
+                            </ul>
+                        ) : (
+                             <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                <p className="text-muted-foreground">No assignments are linked to this bucket yet.</p>
+                            </div>
+                        )}
+                    </TabsContent>
+                </Tabs>
+
+            </AccordionContent>
+        </AccordionItem>
     );
   };
 
@@ -165,11 +258,11 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
       <section>
         <h2 className="text-xl font-bold mb-4">Payment Buckets</h2>
         {buckets.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Accordion type="single" collapsible className="w-full">
                 {buckets.map((bucket: any) => (
-                    <BucketCard key={bucket.id} bucket={bucket} />
+                    <BucketAccordion key={bucket.id} bucket={bucket} />
                 ))}
-            </div>
+            </Accordion>
         ) : (
             <div className="text-center py-12 border-2 border-dashed rounded-lg">
                 <p className="text-muted-foreground">No payment buckets found for this course.</p>
@@ -186,3 +279,5 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
+
+    
