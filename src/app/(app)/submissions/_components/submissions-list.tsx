@@ -192,12 +192,9 @@ export function SubmissionsList() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Submission ID</TableHead>
                                 <TableHead>Student</TableHead>
-                                <TableHead>Course</TableHead>
-                                <TableHead>Bucket</TableHead>
                                 <TableHead>Assignment</TableHead>
-                                <TableHead>File</TableHead>
+                                <TableHead>Submitted File</TableHead>
                                 <TableHead>Grade</TableHead>
                                 <TableHead>Date</TableHead>
                             </TableRow>
@@ -206,7 +203,7 @@ export function SubmissionsList() {
                             {isLoading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <TableRow key={i}>
-                                        <TableCell colSpan={8}>
+                                        <TableCell colSpan={5}>
                                             <Skeleton className="h-8 w-full" />
                                         </TableCell>
                                     </TableRow>
@@ -214,23 +211,22 @@ export function SubmissionsList() {
                             ) : submissions.length > 0 ? (
                                 submissions.map((sub) => (
                                     <TableRow key={sub.id}>
-                                        <TableCell className="font-mono text-xs">#{sub.id}</TableCell>
-                                        <TableCell>{getStudentName(sub.student_number)}</TableCell>
-                                        <TableCell>{getCourseName(sub.course_id)}</TableCell>
-                                        <TableCell>{getBucketName(sub.course_bucket_id)}</TableCell>
-                                        <TableCell>{getAssignmentTitle(sub.assigment_id)}</TableCell>
-                                        <TableCell className="flex gap-2">
+                                        <TableCell>
+                                            <div className="font-medium">{getStudentName(sub.student_number)}</div>
+                                            <div className="text-xs text-muted-foreground font-mono">{sub.student_number}</div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="font-medium">{getAssignmentTitle(sub.assigment_id)}</div>
+                                            <div className="text-xs text-muted-foreground">
+                                                {getCourseName(sub.course_id)} / {getBucketName(sub.course_bucket_id)}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
                                             <Button asChild variant="outline" size="sm">
-                                                <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
+                                                <a href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
                                                     <Download className="mr-2 h-3 w-3" />
                                                     Download
-                                                </Link>
-                                            </Button>
-                                            <Button asChild variant="outline" size="sm">
-                                                <Link href={getFullUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
-                                                    <Eye className="mr-2 h-3 w-3" />
-                                                    View
-                                                </Link>
+                                                </a>
                                             </Button>
                                         </TableCell>
                                         <TableCell>
@@ -241,7 +237,7 @@ export function SubmissionsList() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
                                     No submissions found for the selected filters.
                                     </TableCell>
                                 </TableRow>
