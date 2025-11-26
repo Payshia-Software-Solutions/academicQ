@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Plus } from "lucide-react";
 import type { Class } from "@/lib/types";
 import { Skeleton } from '@/components/ui/skeleton';
+import api from '@/lib/api';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -17,7 +18,6 @@ interface CurrentUser {
 
 async function getClasses() {
     try {
-        // Since NEXT_PUBLIC_API_BASE_URL is available on the client, this should work.
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/courses`);
         if (!response.ok) {
             console.error("Failed to fetch classes");
@@ -52,6 +52,7 @@ export default function ClassesPage() {
     }
 
     async function loadClasses() {
+        setLoading(true);
         const fetchedClasses = await getClasses();
         setClasses(fetchedClasses);
         setLoading(false);
@@ -60,7 +61,7 @@ export default function ClassesPage() {
     loadClasses();
   }, []);
 
-  const isAdmin = !user || user?.user_status === 'admin';
+  const isAdmin = user?.user_status === 'admin';
 
   return (
     <div className="space-y-8">

@@ -26,6 +26,9 @@ import { useEffect, useState } from 'react';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
+  f_name?: string;
+  l_name?: string;
+  email?: string;
   [key: string]: any;
 }
 
@@ -42,8 +45,11 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+    } else {
+        // Redirect to login if no user data found
+        router.push('/login');
     }
-  }, []);
+  }, [router]);
 
   const handleSignOut = () => {
     localStorage.removeItem('authToken');
@@ -55,7 +61,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  const isAdmin = !user || user.user_status === 'admin';
+  const isAdmin = user?.user_status === 'admin';
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -131,7 +137,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   </DropdownMenu>
               </SidebarMenuItem>
             )}
-            {isAdmin && (
+             {isAdmin && (
                  <SidebarMenuItem>
                     <SidebarMenuButton
                         asChild
@@ -239,7 +245,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
               <div className="md:hidden">
                 <SidebarMenuButton asChild variant="ghost" size="icon" className="h-10 w-10">
-                    <Link href="/dashboard">
+                    <Link href={isAdmin ? "/dashboard" : "/classes"}>
                         <Logo className="text-foreground h-6 w-auto" />
                     </Link>
                 </SidebarMenuButton>
