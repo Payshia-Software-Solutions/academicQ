@@ -67,7 +67,7 @@ export function AddContentForm() {
         updated_by: userId,
       }
 
-      const response = await api.post('/course_bucket_contents', postData);
+      const response = await api.post('/course-bucket-contents', postData);
 
       if (response.status === 201 || response.status === 200) {
         toast({

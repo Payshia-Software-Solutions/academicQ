@@ -48,7 +48,7 @@ export function BucketContentList({ bucketId }: BucketContentListProps) {
         async function fetchContent() {
             setIsLoading(true);
             try {
-                const response = await api.get(`/course_bucket_contents/bucket/${bucketId}`);
+                const response = await api.get(`/course-bucket-contents/bucket/${bucketId}`);
                 if (response.data.status === 'success') {
                     setContent(response.data.data || []);
                 } else {
