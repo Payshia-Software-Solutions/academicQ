@@ -270,12 +270,14 @@ export default function ContentDetailsPage() {
                             {content.assignments.map(assignment => (
                                 <li key={assignment.id}>
                                     <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-4 flex-1 min-w-0">
                                             <div className="p-2 bg-accent/10 rounded-lg">
                                                 <FileText className="h-5 w-5 text-accent" />
                                             </div>
-                                            <div>
-                                              <p className="font-semibold">{assignment.content_title}</p>
+                                            <div className="flex-1 min-w-0">
+                                              <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/assignments/${assignment.id}`} className="font-semibold hover:underline truncate block">
+                                                {assignment.content_title}
+                                              </Link>
                                               <Badge variant="outline" className="capitalize mt-1">{assignment.content_type}</Badge>
                                             </div>
                                         </div>
@@ -363,3 +365,5 @@ export default function ContentDetailsPage() {
     )
 
 }
+
+    
