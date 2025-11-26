@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { FileVideo, Image, Link as LinkIcon, FileText, File, ExternalLink } from 'lucide-react';
+import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -113,9 +113,9 @@ export function BucketContentList({ courseId, bucketId }: BucketContentListProps
                                      </div>
                                 </div>
                                 <Button asChild variant="ghost" size="sm">
-                                    <Link href={item.content} target="_blank" rel="noopener noreferrer">
+                                    <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${item.id}`}>
                                         View Content
-                                        <ExternalLink className="ml-2 h-4 w-4" />
+                                        <Eye className="ml-2 h-4 w-4" />
                                     </Link>
                                 </Button>
                              </div>
