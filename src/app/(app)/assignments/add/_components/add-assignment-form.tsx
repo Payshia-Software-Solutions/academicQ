@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, BookOpen, Inbox, FileVideo, Type, FileText } from 'lucide-react';
+import { Loader2, ArrowLeft, BookOpen, Inbox, FileVideo, Type, FileText, UploadCloud } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -30,7 +30,18 @@ const addAssignmentSchema = z.object({
   content_type: z.string().min(1, { message: 'Content type is required.' }),
   content_title: z.string().min(1, { message: 'Assignment title is required.' }),
   content: z.string().min(1, { message: 'Assignment content is required.' }),
+  file: z.any().optional(),
+}).superRefine((data, ctx) => {
+    const fileBasedTypes = ['video', 'image', 'pdf'];
+    if (fileBasedTypes.includes(data.content_type.toLowerCase()) && (!data.file || data.file.length === 0)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'A file is required for this content type.',
+            path: ['file'],
+        });
+    }
 });
+
 
 type AddAssignmentFormValues = z.infer<typeof addAssignmentSchema>;
 
@@ -53,11 +64,14 @@ export function AddAssignmentForm() {
   const form = useForm<AddAssignmentFormValues>({
     resolver: zodResolver(addAssignmentSchema),
     defaultValues: {
-      content_type: 'pdf',
+      content_type: 'text',
     },
   });
 
   const selectedCourseId = form.watch('course_id');
+  const contentType = form.watch('content_type');
+  const isFileBased = ['video', 'image', 'pdf'].includes(contentType.toLowerCase());
+  const fileRef = form.register("file");
 
   useEffect(() => {
     async function fetchCourses() {
@@ -103,15 +117,28 @@ export function AddAssignmentForm() {
        const user = JSON.parse(localStorage.getItem('user') || '{}');
        const userId = user.id || 5;
 
-      const postData = {
-        ...data,
+      const postData: any = {
         course_id: parseInt(data.course_id),
         course_bucket_id: parseInt(data.course_bucket_id),
+        content_type: data.content_type,
+        content_title: data.content_title,
+        content: data.content,
         created_by: userId,
         updated_by: userId,
       }
+      
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(postData));
 
-      const response = await api.post('/assignments', postData);
+      if (isFileBased && data.file && data.file.length > 0) {
+        formData.append('file', data.file[0]);
+      }
+
+      const response = await api.post('/assignments', formData, {
+         headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       if (response.status === 201 || response.status === 200) {
         toast({
@@ -228,7 +255,11 @@ export function AddAssignmentForm() {
                         <FormLabel>Content Type</FormLabel>
                         <div className="relative">
                         <FileVideo className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={(value) => {
+                            field.onChange(value);
+                            form.setValue('file', null);
+                            form.clearErrors(['file']);
+                        }} defaultValue={field.value}>
                             <FormControl>
                             <SelectTrigger className="pl-8">
                                 <SelectValue placeholder="Select a content type" />
@@ -266,6 +297,28 @@ export function AddAssignmentForm() {
                     )}
                 />
             </div>
+            {isFileBased && (
+                 <FormField
+                  control={form.control}
+                  name="file"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Upload File</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                           <UploadCloud className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input 
+                                type="file" 
+                                className="pl-10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                {...fileRef}
+                            />
+                        </div>
+                      </FormControl>
+                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            )}
             </CardContent>
             <CardFooter className="flex justify-between">
             <Button variant="outline" asChild>
@@ -290,3 +343,5 @@ export function AddAssignmentForm() {
     </Form>
   );
 }
+
+    
