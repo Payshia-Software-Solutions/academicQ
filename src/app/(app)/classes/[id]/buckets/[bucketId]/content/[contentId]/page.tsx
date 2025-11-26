@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, FileText, Image as ImageIcon, Video, Download, Upload } from 'lucide-react';
+import { ArrowLeft, FileText, Image as ImageIcon, Video, Download, Upload, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
@@ -248,11 +248,21 @@ export default function ContentDetailsPage() {
             </Card>
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Associated Assignments</CardTitle>
-                    <CardDescription>
-                        {content.assignments?.length || 0} assignment(s) linked to this content.
-                    </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Associated Assignments</CardTitle>
+                        <CardDescription>
+                            {content.assignments?.length || 0} assignment(s) linked to this content.
+                        </CardDescription>
+                    </div>
+                    {isAdmin && (
+                        <Button asChild size="sm">
+                            <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/add-assignment`}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Create Assignment
+                            </Link>
+                        </Button>
+                    )}
                 </CardHeader>
                 <CardContent>
                     {content.assignments && content.assignments.length > 0 ? (
@@ -289,6 +299,13 @@ export default function ContentDetailsPage() {
                     ) : (
                         <div className="text-center py-12 border-2 border-dashed rounded-lg">
                             <p className="text-muted-foreground">No assignments are associated with this content.</p>
+                             {isAdmin && (
+                                <Button variant="outline" className="mt-4" asChild>
+                                    <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/add-assignment`}>
+                                        Create the First Assignment
+                                    </Link>
+                                </Button>
+                            )}
                         </div>
                     )}
                 </CardContent>

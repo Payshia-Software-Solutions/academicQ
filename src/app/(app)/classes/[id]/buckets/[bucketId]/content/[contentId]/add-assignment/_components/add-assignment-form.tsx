@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,17 +16,15 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, BookOpen, Inbox, FileVideo, Type, FileText, UploadCloud } from 'lucide-react';
+import { Loader2, ArrowLeft, FileText, UploadCloud, FileVideo } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const addAssignmentSchema = z.object({
-  course_id: z.string({ required_error: 'Please select a course.' }),
-  course_bucket_id: z.string({ required_error: 'Please select a bucket.' }),
   content_type: z.string().min(1, { message: 'Content type is required.' }),
   content_title: z.string().min(1, { message: 'Assignment title is required.' }),
   content: z.string().min(1, { message: 'Assignment content is required.' }),
@@ -45,21 +43,13 @@ const addAssignmentSchema = z.object({
 
 type AddAssignmentFormValues = z.infer<typeof addAssignmentSchema>;
 
-interface Course {
-  id: string;
-  course_name: string;
-}
-interface Bucket {
-  id: string;
-  name: string;
-}
-
 export function AddAssignmentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [buckets, setBuckets] = useState<Bucket[]>([]);
   const { toast } = useToast();
   const router = useRouter();
+  const params = useParams();
+  const { id: courseId, bucketId, contentId } = params;
+
 
   const form = useForm<AddAssignmentFormValues>({
     resolver: zodResolver(addAssignmentSchema),
@@ -68,48 +58,10 @@ export function AddAssignmentForm() {
     },
   });
 
-  const selectedCourseId = form.watch('course_id');
   const contentType = form.watch('content_type');
   const isFileBased = ['video', 'image', 'pdf'].includes(contentType.toLowerCase());
   const fileRef = form.register("file");
 
-  useEffect(() => {
-    async function fetchCourses() {
-      try {
-        const coursesRes = await api.get('/courses');
-        setCourses(coursesRes.data.records || []);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Failed to load courses',
-          description: 'Could not fetch courses.',
-        });
-      }
-    }
-    fetchCourses();
-  }, [toast]);
-
-  useEffect(() => {
-    if (!selectedCourseId) {
-      setBuckets([]);
-      form.resetField('course_bucket_id');
-      return;
-    }
-    async function fetchBuckets() {
-      try {
-        const response = await api.get(`/course_buckets/course/${selectedCourseId}`);
-        setBuckets(response.data.data || []);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Failed to load buckets',
-          description: 'Could not fetch buckets for the selected course.',
-        });
-        setBuckets([]);
-      }
-    }
-    fetchBuckets();
-  }, [selectedCourseId, toast, form]);
 
   const onSubmit = async (data: AddAssignmentFormValues) => {
     setIsSubmitting(true);
@@ -118,8 +70,9 @@ export function AddAssignmentForm() {
        const userId = user.id || 5;
 
       const postData: any = {
-        course_id: parseInt(data.course_id),
-        course_bucket_id: parseInt(data.course_bucket_id),
+        course_id: parseInt(courseId as string),
+        course_bucket_id: parseInt(bucketId as string),
+        content_id: parseInt(contentId as string),
         content_type: data.content_type,
         content_title: data.content_title,
         content: data.content,
@@ -145,7 +98,7 @@ export function AddAssignmentForm() {
           title: 'Assignment Created',
           description: `The assignment "${data.content_title}" has been successfully created.`,
         });
-        router.push(`/classes/${data.course_id}`);
+        router.push(`/classes/${courseId}/buckets/${bucketId}/content/${contentId}`);
       } else {
         toast({
           variant: 'destructive',
@@ -165,6 +118,8 @@ export function AddAssignmentForm() {
       setIsSubmitting(false);
     }
   };
+  
+  const cancelUrl = `/classes/${courseId}/buckets/${bucketId}/content/${contentId}`;
 
   return (
     <Form {...form}>
@@ -172,62 +127,9 @@ export function AddAssignmentForm() {
         <Card>
             <CardHeader>
             <CardTitle>New Assignment Details</CardTitle>
-                <CardDescription>Fill in the details to create a new assignment.</CardDescription>
+                <CardDescription>Fill in the details to create a new assignment for this content.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <FormField
-                    control={form.control}
-                    name="course_id"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Course</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
-                                <SelectValue placeholder="Select a course..." />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            {courses.map(course => (
-                                <SelectItem key={course.id} value={course.id}>
-                                {course.course_name}
-                                </SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                <FormField
-                    control={form.control}
-                    name="course_bucket_id"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Payment Bucket</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={!selectedCourseId || buckets.length === 0}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <Inbox className="mr-2 h-4 w-4 text-muted-foreground" />
-                                <SelectValue placeholder={!selectedCourseId ? "Select a course first" : "Select a bucket..."} />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            {buckets.map(bucket => (
-                                <SelectItem key={bucket.id} value={bucket.id}>
-                                {bucket.name}
-                                </SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-            </div>
             
             <FormField
                 control={form.control}
@@ -322,7 +224,7 @@ export function AddAssignmentForm() {
             </CardContent>
             <CardFooter className="flex justify-between">
             <Button variant="outline" asChild>
-                <Link href="/classes">
+                <Link href={cancelUrl}>
                     <ArrowLeft className="mr-2 h-4 w-4"/>
                     Cancel
                 </Link>

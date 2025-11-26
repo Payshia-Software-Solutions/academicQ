@@ -14,7 +14,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, FilePenLine, Upload, ListChecks } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { useToast } from '@/hooks/use-toast';
@@ -113,30 +113,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {isAdmin && (
-              <SidebarMenuItem>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <SidebarMenuButton
-                        isActive={isActive('/assignments')}
-                        tooltip="Assignments"
-                        className="justify-between"
-                      >
-                        <div className="flex items-center gap-3">
-                          <FilePenLine />
-                          <span className="group-data-[state=collapsed]:hidden">Assignments</span>
-                        </div>
-                        <ChevronDown className="h-4 w-4 group-data-[state=collapsed]:hidden" />
-                      </SidebarMenuButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 ml-4">
-                      <DropdownMenuItem asChild>
-                          <Link href="/assignments/add">Create Assignment</Link>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-              </SidebarMenuItem>
-            )}
+            
              {isAdmin && (
                  <SidebarMenuItem>
                     <SidebarMenuButton
