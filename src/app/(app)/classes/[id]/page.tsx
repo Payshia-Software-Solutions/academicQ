@@ -127,9 +127,91 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     notFound();
   }
 
-  const BucketAccordion = ({ bucket }: { bucket: Bucket }) => {
+  const BucketAccordion = ({ bucket, isAdmin }: { bucket: Bucket, isAdmin: boolean }) => {
     const totalContent = bucket.contents?.length || 0;
     const totalAssignments = bucket.assignments?.length || 0;
+
+    const contentList = (
+        <div>
+            {isAdmin && totalContent > 0 && (
+                 <div className="flex justify-end mb-4">
+                    <Button asChild size="sm" variant="outline">
+                        <Link href={`/classes/${course.id}/buckets/${bucket.id}/add-content`}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Content
+                        </Link>
+                    </Button>
+                </div>
+            )}
+            {totalContent > 0 ? (
+                 <ul className="space-y-3">
+                    {bucket.contents.map(item => (
+                    <li key={`content-${item.id}`}>
+                        <Link href={`/classes/${course.id}/buckets/${bucket.id}/content/${item.id}`}>
+                            <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2 bg-accent/10 rounded-lg">
+                                        <BookOpen className="h-5 w-5 text-accent" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold">{item.content_title}</p>
+                                        <Badge variant="outline" className="capitalize text-xs">{item.content_type}</Badge>
+                                    </div>
+                                </div>
+                                <ChevronRight className="h-5 w-5 text-muted-foreground"/>
+                            </div>
+                        </Link>
+                    </li>
+                    ))}
+                </ul>
+            ) : (
+                 <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground">No content has been added to this bucket yet.</p>
+                     {isAdmin && (
+                        <Button asChild size="sm" variant="outline" className="mt-4">
+                            <Link href={`/classes/${course.id}/buckets/${bucket.id}/add-content`}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Content
+                            </Link>
+                        </Button>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+    
+    const assignmentsList = (
+         <div>
+            {totalAssignments > 0 ? (
+                    <ul className="space-y-3">
+                    {bucket.assignments.map(item => (
+                    <li key={`assignment-${item.id}`}>
+                         <Link href={`/classes/${course!.id}/buckets/${bucket.id}/content/${item.id}/assignments/${item.id}`}>
+                            <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2 bg-primary/10 rounded-lg">
+                                        <FileText className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold">{item.content_title}</p>
+                                        <Badge variant="secondary" className="capitalize text-xs">{item.content_type}</Badge>
+                                    </div>
+                                </div>
+                                <ChevronRight className="h-5 w-5 text-muted-foreground"/>
+                            </div>
+                        </Link>
+                    </li>
+                    ))}
+                </ul>
+            ) : (
+                    <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground">No assignments are linked to this bucket yet.</p>
+                </div>
+            )}
+        </div>
+    );
+
+
     return (
         <AccordionItem value={`bucket-${bucket.id}`}>
             <AccordionTrigger className="hover:no-underline">
@@ -153,78 +235,31 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                 </div>
             </AccordionTrigger>
             <AccordionContent>
-                <Tabs defaultValue="content" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="content">Content ({totalContent})</TabsTrigger>
-                        <TabsTrigger value="assignments">Assignments ({totalAssignments})</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="content" className="mt-4">
-                        <div className="flex justify-end mb-4">
-                            {isAdmin && (
-                                <Button asChild size="sm" variant="outline">
-                                     <Link href={`/classes/${course.id}/buckets/${bucket.id}/add-content`}>
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Content
-                                    </Link>
-                                </Button>
-                            )}
+                {isAdmin ? (
+                    <Tabs defaultValue="content" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="content">Content ({totalContent})</TabsTrigger>
+                            <TabsTrigger value="assignments">Assignments ({totalAssignments})</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="content" className="mt-4">
+                           {contentList}
+                        </TabsContent>
+                        <TabsContent value="assignments" className="mt-4">
+                           {assignmentsList}
+                        </TabsContent>
+                    </Tabs>
+                ) : (
+                    <div className="space-y-6">
+                        <div>
+                            <h4 className="font-bold text-lg mb-4">Content</h4>
+                            {contentList}
                         </div>
-                        {totalContent > 0 ? (
-                             <ul className="space-y-3">
-                                {bucket.contents.map(item => (
-                                <li key={`content-${item.id}`}>
-                                    <Link href={`/classes/${course.id}/buckets/${bucket.id}/content/${item.id}`}>
-                                        <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-2 bg-accent/10 rounded-lg">
-                                                    <BookOpen className="h-5 w-5 text-accent" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold">{item.content_title}</p>
-                                                    <Badge variant="outline" className="capitalize text-xs">{item.content_type}</Badge>
-                                                </div>
-                                            </div>
-                                            <ChevronRight className="h-5 w-5 text-muted-foreground"/>
-                                        </div>
-                                    </Link>
-                                </li>
-                                ))}
-                            </ul>
-                        ) : (
-                             <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                                <p className="text-muted-foreground">No content has been added to this bucket yet.</p>
-                            </div>
-                        )}
-                    </TabsContent>
-                    <TabsContent value="assignments" className="mt-4">
-                       {totalAssignments > 0 ? (
-                             <ul className="space-y-3">
-                                {bucket.assignments.map(item => (
-                                <li key={`assignment-${item.id}`}>
-                                    <Link href="#">
-                                        <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-2 bg-primary/10 rounded-lg">
-                                                    <FileText className="h-5 w-5 text-primary" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold">{item.content_title}</p>
-                                                    <Badge variant="secondary" className="capitalize text-xs">{item.content_type}</Badge>
-                                                </div>
-                                            </div>
-                                            <ChevronRight className="h-5 w-5 text-muted-foreground"/>
-                                        </div>
-                                    </Link>
-                                </li>
-                                ))}
-                            </ul>
-                        ) : (
-                             <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                                <p className="text-muted-foreground">No assignments are linked to this bucket yet.</p>
-                            </div>
-                        )}
-                    </TabsContent>
-                </Tabs>
+                        <div>
+                            <h4 className="font-bold text-lg mb-4">Assignments</h4>
+                            {assignmentsList}
+                        </div>
+                    </div>
+                )}
 
             </AccordionContent>
         </AccordionItem>
@@ -260,7 +295,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         {buckets.length > 0 ? (
             <Accordion type="single" collapsible className="w-full">
                 {buckets.map((bucket: any) => (
-                    <BucketAccordion key={bucket.id} bucket={bucket} />
+                    <BucketAccordion key={bucket.id} bucket={bucket} isAdmin={isAdmin} />
                 ))}
             </Accordion>
         ) : (
@@ -279,5 +314,3 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
-
-    
