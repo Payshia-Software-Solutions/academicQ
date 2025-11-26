@@ -8,15 +8,23 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, FileText, Image as ImageIcon, Video, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Image as ImageIcon, Video, Download, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2 } from 'lucide-react';
 
 interface Assignment {
     id: string;
     content_title: string;
     file_url: string;
+    course_bucket_id: string;
 }
 
 interface ContentDetails {
@@ -27,6 +35,19 @@ interface ContentDetails {
     assignments: Assignment[];
 }
 
+interface CurrentUser {
+  user_status: 'admin' | 'student';
+  student_number?: string;
+  id?: number;
+  [key: string]: any;
+}
+
+const submissionSchema = z.object({
+  assignment_file: z.any().refine((files) => files?.length == 1, "Assignment file is required."),
+});
+
+type SubmissionFormValues = z.infer<typeof submissionSchema>;
+
 export default function ContentDetailsPage() {
     const params = useParams();
     const router = useRouter();
@@ -35,6 +56,20 @@ export default function ContentDetailsPage() {
 
     const [content, setContent] = useState<ContentDetails | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useState<CurrentUser | null>(null);
+    const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+    }, []);
+
+    const form = useForm<SubmissionFormValues>({
+        resolver: zodResolver(submissionSchema),
+    });
 
     useEffect(() => {
         if (!contentId) return;
@@ -68,6 +103,47 @@ export default function ContentDetailsPage() {
         fetchContentDetails();
 
     }, [contentId, toast]);
+
+    const handleSubmissionSubmit = async (data: SubmissionFormValues) => {
+        if (!selectedAssignment || !user || !user.student_number || !user.id) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Cannot submit assignment. User or assignment details missing.' });
+            return;
+        }
+        setIsSubmitting(true);
+        const formData = new FormData();
+        const submissionData = {
+            student_number: user.student_number,
+            course_bucket_id: parseInt(selectedAssignment.course_bucket_id),
+            assigment_id: parseInt(selectedAssignment.id),
+            grade: null,
+            created_by: user.id,
+            is_active: 1
+        };
+
+        formData.append('data', JSON.stringify(submissionData));
+        formData.append('assignment_file', data.assignment_file[0]);
+
+        try {
+            const response = await api.post('/assignment-submissions', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            if (response.status === 201 || response.status === 200) {
+                toast({ title: 'Assignment Submitted', description: 'Your assignment has been successfully submitted.' });
+                setSelectedAssignment(null);
+                form.reset();
+            } else {
+                toast({ variant: 'destructive', title: 'Submission Failed', description: response.data.message || 'An unknown error occurred.' });
+            }
+        } catch (error: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Submission Error',
+                description: error.response?.data?.message || 'Could not connect to the server.'
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const renderContent = () => {
         if (!content) return null;
@@ -127,7 +203,6 @@ export default function ContentDetailsPage() {
         }
     };
 
-
     if (isLoading) {
         return (
             <div className="space-y-6">
@@ -148,6 +223,8 @@ export default function ContentDetailsPage() {
             </div>
         );
     }
+    
+    const isAdmin = user?.user_status === 'admin';
 
     return (
         <div className="space-y-6">
@@ -188,12 +265,19 @@ export default function ContentDetailsPage() {
                                             </div>
                                             <p className="font-semibold">{assignment.content_title}</p>
                                         </div>
-                                        <Button asChild variant="outline" size="sm">
-                                            <a href={assignment.file_url} target="_blank" rel="noopener noreferrer" download>
-                                                <Download className="mr-2 h-4 w-4" />
-                                                Download
-                                            </a>
-                                        </Button>
+                                        {isAdmin ? (
+                                            <Button asChild variant="outline" size="sm">
+                                                <a href={assignment.file_url} target="_blank" rel="noopener noreferrer">
+                                                    <Download className="mr-2 h-4 w-4" />
+                                                    Download
+                                                </a>
+                                            </Button>
+                                        ) : (
+                                            <Button variant="default" size="sm" onClick={() => setSelectedAssignment(assignment)}>
+                                                <Upload className="mr-2 h-4 w-4" />
+                                                Submit Assignment
+                                            </Button>
+                                        )}
                                     </div>
                                 </li>
                             ))}
@@ -205,6 +289,55 @@ export default function ContentDetailsPage() {
                     )}
                 </CardContent>
             </Card>
+            
+            <Dialog open={!!selectedAssignment} onOpenChange={(open) => !open && setSelectedAssignment(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Submit: {selectedAssignment?.content_title}</DialogTitle>
+                        <DialogDescription>
+                            Upload your file to complete the submission.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleSubmissionSubmit)} className="space-y-4">
+                             <FormField
+                                control={form.control}
+                                name="assignment_file"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Assignment File</FormLabel>
+                                    <FormControl>
+                                        <Input 
+                                            type="file" 
+                                            onChange={(e) => field.onChange(e.target.files)}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="button" variant="secondary">
+                                    Cancel
+                                    </Button>
+                                </DialogClose>
+                                <Button type="submit" disabled={isSubmitting}>
+                                     {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Submitting...
+                                        </>
+                                        ) : (
+                                        'Submit'
+                                     )}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                </DialogContent>
+            </Dialog>
+
         </div>
     )
 

@@ -151,20 +151,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             )}
-            {!isAdmin && (
-                <SidebarMenuItem>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isActive('/assignments/submit')}
-                        tooltip="Submit Assignment"
-                    >
-                        <Link href="/assignments/submit">
-                            <Upload />
-                            <span className="group-data-[state=collapsed]:hidden">Submit Assignment</span>
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            )}
              <SidebarMenuItem>
                 {isAdmin ? (
                   <DropdownMenu>
