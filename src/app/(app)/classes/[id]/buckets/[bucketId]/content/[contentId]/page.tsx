@@ -23,6 +23,7 @@ import { Loader2 } from 'lucide-react';
 interface Assignment {
     id: string;
     content_title: string;
+    content_type: string;
     file_url: string;
     course_bucket_id: string;
 }
@@ -263,7 +264,10 @@ export default function ContentDetailsPage() {
                                             <div className="p-2 bg-accent/10 rounded-lg">
                                                 <FileText className="h-5 w-5 text-accent" />
                                             </div>
-                                            <p className="font-semibold">{assignment.content_title}</p>
+                                            <div>
+                                              <p className="font-semibold">{assignment.content_title}</p>
+                                              <Badge variant="outline" className="capitalize mt-1">{assignment.content_type}</Badge>
+                                            </div>
                                         </div>
                                         {isAdmin ? (
                                             <Button asChild variant="outline" size="sm">
