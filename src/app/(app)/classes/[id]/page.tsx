@@ -112,38 +112,30 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
   }
 
   const BucketCard = ({ bucket }: { bucket: Bucket }) => {
-    const cardContent = (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle>{bucket.name}</CardTitle>
-          <CardDescription>{bucket.description}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-            <span className="font-semibold">${parseFloat(bucket.payment_amount).toFixed(2)}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Tag className="h-4 w-4 text-muted-foreground" />
-            <span className="capitalize">{bucket.payment_type || 'N/A'}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Info className="h-4 w-4 text-muted-foreground" />
-            <span>Status: {bucket.is_active === "1" ? "Active" : "Inactive"}</span>
-          </div>
-        </CardContent>
-      </Card>
+    return (
+      <Link href={`/classes/${course.id}/buckets/${bucket.id}`} className="block hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+         <Card className="h-full">
+            <CardHeader>
+            <CardTitle>{bucket.name}</CardTitle>
+            <CardDescription>{bucket.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+            <div className="flex items-center gap-2 text-sm">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold">${parseFloat(bucket.payment_amount).toFixed(2)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <span className="capitalize">{bucket.payment_type || 'N/A'}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+                <Info className="h-4 w-4 text-muted-foreground" />
+                <span>Status: {bucket.is_active === "1" ? "Active" : "Inactive"}</span>
+            </div>
+            </CardContent>
+        </Card>
+      </Link>
     );
-
-    if (isAdmin) {
-      return (
-        <Link href={`/classes/${course.id}/buckets/${bucket.id}/add-content`} className="block hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-          {cardContent}
-        </Link>
-      );
-    }
-    
-    return <div className="cursor-not-allowed">{cardContent}</div>;
   };
 
   return (
