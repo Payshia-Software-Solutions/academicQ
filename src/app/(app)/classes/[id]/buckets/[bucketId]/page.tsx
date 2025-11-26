@@ -121,7 +121,7 @@ function BucketContentPageContent() {
         </div>
       </header>
       
-      <BucketContentList bucketId={bucketId} />
+      <BucketContentList courseId={courseId} bucketId={bucketId} />
 
     </div>
   );

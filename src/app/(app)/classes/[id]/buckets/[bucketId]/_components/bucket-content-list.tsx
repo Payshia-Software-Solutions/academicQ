@@ -24,31 +24,32 @@ interface BucketContent {
 }
 
 interface BucketContentListProps {
+    courseId: string;
     bucketId: string;
 }
 
 const getIconForType = (type: string) => {
-    switch (type.toUpperCase()) {
-        case 'VIDEO': return <FileVideo className="h-5 w-5 text-accent" />;
-        case 'IMAGE': return <Image className="h-5 w-5 text-accent" />;
-        case 'LINK': return <LinkIcon className="h-5 w-5 text-accent" />;
-        case 'PDF': return <FileText className="h-5 w-5 text-accent" />;
+    switch (type.toLowerCase()) {
+        case 'video': return <FileVideo className="h-5 w-5 text-accent" />;
+        case 'image': return <Image className="h-5 w-5 text-accent" />;
+        case 'link': return <LinkIcon className="h-5 w-5 text-accent" />;
+        case 'pdf': return <FileText className="h-5 w-5 text-accent" />;
         default: return <File className="h-5 w-5 text-accent" />;
     }
 };
 
-export function BucketContentList({ bucketId }: BucketContentListProps) {
+export function BucketContentList({ courseId, bucketId }: BucketContentListProps) {
     const [content, setContent] = useState<BucketContent[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
     useEffect(() => {
-        if (!bucketId) return;
+        if (!bucketId || !courseId) return;
 
         async function fetchContent() {
             setIsLoading(true);
             try {
-                const response = await api.get(`/course-bucket-contents/bucket/${bucketId}`);
+                const response = await api.get(`/course-bucket-contents?course_id=${courseId}&course_bucket_id=${bucketId}`);
                 if (response.data.status === 'success') {
                     setContent(response.data.data || []);
                 } else {
@@ -66,7 +67,7 @@ export function BucketContentList({ bucketId }: BucketContentListProps) {
             }
         }
         fetchContent();
-    }, [bucketId, toast]);
+    }, [courseId, bucketId, toast]);
 
     if (isLoading) {
         return (
