@@ -10,9 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Users, Link as LinkIcon, Download, Eye } from 'lucide-react';
+import { BookOpen, Inbox, Users, Download, ChevronDown, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface Submission {
     id: string;
@@ -23,6 +24,7 @@ interface Submission {
     grade: string | null;
     created_at: string;
     course_id: string;
+    sub_status: 'submitted' | 'graded' | 'rejected' | null;
 }
 
 interface Course {
@@ -44,6 +46,9 @@ interface Assignment {
     content_title: string;
 }
 
+const statusOptions: Submission['sub_status'][] = ['submitted', 'graded', 'rejected'];
+
+
 export function SubmissionsList() {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -58,6 +63,7 @@ export function SubmissionsList() {
     const [selectedCourse, setSelectedCourse] = useState('all-courses');
     const [selectedBucket, setSelectedBucket] = useState('all-buckets');
     const [selectedStudent, setSelectedStudent] = useState('all-students');
+    const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchInitialData() {
@@ -120,6 +126,36 @@ export function SubmissionsList() {
         }
         fetchSubmissions();
     }, [toast, selectedCourse, selectedBucket, selectedStudent]);
+
+    const handleStatusChange = async (submissionId: string, newStatus: Submission['sub_status']) => {
+        if (!newStatus) return;
+        setUpdatingStatus(submissionId);
+
+        // Optimistic UI update
+        const originalSubmissions = [...submissions];
+        setSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, sub_status: newStatus } : s));
+
+        try {
+            const response = await api.put(`/assignment-submissions/update/status/?id=${submissionId}&status=${newStatus}`);
+            if (response.data.status !== 'success') {
+                throw new Error(response.data.message || 'Failed to update status.');
+            }
+            toast({
+                title: 'Status Updated',
+                description: `Submission #${submissionId} status set to ${newStatus}.`,
+            });
+        } catch (error: any) {
+            // Revert on error
+            setSubmissions(originalSubmissions);
+            toast({
+                variant: 'destructive',
+                title: 'Update Failed',
+                description: error.message || 'Could not update submission status.',
+            });
+        } finally {
+            setUpdatingStatus(null);
+        }
+    };
     
     const getFullUrl = (filePath: string) => {
        if (!filePath) return '#';
@@ -139,6 +175,23 @@ export function SubmissionsList() {
     const getAssignmentTitle = (assignmentId: string) => {
         return assignments.find(a => a.id.toString() === assignmentId.toString())?.content_title || `Assignment #${assignmentId}`;
     }
+
+    const StatusBadge = ({ status, isUpdating }: { status: Submission['sub_status'], isUpdating: boolean }) => {
+        const statusMap = {
+            submitted: { variant: 'outline', text: 'Submitted' },
+            graded: { variant: 'secondary', text: 'Graded' },
+            rejected: { variant: 'destructive', text: 'Rejected' },
+        };
+        const currentStatus = status && statusMap[status] ? statusMap[status] : { variant: 'outline', text: 'N/A' };
+        
+        if (isUpdating) {
+            return <Button variant="ghost" size="sm" disabled><Loader2 className="h-4 w-4 animate-spin" /></Button>
+        }
+
+        return (
+            <Badge variant={currentStatus.variant as any} className="capitalize">{currentStatus.text}</Badge>
+        )
+    };
 
     return (
         <Card>
@@ -195,7 +248,7 @@ export function SubmissionsList() {
                                 <TableHead>Student</TableHead>
                                 <TableHead>Assignment</TableHead>
                                 <TableHead>Submitted File</TableHead>
-                                <TableHead>Grade</TableHead>
+                                <TableHead>Status</TableHead>
                                 <TableHead>Date</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -230,7 +283,29 @@ export function SubmissionsList() {
                                             </Button>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant={sub.grade ? 'secondary' : 'outline'}>{sub.grade || 'Not Graded'}</Badge>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="sm" className="flex items-center gap-1" disabled={updatingStatus === sub.id}>
+                                                        {updatingStatus === sub.id 
+                                                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                            : <StatusBadge status={sub.sub_status} isUpdating={false} />
+                                                        }
+                                                        <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    {statusOptions.map(status => (
+                                                        <DropdownMenuItem 
+                                                            key={status} 
+                                                            onSelect={() => handleStatusChange(sub.id, status)}
+                                                            disabled={sub.sub_status === status}
+                                                            className="capitalize"
+                                                        >
+                                                          {status}
+                                                        </DropdownMenuItem>
+                                                    ))}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                         <TableCell className="text-xs">{format(new Date(sub.created_at), 'PP p')}</TableCell>
                                     </TableRow>
@@ -249,3 +324,5 @@ export function SubmissionsList() {
         </Card>
     );
 }
+
+    
