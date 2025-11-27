@@ -176,7 +176,7 @@ export function SubmissionsList() {
         return assignments.find(a => a.id.toString() === assignmentId.toString())?.content_title || `Assignment #${assignmentId}`;
     }
 
-    const StatusBadge = ({ status, isUpdating }: { status: Submission['sub_status'], isUpdating: boolean }) => {
+    const StatusBadge = ({ status }: { status: Submission['sub_status']}) => {
         const statusMap = {
             submitted: { variant: 'outline', text: 'Submitted' },
             graded: { variant: 'secondary', text: 'Graded' },
@@ -184,10 +184,6 @@ export function SubmissionsList() {
         };
         const currentStatus = status && statusMap[status] ? statusMap[status] : { variant: 'outline', text: 'N/A' };
         
-        if (isUpdating) {
-            return <Button variant="ghost" size="sm" disabled><Loader2 className="h-4 w-4 animate-spin" /></Button>
-        }
-
         return (
             <Badge variant={currentStatus.variant as any} className="capitalize">{currentStatus.text}</Badge>
         )
@@ -288,7 +284,7 @@ export function SubmissionsList() {
                                                     <Button variant="ghost" size="sm" className="flex items-center gap-1" disabled={updatingStatus === sub.id}>
                                                         {updatingStatus === sub.id 
                                                             ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                            : <StatusBadge status={sub.sub_status} isUpdating={false} />
+                                                            : <StatusBadge status={sub.sub_status} />
                                                         }
                                                         <ChevronDown className="h-3 w-3 text-muted-foreground" />
                                                     </Button>
@@ -324,5 +320,3 @@ export function SubmissionsList() {
         </Card>
     );
 }
-
-    
