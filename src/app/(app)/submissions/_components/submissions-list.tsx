@@ -10,10 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Users, Download, ChevronDown, Loader2 } from 'lucide-react';
+import { BookOpen, Inbox, Users, Download, ChevronDown, Loader2, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface Submission {
     id: string;
@@ -64,6 +67,9 @@ export function SubmissionsList() {
     const [selectedBucket, setSelectedBucket] = useState('all-buckets');
     const [selectedStudent, setSelectedStudent] = useState('all-students');
     const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+    const [currentGrade, setCurrentGrade] = useState('');
+    const [updatingGrade, setUpdatingGrade] = useState<string | null>(null);
+
 
     useEffect(() => {
         async function fetchInitialData() {
@@ -131,7 +137,6 @@ export function SubmissionsList() {
         if (!newStatus) return;
         setUpdatingStatus(submissionId);
 
-        // Optimistic UI update
         const originalSubmissions = [...submissions];
         setSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, sub_status: newStatus } : s));
 
@@ -145,7 +150,6 @@ export function SubmissionsList() {
                 description: `Submission #${submissionId} status set to ${newStatus}.`,
             });
         } catch (error: any) {
-            // Revert on error
             setSubmissions(originalSubmissions);
             toast({
                 variant: 'destructive',
@@ -157,9 +161,44 @@ export function SubmissionsList() {
         }
     };
     
+    const handleGradeUpdate = async (submissionId: string) => {
+        if (!currentGrade) {
+            toast({ variant: 'destructive', title: 'Grade cannot be empty.' });
+            return;
+        }
+        setUpdatingGrade(submissionId);
+
+        const originalSubmissions = [...submissions];
+        setSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, grade: currentGrade } : s));
+        
+        try {
+            const response = await api.put(`/assignment-submissions/stu/update/grade/?id=${submissionId}&grade=${currentGrade}`);
+            if (response.data.status !== 'success') {
+                 throw new Error(response.data.message || 'Failed to update grade.');
+            }
+            toast({
+                title: 'Grade Updated',
+                description: `Submission #${submissionId} grade set to ${currentGrade}.`,
+            });
+            // Close popover by finding a better method if available
+            document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+        } catch (error: any) {
+            setSubmissions(originalSubmissions);
+            toast({
+                variant: 'destructive',
+                title: 'Grade Update Failed',
+                description: error.message,
+            });
+        } finally {
+            setUpdatingGrade(null);
+            setCurrentGrade('');
+        }
+    };
+
+
     const getFullUrl = (filePath: string) => {
        if (!filePath) return '#';
-        // The file path from the API is already a full URL, so no need to prepend the base URL
         return filePath;
     }
 
@@ -245,6 +284,7 @@ export function SubmissionsList() {
                                 <TableHead>Assignment</TableHead>
                                 <TableHead>Submitted File</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead>Grade</TableHead>
                                 <TableHead>Date</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -252,7 +292,7 @@ export function SubmissionsList() {
                             {isLoading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <TableRow key={i}>
-                                        <TableCell colSpan={5}>
+                                        <TableCell colSpan={6}>
                                             <Skeleton className="h-8 w-full" />
                                         </TableCell>
                                     </TableRow>
@@ -303,12 +343,54 @@ export function SubmissionsList() {
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
+                                        <TableCell>
+                                            <Popover onOpenChange={(open) => !open && setCurrentGrade('')}>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="ghost" size="sm" onClick={() => setCurrentGrade(sub.grade || '')}>
+                                                        {sub.grade ? (
+                                                            <>
+                                                                <span className="font-semibold">{sub.grade}</span>
+                                                                <Edit className="ml-2 h-3 w-3" />
+                                                            </>
+                                                        ) : 'Add Grade'}
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-48">
+                                                    <div className="grid gap-4">
+                                                        <div className="space-y-2">
+                                                            <h4 className="font-medium leading-none">Set Grade</h4>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Enter a grade for this submission.
+                                                            </p>
+                                                        </div>
+                                                        <div className="grid gap-2">
+                                                            <Label htmlFor={`grade-${sub.id}`}>Grade</Label>
+                                                            <Input
+                                                                id={`grade-${sub.id}`}
+                                                                value={currentGrade}
+                                                                onChange={(e) => setCurrentGrade(e.target.value)}
+                                                                className="h-8"
+                                                            />
+                                                        </div>
+                                                        <Button 
+                                                            size="sm" 
+                                                            onClick={() => handleGradeUpdate(sub.id)}
+                                                            disabled={updatingGrade === sub.id}
+                                                        >
+                                                             {updatingGrade === sub.id ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                             ) : 'Save'}
+                                                        </Button>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </TableCell>
                                         <TableCell className="text-xs">{format(new Date(sub.created_at), 'PP p')}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
+                                    <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
                                     No submissions found for the selected filters.
                                     </TableCell>
                                 </TableRow>
@@ -320,5 +402,3 @@ export function SubmissionsList() {
         </Card>
     );
 }
-
-    
