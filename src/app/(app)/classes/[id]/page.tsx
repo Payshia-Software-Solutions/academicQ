@@ -28,6 +28,7 @@ interface Assignment {
     id: string;
     content_title: string;
     content_type: string;
+    submition_count?: string;
 }
 
 interface Bucket {
@@ -52,7 +53,7 @@ async function getCourseDetails(id: string): Promise<Course | null> {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/courses`);
         if (!response.ok) return null;
         const data = await response.json();
-        return data.records.find((c: any) => c.id.toString() === id.toString());
+        return data.data.find((c: any) => c.id.toString() === id.toString());
     } catch (error) {
         console.error("Failed to fetch course details:", error);
         return null;
@@ -197,7 +198,12 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                                         <Badge variant="secondary" className="capitalize text-xs">{item.content_type}</Badge>
                                     </div>
                                 </div>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground"/>
+                                <div className="text-right">
+                                    <ChevronRight className="h-5 w-5 text-muted-foreground"/>
+                                     {item.submition_count && (
+                                        <p className="text-xs text-muted-foreground mt-1">{item.submition_count} Submissions</p>
+                                    )}
+                                </div>
                             </div>
                         </Link>
                     </li>
