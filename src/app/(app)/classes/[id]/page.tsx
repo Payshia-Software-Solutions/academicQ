@@ -47,6 +47,7 @@ interface Bucket {
 interface CurrentUser {
   user_status: 'admin' | 'student';
   id?: number;
+  student_number?: string;
   [key: string]: any;
 }
 
@@ -101,7 +102,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     }, [params.id]);
 
     const handleEnroll = async () => {
-        if (!user || !course || !user.id) {
+        if (!user || !course || !user.student_number) {
             toast({
                 variant: 'destructive',
                 title: 'Error',
@@ -114,7 +115,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         setIsEnrolling(true);
         try {
             const enrollmentData = {
-                student_id: user.id,
+                student_id: user.student_number,
                 course_id: parseInt(course.id),
                 enrollment_date: new Date().toISOString().split('T')[0],
                 status: 'pending'
@@ -373,3 +374,5 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
+
+    
