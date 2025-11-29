@@ -369,12 +369,13 @@ SidebarMenu.displayName = "SidebarMenu"
 
 const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
-  React.ComponentProps<"li">
->(({ className, ...props }, ref) => (
-  <li
+  React.ComponentProps<"li"> & React.ComponentProps<typeof AccordionPrimitive.Item>
+>(({ className, value, ...props }, ref) => (
+  <AccordionPrimitive.Item
+    value={value || ""}
     ref={ref}
     data-sidebar="menu-item"
-    className={cn("group/menu-item relative", className)}
+    className={cn("group/menu-item relative", value && "border-none", className)}
     {...props}
   />
 ))

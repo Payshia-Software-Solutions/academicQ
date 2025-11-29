@@ -154,29 +154,31 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
              <SidebarMenuItem>
                 {isAdmin ? (
                   <SidebarSubMenu>
-                    <SidebarSubMenuButton
-                        isActive={isActive('/payments')}
-                        tooltip="Payments"
-                        className="justify-between"
-                      >
-                        <div className="flex items-center gap-3">
-                          <CreditCard />
-                          <span className="group-data-[state=collapsed]:hidden">Payments</span>
-                        </div>
-                        <ChevronDown className="h-4 w-4 group-data-[state=collapsed]:hidden" />
-                      </SidebarSubMenuButton>
-                    <SidebarSubMenuContent>
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={isActive('/payments/course-payment')}>
-                          <Link href="/payments/course-payment">Student Payment</Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                       <SidebarMenuItem>
-                        <SidebarMenuButton asChild isActive={isActive('/payments/request')}>
-                            <Link href="/payments/request">Payment Request</Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </SidebarSubMenuContent>
+                    <SidebarMenuItem value="payments">
+                      <SidebarSubMenuButton
+                          isActive={isActive('/payments')}
+                          tooltip="Payments"
+                          className="justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <CreditCard />
+                            <span className="group-data-[state=collapsed]:hidden">Payments</span>
+                          </div>
+                          <ChevronDown className="h-4 w-4 group-data-[state=collapsed]:hidden" />
+                        </SidebarSubMenuButton>
+                      <SidebarSubMenuContent>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild isActive={isActive('/payments/course-payment')}>
+                            <Link href="/payments/course-payment">Student Payment</Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                         <SidebarMenuItem>
+                          <SidebarMenuButton asChild isActive={isActive('/payments/request')}>
+                              <Link href="/payments/request">Payment Request</Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarSubMenuContent>
+                    </SidebarMenuItem>
                   </SidebarSubMenu>
                 ) : (
                    <SidebarMenuButton
