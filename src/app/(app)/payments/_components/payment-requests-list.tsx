@@ -56,7 +56,7 @@ export function PaymentRequestsList() {
     }, [toast]);
     
     const getFullImageUrl = (slipUrl: string) => {
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '');
+        const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
         return `${baseUrl}${slipUrl}`;
     }
 

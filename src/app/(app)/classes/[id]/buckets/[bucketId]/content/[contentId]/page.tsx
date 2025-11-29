@@ -86,16 +86,27 @@ export default function ContentDetailsPage() {
 
     }, [contentId, toast]);
 
+    const getFullFileUrl = (filePath: string) => {
+        if (!filePath) return '#';
+        const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
+        // Check if filePath is already a full URL
+        if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+            return filePath;
+        }
+        return `${baseUrl}${filePath}`;
+    };
     
     const renderContent = () => {
         if (!content) return null;
+        
+        const fileUrl = getFullFileUrl(content.content);
 
         switch (content.content_type.toLowerCase()) {
             case 'video':
                 return (
                     <div className="aspect-video w-full">
                         <iframe
-                            src={content.content}
+                            src={fileUrl}
                             title={content.content_title}
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -108,7 +119,7 @@ export default function ContentDetailsPage() {
                 return (
                     <div className="relative w-full h-96">
                         <Image
-                            src={content.content}
+                            src={fileUrl}
                             alt={content.content_title}
                             fill
                             style={{ objectFit: 'contain' }}
@@ -119,8 +130,8 @@ export default function ContentDetailsPage() {
             case 'pdf':
                 return (
                      <div className="h-[70vh]">
-                         <iframe src={content.content} className="w-full h-full border rounded-lg" title={content.content_title}>
-                             <p>Your browser does not support PDFs. <a href={content.content}>Download the PDF</a>.</p>
+                         <iframe src={fileUrl} className="w-full h-full border rounded-lg" title={content.content_title}>
+                             <p>Your browser does not support PDFs. <a href={fileUrl}>Download the PDF</a>.</p>
                          </iframe>
                     </div>
                 );

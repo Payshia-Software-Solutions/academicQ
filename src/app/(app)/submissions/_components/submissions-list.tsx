@@ -199,7 +199,11 @@ export function SubmissionsList() {
 
     const getFullUrl = (filePath: string) => {
        if (!filePath) return '#';
-        return filePath;
+        const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
+        if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+            return filePath;
+        }
+        return `${baseUrl}${filePath}`;
     }
 
     const getStudentName = (studentNumber: string) => {

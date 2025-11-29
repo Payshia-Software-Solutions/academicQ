@@ -43,7 +43,7 @@ async function getClasses(): Promise<Class[]> {
             teacher: 'N/A', 
             schedule: 'N/A', 
             studentIds: [], 
-            imageUrl: record.img_url || 'https://placehold.co/600x400.png'
+            imageUrl: record.img_url ? `${process.env.NEXT_PUBLIC_FILE_BASE_URL}${record.img_url}` : 'https://placehold.co/600x400.png'
         }));
     } catch (error) {
         console.error("Error fetching classes:", error);

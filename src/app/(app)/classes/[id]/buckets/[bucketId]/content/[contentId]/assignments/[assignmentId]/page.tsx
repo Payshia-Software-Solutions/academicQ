@@ -96,6 +96,17 @@ export default function AssignmentDetailsPage() {
         fetchAssignmentDetails();
 
     }, [assignmentId, toast]);
+    
+    const getFullFileUrl = (filePath: string) => {
+        if (!filePath) return '#';
+        const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
+        // Check if filePath is already a full URL
+        if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+            return filePath;
+        }
+        return `${baseUrl}${filePath}`;
+    };
+
 
     const handleSubmissionSubmit = async (data: SubmissionFormValues) => {
         if (!assignment || !user || !user.student_number || !user.id) {
@@ -140,13 +151,14 @@ export default function AssignmentDetailsPage() {
     
     const renderContent = () => {
         if (!assignment) return null;
+        const fileUrl = getFullFileUrl(assignment.file_url || assignment.content);
 
         switch (assignment.content_type.toLowerCase()) {
             case 'video':
                 return (
                      <div className="aspect-video w-full">
                         <iframe
-                            src={assignment.file_url || assignment.content}
+                            src={fileUrl}
                             title={assignment.content_title}
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -159,7 +171,7 @@ export default function AssignmentDetailsPage() {
                 return (
                     <div className="relative w-full h-96">
                         <Image
-                            src={assignment.file_url || assignment.content}
+                            src={fileUrl}
                             alt={assignment.content_title}
                             fill
                             style={{ objectFit: 'contain' }}
@@ -170,8 +182,8 @@ export default function AssignmentDetailsPage() {
             case 'pdf':
                 return (
                      <div className="h-[70vh]">
-                         <iframe src={assignment.file_url || assignment.content} className="w-full h-full border rounded-lg" title={assignment.content_title}>
-                             <p>Your browser does not support PDFs. <a href={assignment.file_url || assignment.content}>Download the PDF</a>.</p>
+                         <iframe src={fileUrl} className="w-full h-full border rounded-lg" title={assignment.content_title}>
+                             <p>Your browser does not support PDFs. <a href={fileUrl}>Download the PDF</a>.</p>
                          </iframe>
                     </div>
                 );
@@ -249,7 +261,7 @@ export default function AssignmentDetailsPage() {
                         <div className="flex items-center gap-4 mt-4">
                             {assignment.file_url && (
                                 <Button asChild>
-                                    <a href={assignment.file_url} target="_blank" rel="noopener noreferrer">
+                                    <a href={getFullFileUrl(assignment.file_url)} target="_blank" rel="noopener noreferrer">
                                         <Download className="mr-2 h-4 w-4" />
                                         Download Material
                                     </a>
