@@ -43,7 +43,7 @@ async function getClasses(): Promise<Class[]> {
             teacher: 'N/A', 
             schedule: 'N/A', 
             studentIds: [], 
-            imageUrl: record.img_url ? `${process.env.NEXT_PUBLIC_FILE_BASE_URL}${record.img_url}` : 'https://placehold.co/600x400.png'
+            imageUrl: record.img_url || 'https://placehold.co/600x400.png'
         }));
     } catch (error) {
         console.error("Error fetching classes:", error);
@@ -52,12 +52,18 @@ async function getClasses(): Promise<Class[]> {
 }
 
 function ClassCard({ cls }: { cls: Class }) {
+    const getFullFileUrl = (filePath: string) => {
+        if (!filePath || filePath.startsWith('http')) return filePath;
+        const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
+        return `${baseUrl}${filePath}`;
+    };
+
     return (
         <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
             <CardHeader className="p-0">
             <div className="relative h-48 w-full">
                 <Image
-                src={cls.imageUrl}
+                src={getFullFileUrl(cls.imageUrl)}
                 alt={cls.name}
                 fill
                 style={{objectFit: "cover"}}
