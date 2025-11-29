@@ -367,19 +367,31 @@ const SidebarMenu = React.forwardRef<
 })
 SidebarMenu.displayName = "SidebarMenu"
 
+const SidebarMenuItemContext = React.createContext<{ inSubMenu?: boolean }>({})
+
 const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
-  React.ComponentProps<"li"> & React.ComponentProps<typeof AccordionPrimitive.Item>
->(({ className, value, ...props }, ref) => (
-  <AccordionPrimitive.Item
-    value={value || ""}
-    ref={ref}
-    data-sidebar="menu-item"
-    className={cn("group/menu-item relative", value && "border-none", className)}
-    {...props}
-  />
-))
+  React.HTMLAttributes<HTMLLIElement> & { value?: string }
+>(({ className, value, ...props }, ref) => {
+  const { inSubMenu } = React.useContext(SidebarMenuItemContext)
+  const Comp = inSubMenu ? AccordionPrimitive.Item : "li"
+
+  return (
+    <Comp
+      // @ts-expect-error - value is a valid prop for AccordionItem
+      value={value}
+      ref={ref}
+      className={cn(
+        "group/menu-item relative",
+        inSubMenu && "border-none",
+        className
+      )}
+      {...props}
+    />
+  )
+})
 SidebarMenuItem.displayName = "SidebarMenuItem"
+
 
 const sidebarMenuButtonVariants = cva(
   "peer/menu-button flex w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium outline-none ring-primary-foreground transition-all focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
@@ -477,14 +489,18 @@ SidebarMenuButton.displayName = "SidebarMenuButton"
 const SidebarSubMenu = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Root>,
   React.ComponentProps<typeof AccordionPrimitive.Root>
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
   return (
-    <AccordionPrimitive.Root
-      ref={ref}
-      type="multiple"
-      className={cn("w-full", className)}
-      {...props}
-    />
+    <SidebarMenuItemContext.Provider value={{ inSubMenu: true }}>
+      <AccordionPrimitive.Root
+        ref={ref}
+        type="multiple"
+        className={cn("w-full", className)}
+        {...props}
+      >
+        {children}
+      </AccordionPrimitive.Root>
+    </SidebarMenuItemContext.Provider>
   )
 })
 SidebarSubMenu.displayName = "SidebarSubMenu"
