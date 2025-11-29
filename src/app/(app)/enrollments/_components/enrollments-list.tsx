@@ -63,7 +63,7 @@ export function EnrollmentsList() {
 
         try {
             const response = await api.put(`/enrollments/${enrollmentId}`, { status: newStatus });
-             if (response.data.status !== 'success') {
+             if (response.data.message !== 'Enrollment updated successfully.') {
                 throw new Error(response.data.message || 'Failed to update status.');
             }
             toast({
@@ -173,4 +173,3 @@ export function EnrollmentsList() {
         </Card>
     );
 }
-
