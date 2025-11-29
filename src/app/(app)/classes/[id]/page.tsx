@@ -360,7 +360,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         if (enrollmentStatus) {
             return (
                 <Badge 
-                    variant={enrollmentStatus === 'pending' ? 'outline' : 'secondary'} 
+                    variant={enrollmentStatus === 'pending' || enrollmentStatus === 'rejected' ? 'destructive' : 'secondary'} 
                     className="flex items-center gap-2 capitalize text-base"
                 >
                     <Clock className="h-4 w-4" />
@@ -375,6 +375,8 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
             </Button>
         );
     };
+
+    const canViewContent = isAdmin || enrollmentStatus === 'approved';
 
   return (
     <div className="space-y-6">
@@ -402,29 +404,33 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         </div>
       </header>
 
-      <section>
-        <h2 className="text-xl font-bold mb-4">Payment Buckets</h2>
-        {buckets.length > 0 ? (
-            <Accordion type="single" collapsible className="w-full">
-                {buckets.map((bucket: any) => (
-                    <BucketAccordion key={bucket.id} bucket={bucket} />
-                ))}
-            </Accordion>
-        ) : (
-            <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground">No payment buckets found for this course.</p>
-                {isAdmin && (
-                    <Button variant="outline" className="mt-4" asChild>
-                        <Link href={`/classes/${params.id}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
-                            Create the First Bucket
-                        </Link>
-                    </Button>
-                )}
-            </div>
-        )}
-      </section>
+      {canViewContent && (
+        <section>
+          <h2 className="text-xl font-bold mb-4">Payment Buckets</h2>
+          {buckets.length > 0 ? (
+              <Accordion type="single" collapsible className="w-full">
+                  {buckets.map((bucket: any) => (
+                      <BucketAccordion key={bucket.id} bucket={bucket} />
+                  ))}
+              </Accordion>
+          ) : (
+              <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                  <p className="text-muted-foreground">No payment buckets found for this course.</p>
+                  {isAdmin && (
+                      <Button variant="outline" className="mt-4" asChild>
+                          <Link href={`/classes/${params.id}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
+                              Create the First Bucket
+                          </Link>
+                      </Button>
+                  )}
+              </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
+
+    
 
     
