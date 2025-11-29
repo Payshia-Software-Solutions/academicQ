@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import api from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface Course {
   id: string;
@@ -50,10 +52,9 @@ interface CurrentUser {
 
 async function getCourseDetails(id: string): Promise<Course | null> {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/courses`);
-        if (!response.ok) return null;
-        const data = await response.json();
-        return data.data.find((c: any) => c.id.toString() === id.toString());
+        const response = await api.get(`/courses`);
+        if (response.data.status !== 'success') return null;
+        return response.data.data.find((c: any) => c.id.toString() === id.toString());
     } catch (error) {
         console.error("Failed to fetch course details:", error);
         return null;
@@ -62,10 +63,9 @@ async function getCourseDetails(id: string): Promise<Course | null> {
 
 async function getCourseBuckets(id: string): Promise<Bucket[]> {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/course_buckets/course/${id}`);
-        if (!response.ok) return [];
-        const data = await response.json();
-        return data.data || [];
+        const response = await api.get(`/course_buckets/course/${id}`);
+        if (response.data.status !== 'success') return [];
+        return response.data.data || [];
     } catch (error) {
         console.error("Failed to fetch course buckets:", error);
         return [];
@@ -77,6 +77,8 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     const [buckets, setBuckets] = useState<Bucket[]>([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<CurrentUser | null>(null);
+    const [isEnrolling, setIsEnrolling] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -96,6 +98,39 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         }
         loadData();
     }, [params.id]);
+
+    const handleEnroll = async () => {
+        if (!user || !course) return;
+
+        setIsEnrolling(true);
+        try {
+            // In a real app, you'd get the student ID from the logged-in user session
+            const enrollmentData = {
+                student_id: user.id, // Assuming user.id is the student's ID
+                course_id: course.id,
+                enrollment_date: new Date().toISOString().split('T')[0],
+                status: 'pending'
+            };
+
+            // Simulate API call for now
+            // const response = await api.post('/enrollments', enrollmentData);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            toast({
+                title: 'Enrollment Submitted',
+                description: `Your request to enroll in "${course.course_name}" has been sent.`,
+            });
+        } catch (error: any) {
+             toast({
+                variant: 'destructive',
+                title: 'Enrollment Failed',
+                description: error.response?.data?.message || 'Could not complete the enrollment process.',
+            });
+        } finally {
+            setIsEnrolling(false);
+        }
+    };
+
 
     const isAdmin = user?.user_status === 'admin';
 
@@ -128,7 +163,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     notFound();
   }
 
-  const BucketAccordion = ({ bucket, isAdmin }: { bucket: Bucket, isAdmin: boolean }) => {
+  const BucketAccordion = ({ bucket }: { bucket: Bucket }) => {
     const totalContent = bucket.contents?.length || 0;
     const totalAssignments = bucket.assignments?.length || 0;
 
@@ -285,12 +320,16 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{course.course_name}</h1>
                 <p className="text-muted-foreground mt-1">{course.description}</p>
             </div>
-            {isAdmin && (
+            {isAdmin ? (
                 <Button asChild>
                     <Link href={`/classes/${params.id}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
                         <Plus className="mr-2 h-4 w-4" />
                         Create Bucket
                     </Link>
+                </Button>
+            ) : (
+                 <Button onClick={handleEnroll} disabled={isEnrolling}>
+                    {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
                 </Button>
             )}
         </div>
@@ -301,7 +340,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         {buckets.length > 0 ? (
             <Accordion type="single" collapsible className="w-full">
                 {buckets.map((bucket: any) => (
-                    <BucketAccordion key={bucket.id} bucket={bucket} isAdmin={isAdmin} />
+                    <BucketAccordion key={bucket.id} bucket={bucket} />
                 ))}
             </Accordion>
         ) : (
@@ -320,3 +359,5 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
+
+    
