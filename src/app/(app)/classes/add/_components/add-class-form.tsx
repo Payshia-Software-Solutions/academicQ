@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, BookOpen, Hash, FileText, Star, Tag } from 'lucide-react';
+import { Loader2, ArrowLeft, BookOpen, Hash, FileText, Star, Tag, DollarSign, UploadCloud } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -24,11 +24,19 @@ import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 const addClassSchema = z.object({
   course_name: z.string().min(1, { message: 'Course name is required.' }),
   course_code: z.string().min(1, { message: 'Course code is required.' }),
   description: z.string().min(1, { message: 'Description is required.' }),
   credits: z.coerce.number().positive({ message: 'Credits must be a positive number.' }),
+  course_fee: z.coerce.number().positive({ message: 'Course fee must be a positive number.' }),
+  registration_fee: z.coerce.number().positive({ message: 'Registration fee must be a positive number.' }),
+  img_url: z
+    .any()
+    .refine((files) => files?.length == 1, "Course image is required.")
+    .refine((files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type), ".jpg, .jpeg, .png and .webp files are accepted."),
   payment_status: z.string().min(1, { message: 'Payment status is required.' }),
 });
 
@@ -45,11 +53,31 @@ export function AddClassForm() {
       payment_status: 'monthly',
     },
   });
+  
+  const imgUrlRef = form.register("img_url");
 
   const onSubmit = async (data: AddClassFormValues) => {
     setIsSubmitting(true);
+    
+    const formData = new FormData();
+    formData.append('course_name', data.course_name);
+    formData.append('course_code', data.course_code);
+    formData.append('description', data.description);
+    formData.append('credits', data.credits.toString());
+    formData.append('course_fee', data.course_fee.toString());
+    formData.append('registration_fee', data.registration_fee.toString());
+    formData.append('payment_status', data.payment_status);
+
+    if (data.img_url && data.img_url[0]) {
+      formData.append('img_url', data.img_url[0]);
+    }
+
     try {
-      const response = await api.post('/courses', data);
+      const response = await api.post('/courses', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       if (response.status === 201 || response.status === 200) {
         toast({
@@ -141,8 +169,40 @@ export function AddClassForm() {
                     </FormItem>
                   )}
                 />
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <FormField
+                      control={form.control}
+                      name="course_fee"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Course Fee</FormLabel>
+                           <div className="relative">
+                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                             <FormControl>
+                                <Input type="number" step="0.01" placeholder="e.g. 299.99" {...field} className="pl-8" />
+                             </FormControl>
+                           </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="registration_fee"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Registration Fee</FormLabel>
+                           <div className="relative">
+                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                             <FormControl>
+                                <Input type="number" step="0.01" placeholder="e.g. 25.00" {...field} className="pl-8" />
+                             </FormControl>
+                           </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
                       control={form.control}
                       name="credits"
                       render={({ field }) => (
@@ -158,31 +218,54 @@ export function AddClassForm() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="payment_status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Payment Status</FormLabel>
-                           <div className="relative">
-                             <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="pl-8">
-                                  <SelectValue placeholder="Select a payment frequency" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                                <SelectItem value="year">Yearly</SelectItem>
-                                <SelectItem value="once">Once</SelectItem>
-                              </SelectContent>
-                            </Select>
-                           </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="img_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Course Image</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <UploadCloud className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input 
+                                  type="file" 
+                                  className="pl-10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                                  accept="image/*"
+                                  {...imgUrlRef}
+                              />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="payment_status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Payment Frequency</FormLabel>
+                          <div className="relative">
+                            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="pl-8">
+                                <SelectValue placeholder="Select a payment frequency" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="year">Yearly</SelectItem>
+                              <SelectItem value="once">Once</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                  </div>
               </CardContent>
               <CardFooter className="flex justify-between">

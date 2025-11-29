@@ -1,3 +1,4 @@
+
 export type UserRole = 'Student' | 'Staff' | 'Admin';
 
 export interface Payment {
