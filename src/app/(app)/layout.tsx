@@ -44,12 +44,17 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser: CurrentUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      // Redirect student from dashboard to classes
+      if (parsedUser.user_status === 'student' && pathname === '/dashboard') {
+          router.replace('/classes');
+      }
     } else {
         // Redirect to login if no user data found
         router.push('/login');
     }
-  }, [router]);
+  }, [router, pathname]);
 
   const handleSignOut = () => {
     localStorage.removeItem('authToken');
@@ -62,12 +67,13 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   };
   
   const isAdmin = user?.user_status === 'admin';
+  const homePath = isAdmin ? '/dashboard' : '/classes';
 
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar>
         <SidebarHeader>
-          <Link href="/dashboard" className="block">
+          <Link href={homePath} className="block">
             <Logo className="text-foreground" />
           </Link>
         </SidebarHeader>
@@ -208,7 +214,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
               <div className="md:hidden">
                 <SidebarMenuButton asChild variant="ghost" size="icon" className="h-10 w-10">
-                    <Link href={isAdmin ? "/dashboard" : "/classes"}>
+                    <Link href={homePath}>
                         <Logo className="text-foreground h-6 w-auto" />
                     </Link>
                 </SidebarMenuButton>

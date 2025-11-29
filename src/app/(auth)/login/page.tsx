@@ -58,16 +58,23 @@ export default function LoginPage() {
       );
 
       if (response.data.status === 'success') {
+        const user = response.data.user;
         if (typeof window !== 'undefined') {
           localStorage.setItem('authToken', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
+          localStorage.setItem('user', JSON.stringify(user));
         }
 
         toast({
           title: 'Login Successful',
-          description: "Loading your institute's dashboard.",
+          description: "You are being redirected.",
         });
-        router.push('/dashboard');
+
+        if (user.user_status === 'student') {
+            router.push('/classes');
+        } else {
+            router.push('/dashboard');
+        }
+
       } else {
         toast({
           variant: 'destructive',
