@@ -169,12 +169,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                       <SidebarSubMenuContent>
                         <SidebarMenuItem>
                           <SidebarMenuButton asChild isActive={isActive('/payments/course-payment')}>
-                            <Link href="/payments/course-payment">Student Payment</Link>
+                            <Link href="/payments/course-payment">- Student Payment</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                          <SidebarMenuItem>
                           <SidebarMenuButton asChild isActive={isActive('/payments/request')}>
-                              <Link href="/payments/request">Payment Request</Link>
+                              <Link href="/payments/request">- Payment Request</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       </SidebarSubMenuContent>
