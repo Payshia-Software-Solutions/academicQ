@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus, Tag, DollarSign, Info, FileText, BookOpen } from "lucide-react";
+import { ChevronRight, Plus, Tag, DollarSign, Info, FileText, BookOpen, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -80,12 +80,16 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<CurrentUser | null>(null);
     const [isEnrolling, setIsEnrolling] = useState(false);
+    const [enrollmentStatus, setEnrollmentStatus] = useState<string | null>(null);
+    const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true);
     const { toast } = useToast();
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             setUser(JSON.parse(storedUser));
+        } else {
+             setIsCheckingEnrollment(false);
         }
 
         async function loadData() {
@@ -100,6 +104,31 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         }
         loadData();
     }, [params.id]);
+
+    useEffect(() => {
+        if (user?.user_status === 'student' && user.student_number && course?.id) {
+            const checkEnrollment = async () => {
+                setIsCheckingEnrollment(true);
+                try {
+                    const response = await api.get(`/enrollments/?student_id=${user.student_number}&course_id=${course.id}`);
+                    if (response.data && response.data.length > 0) {
+                        setEnrollmentStatus(response.data[0].status);
+                    } else {
+                        setEnrollmentStatus(null);
+                    }
+                } catch (error) {
+                    setEnrollmentStatus(null);
+                    console.error("Failed to check enrollment status:", error);
+                } finally {
+                    setIsCheckingEnrollment(false);
+                }
+            };
+            checkEnrollment();
+        } else {
+             setIsCheckingEnrollment(false);
+        }
+    }, [user, course]);
+
 
     const handleEnroll = async () => {
         if (!user || !course || !user.student_number) {
@@ -128,6 +157,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                     title: 'Enrollment Submitted',
                     description: `Your request to enroll in "${course.course_name}" has been sent.`,
                 });
+                setEnrollmentStatus('pending'); // Update status locally
             } else {
                  toast({
                     variant: 'destructive',
@@ -321,6 +351,30 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         </AccordionItem>
     );
   };
+  
+    const renderEnrollmentButton = () => {
+        if (isCheckingEnrollment) {
+            return <Skeleton className="h-10 w-36" />;
+        }
+
+        if (enrollmentStatus) {
+            return (
+                <Badge 
+                    variant={enrollmentStatus === 'pending' ? 'outline' : 'secondary'} 
+                    className="flex items-center gap-2 capitalize text-base"
+                >
+                    <Clock className="h-4 w-4" />
+                    Status: {enrollmentStatus}
+                </Badge>
+            );
+        }
+
+        return (
+            <Button onClick={handleEnroll} disabled={isEnrolling}>
+                {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
+            </Button>
+        );
+    };
 
   return (
     <div className="space-y-6">
@@ -343,9 +397,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                     </Link>
                 </Button>
             ) : (
-                 <Button onClick={handleEnroll} disabled={isEnrolling}>
-                    {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
-                </Button>
+                renderEnrollmentButton()
             )}
         </div>
       </header>
