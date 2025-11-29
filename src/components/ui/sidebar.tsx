@@ -2,6 +2,7 @@
 "use client"
 
 import * as React from "react"
+import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
@@ -256,7 +257,9 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "flex-1",
+        "flex-1 md:transition-[margin-left] md:duration-300 md:ease-in-out",
+        "group-data-[state=expanded]/sidebar-wrapper:md:ml-[var(--sidebar-width)]",
+        "group-data-[state=collapsed]/sidebar-wrapper:md:ml-[var(--sidebar-width-icon)]",
         className
       )}
       {...props}
@@ -466,6 +469,111 @@ const SidebarMenuButton = React.forwardRef<
 )
 SidebarMenuButton.displayName = "SidebarMenuButton"
 
+/* -------------------------------------------------------------------------- */
+/*                              SUBMENU                               */
+/* -------------------------------------------------------------------------- */
+
+const SidebarSubMenu = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Root>,
+  React.ComponentProps<typeof AccordionPrimitive.Root>
+>(({ className, ...props }, ref) => {
+  return (
+    <AccordionPrimitive.Root
+      ref={ref}
+      type="multiple"
+      className={cn("w-full", className)}
+      {...props}
+    />
+  )
+})
+SidebarSubMenu.displayName = "SidebarSubMenu"
+
+const SidebarSubMenuButton = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Trigger>,
+  React.ComponentProps<typeof AccordionPrimitive.Trigger> & {
+    asChild?: boolean,
+    isActive?: boolean,
+    tooltip?: string
+  }
+>(({
+  className,
+  children,
+  isActive = false,
+  tooltip,
+  ...props
+}, ref) => {
+  const { state, isMobile } = useSidebar()
+  const button = (
+    <AccordionPrimitive.Header className="w-full">
+      <AccordionPrimitive.Trigger asChild>
+        <button
+          ref={ref}
+          data-sidebar="menu-button"
+          data-active={isActive}
+          className={cn(sidebarMenuButtonVariants(),
+            isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+            state === 'collapsed' && "justify-center",
+            className)}
+          {...props}
+        >
+          {children}
+        </button>
+      </AccordionPrimitive.Trigger>
+    </AccordionPrimitive.Header>
+  )
+
+  if (state === 'expanded' && !isMobile) {
+    return button;
+  }
+  
+  if (!tooltip) {
+    return button
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent
+        side="right"
+        align="center"
+      >
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
+  )
+})
+SidebarSubMenuButton.displayName = "SidebarSubMenuButton"
+
+
+const SidebarSubMenuContent = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Content>,
+  React.ComponentProps<typeof AccordionPrimitive.Content> & {
+    asChild?: boolean
+  }
+>(({ className, children, ...props }, ref) => {
+  const { state } = useSidebar()
+  if (state === 'collapsed') {
+    return null
+  }
+
+  return (
+    <AccordionPrimitive.Content
+      ref={ref}
+      className={cn(
+        "overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
+        className
+      )}
+      {...props}
+    >
+      <ul className="py-1 pl-8 list-disc list-inside marker:text-sidebar-foreground/40">
+        {children}
+      </ul>
+    </AccordionPrimitive.Content>
+  )
+})
+SidebarSubMenuContent.displayName = "SidebarSubMenuContent"
+
+
 export {
   Sidebar,
   SidebarContent,
@@ -480,4 +588,7 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
+  SidebarSubMenu,
+  SidebarSubMenuButton,
+  SidebarSubMenuContent
 }

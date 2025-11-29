@@ -12,6 +12,9 @@ import {
   SidebarInset,
   SidebarFooter,
   SidebarTrigger,
+  SidebarSubMenu,
+  SidebarSubMenuContent,
+  SidebarSubMenuButton,
 } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
 import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck } from 'lucide-react';
@@ -150,9 +153,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             )}
              <SidebarMenuItem>
                 {isAdmin ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <SidebarMenuButton
+                  <SidebarSubMenu>
+                    <SidebarSubMenuButton
                         isActive={isActive('/payments')}
                         tooltip="Payments"
                         className="justify-between"
@@ -162,17 +164,20 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                           <span className="group-data-[state=collapsed]:hidden">Payments</span>
                         </div>
                         <ChevronDown className="h-4 w-4 group-data-[state=collapsed]:hidden" />
-                      </SidebarMenuButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56 ml-4">
-                      <DropdownMenuItem asChild>
+                      </SidebarSubMenuButton>
+                    <SidebarSubMenuContent>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={isActive('/payments/course-payment')}>
                           <Link href="/payments/course-payment">Student Payment</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                          <Link href="/payments/request">Payment Request</Link>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                       <SidebarMenuItem>
+                        <SidebarMenuButton asChild isActive={isActive('/payments/request')}>
+                            <Link href="/payments/request">Payment Request</Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </SidebarSubMenuContent>
+                  </SidebarSubMenu>
                 ) : (
                    <SidebarMenuButton
                       asChild
