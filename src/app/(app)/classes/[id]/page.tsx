@@ -46,6 +46,7 @@ interface Bucket {
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
+  id?: number;
   [key: string]: any;
 }
 
@@ -100,26 +101,39 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     }, [params.id]);
 
     const handleEnroll = async () => {
-        if (!user || !course) return;
+        if (!user || !course || !user.id) {
+            toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'User information is missing. Please log in again.'
+            });
+            return;
+        }
+
 
         setIsEnrolling(true);
         try {
-            // In a real app, you'd get the student ID from the logged-in user session
             const enrollmentData = {
-                student_id: user.id, // Assuming user.id is the student's ID
-                course_id: course.id,
+                student_id: user.id,
+                course_id: parseInt(course.id),
                 enrollment_date: new Date().toISOString().split('T')[0],
                 status: 'pending'
             };
 
-            // Simulate API call for now
-            // const response = await api.post('/enrollments', enrollmentData);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const response = await api.post('/enrollments', enrollmentData);
             
-            toast({
-                title: 'Enrollment Submitted',
-                description: `Your request to enroll in "${course.course_name}" has been sent.`,
-            });
+            if (response.status === 201 || response.status === 200) {
+                 toast({
+                    title: 'Enrollment Submitted',
+                    description: `Your request to enroll in "${course.course_name}" has been sent.`,
+                });
+            } else {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Enrollment Failed',
+                    description: response.data.message || 'Could not complete the enrollment process.',
+                });
+            }
         } catch (error: any) {
              toast({
                 variant: 'destructive',
@@ -359,5 +373,3 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
-
-    
