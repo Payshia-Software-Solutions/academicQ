@@ -18,12 +18,12 @@ interface CurrentUser {
 
 async function getClasses() {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/courses`);
-        if (!response.ok) {
+        const response = await api.get('/courses');
+        if (response.status !== 200) {
             console.error("Failed to fetch classes");
             return [];
         }
-        const data = await response.json();
+        const data = response.data;
         
         return data.data.map((record: any) => ({
             id: record.id,
@@ -81,8 +81,8 @@ export default function ClassesPage() {
       </header>
       
       {loading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
             <Card key={index} className="flex flex-col overflow-hidden">
                <CardHeader className="p-0">
                   <Skeleton className="h-48 w-full" />
@@ -99,7 +99,7 @@ export default function ClassesPage() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {classes.length > 0 ? classes.map((cls) => (
             <Card key={cls.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <CardHeader className="p-0">
