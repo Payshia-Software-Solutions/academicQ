@@ -25,7 +25,7 @@ async function getClasses() {
         }
         const data = await response.json();
         
-        return data.records.map((record: any) => ({
+        return data.data.map((record: any) => ({
             id: record.id,
             name: record.course_name,
             description: record.description,
