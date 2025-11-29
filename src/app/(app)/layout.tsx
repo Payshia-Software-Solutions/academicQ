@@ -14,7 +14,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { useToast } from '@/hooks/use-toast';
@@ -130,6 +130,20 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                         <Link href="/submissions">
                             <ListChecks />
                             <span className="group-data-[state=collapsed]:hidden">Submissions</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            )}
+            {isAdmin && (
+                 <SidebarMenuItem>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={isActive('/enrollments')}
+                        tooltip="Enrollments"
+                    >
+                        <Link href="/enrollments">
+                            <UserCheck />
+                            <span className="group-data-[state=collapsed]:hidden">Enrollments</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
