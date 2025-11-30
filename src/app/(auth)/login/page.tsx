@@ -53,7 +53,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       const response = await api.post(
-        '/login',
+        '/users/login',
         data
       );
 
