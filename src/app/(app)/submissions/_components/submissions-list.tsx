@@ -74,14 +74,23 @@ export function SubmissionsList() {
     useEffect(() => {
         async function fetchInitialData() {
             try {
-                const [coursesRes, studentsRes, assignmentsRes] = await Promise.all([
+                const [coursesRes, usersRes, assignmentsRes, approvedEnrollmentsRes] = await Promise.all([
                     api.get('/courses'),
                     api.get('/users'),
                     api.get('/assignments'),
+                    api.get('/enrollments/?enroll_status=approved')
                 ]);
+                
                 setCourses(coursesRes.data.data || []);
-                setStudents(studentsRes.data.records.filter((u: any) => u.user_status === 'student' && u.student_number) || []);
                 setAssignments(assignmentsRes.data.data || []);
+                
+                const allUsers = usersRes.data.records || [];
+                const approvedEnrollments = approvedEnrollmentsRes.data || [];
+                const approvedStudentIds = new Set(approvedEnrollments.map((e: any) => e.student_id));
+                
+                const approvedStudents = allUsers.filter((u: any) => u.user_status === 'student' && u.student_number && approvedStudentIds.has(u.id.toString()));
+                setStudents(approvedStudents);
+
             } catch (error) {
                 toast({
                 variant: 'destructive',
