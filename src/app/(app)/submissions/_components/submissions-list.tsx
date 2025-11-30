@@ -80,7 +80,7 @@ export function SubmissionsList() {
                     api.get('/assignments'),
                     api.get('/course_buckets'), // Fetch all buckets
                 ]);
-                setCourses(coursesRes.data.records || []);
+                setCourses(coursesRes.data.data || []);
                 setStudents(studentsRes.data.records.filter((u: any) => u.user_status === 'student' && u.student_number) || []);
                 setAssignments(assignmentsRes.data.data || []);
                 setAllBuckets(bucketsRes.data.data || []); // Store all buckets
