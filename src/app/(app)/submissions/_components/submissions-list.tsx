@@ -58,7 +58,7 @@ export function SubmissionsList() {
     const { toast } = useToast();
 
     const [courses, setCourses] = useState<Course[]>([]);
-    const [allBuckets, setAllBuckets] = useState<Bucket[]>([]);
+    const [courseBuckets, setCourseBuckets] = useState<Bucket[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
     const [assignments, setAssignments] = useState<Assignment[]>([]);
 
@@ -74,16 +74,14 @@ export function SubmissionsList() {
     useEffect(() => {
         async function fetchInitialData() {
             try {
-                const [coursesRes, studentsRes, assignmentsRes, bucketsRes] = await Promise.all([
+                const [coursesRes, studentsRes, assignmentsRes] = await Promise.all([
                     api.get('/courses'),
                     api.get('/users'),
                     api.get('/assignments'),
-                    api.get('/course_buckets'), // Fetch all buckets
                 ]);
                 setCourses(coursesRes.data.data || []);
                 setStudents(studentsRes.data.records.filter((u: any) => u.user_status === 'student' && u.student_number) || []);
                 setAssignments(assignmentsRes.data.data || []);
-                setAllBuckets(bucketsRes.data.data || []); // Store all buckets
             } catch (error) {
                 toast({
                 variant: 'destructive',
@@ -95,12 +93,37 @@ export function SubmissionsList() {
         fetchInitialData();
     }, [toast]);
     
-    const courseBuckets = useMemo(() => {
+
+    useEffect(() => {
         if (!selectedCourse || selectedCourse === 'all-courses') {
-            return [];
+            setCourseBuckets([]);
+            setSelectedBucket('all-buckets');
+            return;
         }
-        return allBuckets.filter(b => b.course_id === selectedCourse);
-    }, [selectedCourse, allBuckets]);
+
+        async function fetchCourseBuckets() {
+            try {
+                const response = await api.get(`/courses/full/details/?id=${selectedCourse}`);
+                if (response.data.status === 'success' && response.data.data.buckets) {
+                    setCourseBuckets(response.data.data.buckets);
+                } else {
+                    setCourseBuckets([]);
+                }
+            } catch(error) {
+                setCourseBuckets([]);
+                 toast({
+                    variant: 'destructive',
+                    title: 'Failed to load buckets',
+                    description: 'Could not fetch buckets for the selected course.',
+                });
+            } finally {
+                setSelectedBucket('all-buckets');
+            }
+        }
+
+        fetchCourseBuckets();
+
+    }, [selectedCourse, toast]);
 
 
     useEffect(() => {
@@ -213,7 +236,7 @@ export function SubmissionsList() {
         return courses.find(c => c.id.toString() === courseId.toString())?.course_name || `Course #${courseId}`;
     };
     const getBucketName = (bucketId: string) => {
-        return allBuckets.find(b => b.id.toString() === bucketId.toString())?.name || `Bucket #${bucketId}`;
+        return courseBuckets.find(b => b.id.toString() === bucketId.toString())?.name || `Bucket #${bucketId}`;
     };
     const getAssignmentTitle = (assignmentId: string) => {
         return assignments.find(a => a.id.toString() === assignmentId.toString())?.content_title || `Assignment #${assignmentId}`;
@@ -254,7 +277,7 @@ export function SubmissionsList() {
                             ))}
                         </SelectContent>
                     </Select>
-                     <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={!selectedCourse || selectedCourse === 'all-courses'}>
+                     <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={!selectedCourse || selectedCourse === 'all-courses' || courseBuckets.length === 0}>
                         <SelectTrigger>
                             <Inbox className="mr-2 h-4 w-4" />
                             <SelectValue placeholder="Filter by bucket..." />
