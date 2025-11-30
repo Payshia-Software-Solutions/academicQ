@@ -86,9 +86,9 @@ export function SubmissionsList() {
                 
                 const allUsers = usersRes.data.records || [];
                 const approvedEnrollments = approvedEnrollmentsRes.data || [];
-                const approvedStudentIds = new Set(approvedEnrollments.map((e: any) => e.student_id));
+                const approvedStudentNumbers = new Set(approvedEnrollments.map((e: any) => e.student_id));
                 
-                const approvedStudents = allUsers.filter((u: any) => u.user_status === 'student' && u.student_number && approvedStudentIds.has(u.id.toString()));
+                const approvedStudents = allUsers.filter((u: any) => u.user_status === 'student' && u.student_number && approvedStudentNumbers.has(u.student_number));
                 setStudents(approvedStudents);
 
             } catch (error) {
