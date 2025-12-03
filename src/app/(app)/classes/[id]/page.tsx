@@ -2,7 +2,7 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Plus, Tag, DollarSign, Info, FileText, BookOpen, Clock, Folder, Users, List, File } from "lucide-react";
@@ -325,5 +325,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
+
+    
 
     
