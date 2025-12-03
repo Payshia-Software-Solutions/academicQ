@@ -43,22 +43,22 @@ interface StudentPayment {
 
 async function getCourseDetails(id: string): Promise<Course | null> {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/courses`);
-        if (!response.ok) return null;
-        const data = await response.json();
-        return data.records.find((c: any) => c.id.toString() === id.toString());
+        const response = await api.get(`/courses`);
+        if (response.data.status !== 'success') return null;
+        return response.data.data.find((c: any) => c.id.toString() === id.toString());
     } catch (error) {
+        console.error("Failed to fetch course details:", error);
         return null;
     }
 }
 
 async function getBucketDetails(id: string): Promise<Bucket | null> {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/course_buckets/${id}`);
-        if (!response.ok) return null;
-        const data = await response.json();
-        return data.data;
+        const response = await api.get(`/course_buckets/${id}`);
+        if (!response.data || response.data.status !== 'success') return null;
+        return response.data.data;
     } catch (error) {
+        console.error("Failed to fetch bucket details:", error);
         return null;
     }
 }
