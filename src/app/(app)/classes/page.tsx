@@ -182,7 +182,7 @@ export default function ClassesPage() {
   const isAdmin = user?.user_status === 'admin';
 
   const { approvedCourses, pendingCourses, rejectedCourses, availableCourses, enrollmentStatusMap } = useMemo(() => {
-    if (isAdmin || !enrollments.length) {
+    if (isAdmin) {
         return { approvedCourses: [], pendingCourses: [], rejectedCourses: [], availableCourses: allCourses, enrollmentStatusMap: new Map() };
     }
 
