@@ -14,6 +14,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -37,6 +38,8 @@ interface Enrollment {
 
 
 function ClassCard({ cls, enrollmentStatus }: { cls: Class, enrollmentStatus?: string }) {
+    const [imageError, setImageError] = useState(false);
+
     const getFullFileUrl = (filePath: string) => {
         if (!filePath || filePath.startsWith('http')) return filePath;
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
@@ -55,14 +58,21 @@ function ClassCard({ cls, enrollmentStatus }: { cls: Class, enrollmentStatus?: s
     return (
         <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
             <CardHeader className="p-0">
-            <div className="relative h-48 w-full">
-                <Image
-                src={getFullFileUrl(cls.imageUrl)}
-                alt={cls.name}
-                fill
-                style={{objectFit: "cover"}}
-                data-ai-hint="online course"
-                />
+            <div className="relative h-48 w-full bg-muted flex items-center justify-center">
+                {!imageError ? (
+                    <Image
+                        src={getFullFileUrl(cls.imageUrl)}
+                        alt={cls.name}
+                        fill
+                        style={{objectFit: "cover"}}
+                        data-ai-hint="online course"
+                        onError={() => setImageError(true)}
+                    />
+                ) : (
+                    <Avatar className="h-24 w-24 text-3xl">
+                        <AvatarFallback>{cls.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                )}
                  {enrollmentStatus && (
                     <Badge variant={getStatusVariant(enrollmentStatus)} className="capitalize absolute top-2 right-2">
                         {enrollmentStatus}
