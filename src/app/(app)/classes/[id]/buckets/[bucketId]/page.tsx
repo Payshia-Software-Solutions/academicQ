@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Plus } from 'lucide-react';
+import { ChevronRight, Plus, DollarSign } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,14 @@ import { BucketContentList } from './_components/bucket-content-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
 import { PaymentSlipUploadForm } from './_components/payment-slip-upload-form';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -81,6 +87,7 @@ function BucketContentPageContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [isPaid, setIsPaid] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
 
    useEffect(() => {
@@ -144,32 +151,38 @@ function BucketContentPageContent() {
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{bucket?.name}</h1>
                 <p className="text-muted-foreground mt-1">Content available in this payment bucket.</p>
             </div>
-            {isAdmin && (
+            {isAdmin ? (
                 <Button asChild>
                     <Link href={`/classes/${courseId}/buckets/${bucketId}/add-content`}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add New Content
                     </Link>
                 </Button>
+            ) : !canViewContent && (
+                <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <DollarSign className="mr-2 h-4 w-4" />
+                            Add Payment
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Upload Payment Slip</DialogTitle>
+                            <DialogDescription>
+                                To access this content, please upload your proof of payment.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <PaymentSlipUploadForm bucketAmount={bucket?.payment_amount || '0'} />
+                        </div>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
       </header>
       
-      {canViewContent ? (
-        <BucketContentList courseId={courseId} bucketId={bucketId} />
-      ) : (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><AlertCircle className="text-destructive"/> Access Locked</CardTitle>
-                <CardDescription>
-                    Your payment for this bucket is pending. Please upload your payment slip to gain access.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <PaymentSlipUploadForm bucketAmount={bucket?.payment_amount || '0'}/>
-            </CardContent>
-        </Card>
-      )}
+      <BucketContentList courseId={courseId} bucketId={bucketId} isLocked={!canViewContent} />
 
     </div>
   );

@@ -7,10 +7,11 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye } from 'lucide-react';
+import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface BucketContent {
     id: string;
@@ -26,6 +27,7 @@ interface BucketContent {
 interface BucketContentListProps {
     courseId: string;
     bucketId: string;
+    isLocked: boolean;
 }
 
 const getIconForType = (type: string) => {
@@ -38,7 +40,7 @@ const getIconForType = (type: string) => {
     }
 };
 
-export function BucketContentList({ courseId, bucketId }: BucketContentListProps) {
+export function BucketContentList({ courseId, bucketId, isLocked }: BucketContentListProps) {
     const [content, setContent] = useState<BucketContent[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
@@ -89,38 +91,60 @@ export function BucketContentList({ courseId, bucketId }: BucketContentListProps
             <CardHeader>
                 <CardTitle>Bucket Content</CardTitle>
                 <CardDescription>
-                    {content.length} item(s) found in this bucket.
+                    {isLocked 
+                        ? `This content is locked. Complete payment to gain access.`
+                        : `${content.length} item(s) found in this bucket.`
+                    }
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 {content.length > 0 ? (
                     <ul className="space-y-3">
-                        {content.map((item) => (
-                           <li key={item.id}>
-                             <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
-                                <div className="flex items-center gap-4">
-                                     <div className="p-2 bg-accent/10 rounded-lg">
-                                        {getIconForType(item.content_type)}
-                                     </div>
-                                     <div>
-                                        <p className="font-semibold">{item.content_title}</p>
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className="capitalize">{item.content_type.toLowerCase()}</Badge>
-                                            <Badge variant={item.is_active === '1' ? 'secondary' : 'destructive'}>
-                                                {item.is_active === '1' ? 'Active' : 'Inactive'}
-                                            </Badge>
+                        {content.map((item) => {
+                            const Wrapper = isLocked ? 'div' : Link;
+                            const props = isLocked ? {} : { href: `/classes/${courseId}/buckets/${bucketId}/content/${item.id}`};
+                           
+                           return (
+                               <li key={item.id}>
+                                 <Wrapper {...props}>
+                                     <div className={cn(
+                                         "flex items-center justify-between p-4 rounded-lg border transition-colors gap-4",
+                                         isLocked ? "bg-muted/50 cursor-not-allowed relative overflow-hidden" : "hover:bg-muted/50",
+                                     )}>
+                                        {isLocked && <div className="absolute inset-0 bg-background/30 backdrop-blur-sm z-10" />}
+                                        <div className="flex items-center gap-4">
+                                             <div className="p-2 bg-accent/10 rounded-lg">
+                                                {getIconForType(item.content_type)}
+                                             </div>
+                                             <div>
+                                                <p className="font-semibold">{item.content_title}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge variant="outline" className="capitalize">{item.content_type.toLowerCase()}</Badge>
+                                                    <Badge variant={item.is_active === '1' ? 'secondary' : 'destructive'}>
+                                                        {item.is_active === '1' ? 'Active' : 'Inactive'}
+                                                    </Badge>
+                                                </div>
+                                             </div>
                                         </div>
+                                        <Button asChild variant="ghost" size="sm" disabled={isLocked}>
+                                            <div className="flex items-center">
+                                                {isLocked ? (
+                                                    <>
+                                                        <Lock className="mr-2 h-4 w-4" /> Locked
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        View Content
+                                                        <Eye className="ml-2 h-4 w-4" />
+                                                    </>
+                                                )}
+                                            </div>
+                                        </Button>
                                      </div>
-                                </div>
-                                <Button asChild variant="ghost" size="sm">
-                                    <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${item.id}`}>
-                                        View Content
-                                        <Eye className="ml-2 h-4 w-4" />
-                                    </Link>
-                                </Button>
-                             </div>
-                           </li>
-                        ))}
+                                 </Wrapper>
+                               </li>
+                           )
+                        })}
                     </ul>
                 ) : (
                     <div className="text-center py-12 border-2 border-dashed rounded-lg">
