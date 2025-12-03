@@ -119,7 +119,7 @@ export default function StudentDashboardPage() {
       </header>
 
       <section>
-        <h2 className="text-xl font-bold mb-4">My Courses</h2>
+        <h2 className="text-xl font-bold mb-4">My Classes</h2>
         {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 4 }).map((_, i) => (
