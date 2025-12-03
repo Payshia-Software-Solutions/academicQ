@@ -31,7 +31,7 @@ interface Course {
 }
 interface Bucket {
   id: string;
-  name: string;
+  bucket_name: string;
   payment_amount: string;
 }
 
@@ -142,11 +142,11 @@ function BucketContentPageContent() {
             <ChevronRight className="h-4 w-4 mx-1" />
             <Link href={`/classes/${courseId}`} className="hover:underline">{course?.course_name || 'Course'}</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="truncate">{bucket?.name || 'Bucket'}</span>
+            <span className="truncate">{bucket?.bucket_name || 'Bucket'}</span>
         </div>
          <div className="flex items-center justify-between gap-4">
             <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{bucket?.name}</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{bucket?.bucket_name}</h1>
                 <p className="text-muted-foreground mt-1">Content available in this payment bucket.</p>
             </div>
             {isAdmin && (
