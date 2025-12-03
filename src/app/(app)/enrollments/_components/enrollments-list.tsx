@@ -34,7 +34,7 @@ export function EnrollmentsList() {
         async function fetchEnrollments() {
             setIsLoading(true);
             try {
-                const response = await api.get('/enrollments');
+                const response = await api.get('/enrollments/?enroll_status=pending');
                 if (response.data) {
                     setEnrollments(response.data || []);
                 } else {
@@ -59,7 +59,14 @@ export function EnrollmentsList() {
         setUpdatingStatus(enrollmentId);
 
         const originalEnrollments = [...enrollments];
-        setEnrollments(prev => prev.map(e => e.id === enrollmentId ? { ...e, status: newStatus } : e));
+        
+        // Optimistically remove from UI if not 'pending' anymore
+        if (newStatus !== 'pending') {
+            setEnrollments(prev => prev.filter(e => e.id !== enrollmentId));
+        } else {
+            setEnrollments(prev => prev.map(e => e.id === enrollmentId ? { ...e, status: newStatus } : e));
+        }
+
 
         try {
             const response = await api.put(`/enrollments/${enrollmentId}`, { status: newStatus });
@@ -99,9 +106,9 @@ export function EnrollmentsList() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>All Enrollment Requests</CardTitle>
+                <CardTitle>Pending Enrollment Requests</CardTitle>
                 <CardDescription>
-                    A list of all student enrollment requests.
+                    A list of all student enrollment requests awaiting approval.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -162,7 +169,7 @@ export function EnrollmentsList() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                                    No enrollment requests found.
+                                    No pending enrollment requests found.
                                     </TableCell>
                                 </TableRow>
                             )}
