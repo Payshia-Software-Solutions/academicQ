@@ -17,6 +17,7 @@ interface Enrollment {
     id: string;
     student_id: string;
     course_id: string;
+    course_name: string;
     enrollment_date: string | null;
     status: 'pending' | 'approved' | 'rejected' | null;
     created_at: string;
@@ -118,7 +119,7 @@ export function EnrollmentsList() {
                             <TableRow>
                                 <TableHead>Enrollment ID</TableHead>
                                 <TableHead>Student ID</TableHead>
-                                <TableHead>Course ID</TableHead>
+                                <TableHead>Course</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Request Date</TableHead>
                             </TableRow>
@@ -137,7 +138,7 @@ export function EnrollmentsList() {
                                     <TableRow key={req.id}>
                                         <TableCell className="font-mono text-xs">#{req.id}</TableCell>
                                         <TableCell>{req.student_id}</TableCell>
-                                        <TableCell>{req.course_id}</TableCell>
+                                        <TableCell>{req.course_name}</TableCell>
                                          <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
