@@ -106,6 +106,7 @@ export default function StudentDashboardPage() {
     }
   }
 
+  const approvedCourses = enrolledCourses.filter(c => c.enrollment_status === 'approved');
 
   return (
     <div className="space-y-6">
@@ -126,9 +127,9 @@ export default function StudentDashboardPage() {
                     <Card key={i}><CardContent className="p-6"><Skeleton className="h-48 w-full" /></CardContent></Card>
                 ))}
             </div>
-        ) : enrolledCourses.length > 0 ? (
+        ) : approvedCourses.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {enrolledCourses.map((course) => (
+            {approvedCourses.map((course) => (
                 <Card key={course.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
                     <CardHeader className="p-0">
                         <div className="relative h-48 w-full">
@@ -160,7 +161,7 @@ export default function StudentDashboardPage() {
             </div>
         ) : (
              <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground">You are not enrolled in any courses yet.</p>
+                <p className="text-muted-foreground">You are not enrolled in any approved courses yet.</p>
                  <Button variant="outline" className="mt-4" asChild>
                     <Link href="/classes">
                        Browse Courses
