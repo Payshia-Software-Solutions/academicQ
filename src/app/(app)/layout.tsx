@@ -139,16 +139,33 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             )}
             {isAdmin && (
                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isActive('/enrollments')}
-                        tooltip="Enrollments"
-                    >
-                        <Link href="/enrollments">
+                  <SidebarSubMenu>
+                    <SidebarMenuItem value="enrollments">
+                      <SidebarSubMenuButton
+                          isActive={isActive('/enrollments')}
+                          tooltip="Enrollments"
+                          className="justify-between"
+                        >
+                          <div className="flex items-center gap-3">
                             <UserCheck />
                             <span className="group-data-[state=collapsed]:hidden">Enrollments</span>
-                        </Link>
-                    </SidebarMenuButton>
+                          </div>
+                          <ChevronDown className="h-4 w-4 group-data-[state=collapsed]:hidden" />
+                        </SidebarSubMenuButton>
+                      <SidebarSubMenuContent>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild isActive={isActive('/enrollments')}>
+                            <Link href="/enrollments">> Pending</Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                         <SidebarMenuItem>
+                          <SidebarMenuButton asChild isActive={isActive('/enrollments/by-course')}>
+                              <Link href="#">> By Course</Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </SidebarSubMenuContent>
+                    </SidebarMenuItem>
+                  </SidebarSubMenu>
                 </SidebarMenuItem>
             )}
              <SidebarMenuItem>
