@@ -197,18 +197,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                       </SidebarSubMenuContent>
                     </SidebarMenuItem>
                   </SidebarSubMenu>
-                ) : (
-                   <SidebarMenuButton
-                      asChild
-                      isActive={isActive('/payments/request')}
-                      tooltip="Payment Request"
-                    >
-                      <Link href="/payments/request">
-                        <CreditCard />
-                        <span className="group-data-[state=collapsed]:hidden">Payment Request</span>
-                      </Link>
-                    </SidebarMenuButton>
-                )}
+                ) : null}
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
