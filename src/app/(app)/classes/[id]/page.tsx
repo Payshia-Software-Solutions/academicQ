@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus, Folder, List, FileText, Clock } from "lucide-react";
+import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2 } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 
 
 interface Course {
@@ -36,7 +36,7 @@ interface Assignment {
 
 interface Bucket {
   id: string;
-  name: string;
+  bucket_name: string;
   description: string;
   payment_amount: string;
   payment_type: string;
@@ -104,6 +104,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     const [enrollmentStatus, setEnrollmentStatus] = useState<string | null>(null);
     const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true);
     const [studentPayments, setStudentPayments] = useState<StudentPayment[]>([]);
+    const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
 
     const { toast } = useToast();
 
@@ -187,6 +188,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                     description: `Your request to enroll in "${course.course_name}" has been sent.`,
                 });
                 setEnrollmentStatus('pending'); // Update status locally
+                setIsEnrollmentDialogOpen(false);
             } else {
                  toast({
                     variant: 'destructive',
@@ -259,17 +261,35 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     }
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button disabled={isEnrolling}>
-                    {isEnrolling ? 'Enrolling...' : 'Enroll Now'}
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleEnroll}>Pending</DropdownMenuItem>
-                <DropdownMenuItem>By Course</DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <Dialog open={isEnrollmentDialogOpen} onOpenChange={setIsEnrollmentDialogOpen}>
+            <DialogTrigger asChild>
+                <Button>Enroll Now</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Confirm Enrollment</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to send an enrollment request for {'"'}
+                        <span className="font-semibold">{course?.course_name}</span>{'"'}?
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleEnroll} disabled={isEnrolling}>
+                        {isEnrolling ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Sending Request...
+                            </>
+                        ) : (
+                            'Confirm Enrollment'
+                        )}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
   };
   
@@ -331,7 +351,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                                             </div>
                                         </CardHeader>
                                         <CardContent>
-                                            <h3 className="font-semibold text-lg truncate group-hover:text-primary">{bucket.name}</h3>
+                                            <h3 className="font-semibold text-lg truncate group-hover:text-primary">{bucket.bucket_name}</h3>
                                             <p className="text-sm text-muted-foreground line-clamp-2">{bucket.description}</p>
                                         </CardContent>
                                         <CardFooter className="flex-col items-start text-xs text-muted-foreground">
