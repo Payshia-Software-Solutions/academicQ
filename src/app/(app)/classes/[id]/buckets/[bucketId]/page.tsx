@@ -8,9 +8,14 @@ import { Suspense, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { BucketContentList } from './_components/bucket-content-list';
 import { Skeleton } from '@/components/ui/skeleton';
+import api from '@/lib/api';
+import { PaymentSlipUploadForm } from './_components/payment-slip-upload-form';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { AlertCircle } from 'lucide-react';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
+  student_number?: string;
   [key: string]: any;
 }
 
@@ -21,6 +26,13 @@ interface Course {
 interface Bucket {
   id: string;
   name: string;
+  payment_amount: string;
+}
+
+interface StudentPayment {
+    id: string;
+    course_bucket_id: string;
+    status: string;
 }
 
 async function getCourseDetails(id: string): Promise<Course | null> {
@@ -45,6 +57,19 @@ async function getBucketDetails(id: string): Promise<Bucket | null> {
     }
 }
 
+async function getStudentPayments(studentNumber: string): Promise<StudentPayment[]> {
+    try {
+        const response = await api.get(`/student_payment_courses/student/${studentNumber}`);
+        if (response.data.status === 'success') {
+            return response.data.data || [];
+        }
+        return [];
+    } catch (error) {
+        console.error("Failed to fetch student payments:", error);
+        return [];
+    }
+}
+
 
 function BucketContentPageContent() {
   const params = useParams();
@@ -55,12 +80,13 @@ function BucketContentPageContent() {
   const [bucket, setBucket] = useState<Bucket | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<CurrentUser | null>(null);
+  const [isPaid, setIsPaid] = useState(false);
+
 
    useEffect(() => {
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const currentUser = storedUser ? JSON.parse(storedUser) : null;
+    setUser(currentUser);
 
     async function loadData() {
         setLoading(true);
@@ -70,12 +96,20 @@ function BucketContentPageContent() {
         ]);
         setCourse(courseData);
         setBucket(bucketData);
+
+        if (currentUser?.user_status === 'student' && currentUser.student_number && bucketData) {
+            const payments = await getStudentPayments(currentUser.student_number);
+            const hasPaid = payments.some(p => p.course_bucket_id === bucketData.id && p.status === 'approved');
+            setIsPaid(hasPaid);
+        }
+
         setLoading(false);
     }
     loadData();
   }, [courseId, bucketId]);
 
   const isAdmin = user?.user_status === 'admin';
+  const canViewContent = isAdmin || isPaid;
   
   if (loading) {
       return (
@@ -121,7 +155,21 @@ function BucketContentPageContent() {
         </div>
       </header>
       
-      <BucketContentList courseId={courseId} bucketId={bucketId} />
+      {canViewContent ? (
+        <BucketContentList courseId={courseId} bucketId={bucketId} />
+      ) : (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><AlertCircle className="text-destructive"/> Access Locked</CardTitle>
+                <CardDescription>
+                    Your payment for this bucket is pending. Please upload your payment slip to gain access.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <PaymentSlipUploadForm bucketAmount={bucket?.payment_amount || '0'}/>
+            </CardContent>
+        </Card>
+      )}
 
     </div>
   );
