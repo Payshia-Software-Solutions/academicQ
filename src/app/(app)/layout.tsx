@@ -154,13 +154,13 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                         </SidebarSubMenuButton>
                       <SidebarSubMenuContent>
                         <SidebarMenuItem>
-                          <SidebarMenuButton asChild isActive={isActive('/enrollments')}>
+                          <SidebarMenuButton asChild isActive={pathname === '/enrollments'}>
                             <Link href="/enrollments">> Pending</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                          <SidebarMenuItem>
                           <SidebarMenuButton asChild isActive={isActive('/enrollments/by-course')}>
-                              <Link href="#">> By Course</Link>
+                              <Link href="/enrollments/by-course">> By Course</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       </SidebarSubMenuContent>
