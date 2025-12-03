@@ -267,6 +267,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           <main className="p-4 sm:p-6">
               {children}
           </main>
+          <footer className="text-center p-4 text-xs text-muted-foreground">
+            Powered By Payshia software Solutions
+          </footer>
       </SidebarInset>
     </div>
   )

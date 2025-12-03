@@ -13,6 +13,9 @@ export default function AuthLayout({
         </div>
         {children}
       </div>
+      <footer className="absolute bottom-4 text-center text-xs text-muted-foreground">
+        Powered By Payshia software Solutions
+      </footer>
     </main>
   );
 }
