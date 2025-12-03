@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Plus, Folder, List, FileText, Clock } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -208,6 +208,10 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
 
     const isAdmin = user?.user_status === 'admin';
 
+    const allAssignments = useMemo(() => {
+        return buckets.flatMap(bucket => bucket.assignments || []);
+    }, [buckets]);
+
     if (loading) {
         return (
              <div className="space-y-6">
@@ -272,7 +276,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     const canViewContent = isAdmin || enrollmentStatus === 'approved';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
        <header>
         <div className="flex items-center text-sm text-muted-foreground mb-2 flex-wrap">
             <Link href="/classes" className="hover:underline">Classes</Link>
@@ -298,66 +302,104 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
       </header>
 
       {canViewContent && (
-        <section>
-          <h2 className="text-xl font-bold mb-4">Payment Buckets</h2>
-          {buckets.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {buckets.map((bucket: any) => {
-                       const totalContent = bucket.contents?.length || 0;
-                       const totalAssignments = bucket.assignments?.length || 0;
-                       
-                       const isPaid = !isAdmin && studentPayments.some(p => p.course_bucket_id === bucket.id && p.status === 'approved');
+        <>
+            <section>
+                <h2 className="text-xl font-bold mb-4">Payment Buckets</h2>
+                {buckets.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {buckets.map((bucket: any) => {
+                            const totalContent = bucket.contents?.length || 0;
+                            const totalAssignments = bucket.assignments?.length || 0;
+                            
+                            const isPaid = !isAdmin && studentPayments.some(p => p.course_bucket_id === bucket.id && p.status === 'approved');
 
-                       return (
-                        <Link href={`/classes/${course.id}/buckets/${bucket.id}`} key={bucket.id} className="block group">
-                            <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
-                                <CardHeader>
-                                    <div className="flex items-start justify-between">
-                                        <Folder className="h-10 w-10 text-primary" />
-                                        {isAdmin ? (
-                                            <Badge variant={bucket.is_active === "1" ? 'secondary' : 'destructive'}>
-                                                {bucket.is_active === "1" ? "Active" : "Inactive"}
-                                            </Badge>
-                                        ) : (
-                                            <Badge variant={isPaid ? 'secondary' : 'destructive'}>
-                                                {isPaid ? "Paid" : "Not Paid"}
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <h3 className="font-semibold text-lg truncate group-hover:text-primary">{bucket.name}</h3>
-                                    <p className="text-sm text-muted-foreground line-clamp-2">{bucket.description}</p>
-                                </CardContent>
-                                <CardFooter className="flex-col items-start text-xs text-muted-foreground">
-                                    <div className="flex items-center gap-2">
-                                        <List className="h-3 w-3" />
-                                        <span>{totalContent} content item(s)</span>
-                                    </div>
-                                     <div className="flex items-center gap-2">
-                                        <FileText className="h-3 w-3" />
-                                        <span>{totalAssignments} assignment(s)</span>
-                                    </div>
-                                </CardFooter>
-                            </Card>
-                        </Link>
-                       )
-                    })}
-                </div>
-          ) : (
-              <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                  <p className="text-muted-foreground">No payment buckets found for this course.</p>
-                  {isAdmin && (
-                      <Button variant="outline" className="mt-4" asChild>
-                          <Link href={`/classes/${params.id}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
-                              Create the First Bucket
-                          </Link>
-                      </Button>
-                  )}
-              </div>
-          )}
-        </section>
+                            return (
+                                <Link href={`/classes/${course.id}/buckets/${bucket.id}`} key={bucket.id} className="block group">
+                                    <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
+                                        <CardHeader>
+                                            <div className="flex items-start justify-between">
+                                                <Folder className="h-10 w-10 text-primary" />
+                                                {isAdmin ? (
+                                                    <Badge variant={bucket.is_active === "1" ? 'secondary' : 'destructive'}>
+                                                        {bucket.is_active === "1" ? "Active" : "Inactive"}
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant={isPaid ? 'secondary' : 'destructive'}>
+                                                        {isPaid ? "Paid" : "Not Paid"}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <h3 className="font-semibold text-lg truncate group-hover:text-primary">{bucket.name}</h3>
+                                            <p className="text-sm text-muted-foreground line-clamp-2">{bucket.description}</p>
+                                        </CardContent>
+                                        <CardFooter className="flex-col items-start text-xs text-muted-foreground">
+                                            <div className="flex items-center gap-2">
+                                                <List className="h-3 w-3" />
+                                                <span>{totalContent} content item(s)</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <FileText className="h-3 w-3" />
+                                                <span>{totalAssignments} assignment(s)</span>
+                                            </div>
+                                        </CardFooter>
+                                    </Card>
+                                </Link>
+                            )
+                            })}
+                        </div>
+                ) : (
+                    <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                        <p className="text-muted-foreground">No payment buckets found for this course.</p>
+                        {isAdmin && (
+                            <Button variant="outline" className="mt-4" asChild>
+                                <Link href={`/classes/${params.id}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
+                                    Create the First Bucket
+                                </Link>
+                            </Button>
+                        )}
+                    </div>
+                )}
+            </section>
+            
+            <section>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>All Assignments</CardTitle>
+                        <CardDescription>{allAssignments.length} assignment(s) found for this course.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {allAssignments.length > 0 ? (
+                            <ul className="space-y-3">
+                                {allAssignments.map((assignment) => (
+                                    <li key={assignment.id}>
+                                        <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
+                                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                <div className="p-2 bg-accent/10 rounded-lg">
+                                                    <FileText className="h-5 w-5 text-accent" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-semibold truncate">{assignment.content_title}</p>
+                                                    <Badge variant="outline" className="capitalize mt-1">{assignment.content_type}</Badge>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                             <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                                <p className="text-muted-foreground">No assignments found for this course.</p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </section>
+        </>
       )}
     </div>
   );
 }
+
+    
