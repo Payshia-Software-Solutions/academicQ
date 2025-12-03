@@ -1,4 +1,3 @@
-
 'use client';
 import { Logo } from '@/components/icons';
 import {
@@ -49,9 +48,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       const parsedUser: CurrentUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      // Redirect student from dashboard to classes
+      // Redirect student from admin dashboard
       if (parsedUser.user_status === 'student' && pathname === '/dashboard') {
-          router.replace('/classes');
+          router.replace('/student-dashboard');
       }
     } else {
         // Redirect to login if no user data found
@@ -70,7 +69,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   };
   
   const isAdmin = user?.user_status === 'admin';
-  const homePath = isAdmin ? '/dashboard' : '/classes';
+  const homePath = isAdmin ? '/dashboard' : '/student-dashboard';
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -90,6 +89,20 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   tooltip="Dashboard"
                 >
                   <Link href="/dashboard">
+                    <LayoutDashboard />
+                    <span className="group-data-[state=collapsed]:hidden">Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+             {!isAdmin && (
+               <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/student-dashboard'}
+                  tooltip="Dashboard"
+                >
+                  <Link href="/student-dashboard">
                     <LayoutDashboard />
                     <span className="group-data-[state=collapsed]:hidden">Dashboard</span>
                   </Link>
