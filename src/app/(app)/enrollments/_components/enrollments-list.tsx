@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 
 interface Enrollment {
     id: string;
@@ -30,6 +31,11 @@ export function EnrollmentsList() {
     const [isLoading, setIsLoading] = useState(true);
     const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
     const { toast } = useToast();
+
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
+    const [targetStatus, setTargetStatus] = useState<Enrollment['status'] | null>(null);
+
 
     useEffect(() => {
         async function fetchEnrollments() {
@@ -55,9 +61,20 @@ export function EnrollmentsList() {
         fetchEnrollments();
     }, [toast]);
 
-    const handleStatusChange = async (enrollmentId: string, newStatus: Enrollment['status']) => {
-        if (!newStatus) return;
+    const openConfirmationDialog = (enrollment: Enrollment, status: Enrollment['status']) => {
+        setSelectedEnrollment(enrollment);
+        setTargetStatus(status);
+        setIsDialogOpen(true);
+    }
+
+    const handleStatusChange = async () => {
+        if (!selectedEnrollment || !targetStatus) return;
+
+        const enrollmentId = selectedEnrollment.id;
+        const newStatus = targetStatus;
+
         setUpdatingStatus(enrollmentId);
+        setIsDialogOpen(false);
 
         const originalEnrollments = [...enrollments];
         
@@ -87,6 +104,8 @@ export function EnrollmentsList() {
             });
         } finally {
             setUpdatingStatus(null);
+            setSelectedEnrollment(null);
+            setTargetStatus(null);
         }
     };
     
@@ -105,6 +124,7 @@ export function EnrollmentsList() {
 
 
     return (
+        <>
         <Card>
             <CardHeader>
                 <CardTitle>Pending Enrollment Requests</CardTitle>
@@ -154,7 +174,7 @@ export function EnrollmentsList() {
                                                     {statusOptions.map(status => (
                                                         <DropdownMenuItem 
                                                             key={status} 
-                                                            onSelect={() => handleStatusChange(req.id, status)}
+                                                            onSelect={() => openConfirmationDialog(req, status)}
                                                             disabled={req.status === status}
                                                             className="capitalize"
                                                         >
@@ -179,5 +199,44 @@ export function EnrollmentsList() {
                  </div>
             </CardContent>
         </Card>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Confirm Status Change</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to change the status of this enrollment?
+                    </DialogDescription>
+                </DialogHeader>
+                {selectedEnrollment && (
+                    <div className="space-y-4 py-4">
+                        <div className="flex justify-between items-center p-3 rounded-md bg-muted">
+                            <span className="text-sm text-muted-foreground">Student ID</span>
+                            <span className="font-semibold">{selectedEnrollment.student_id}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 rounded-md bg-muted">
+                             <span className="text-sm text-muted-foreground">Course</span>
+                            <span className="font-semibold">{selectedEnrollment.course_name}</span>
+                        </div>
+                         <div className="flex justify-between items-center p-3 rounded-md border-2 border-dashed">
+                             <span className="text-sm text-muted-foreground">New Status</span>
+                            <Badge variant={targetStatus === 'approved' ? 'secondary' : targetStatus === 'rejected' ? 'destructive' : 'outline'} className="capitalize">
+                                {targetStatus}
+                            </Badge>
+                        </div>
+                    </div>
+                )}
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button" variant="outline">
+                        Cancel
+                        </Button>
+                    </DialogClose>
+                    <Button type="button" onClick={handleStatusChange}>
+                        Confirm
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+        </>
     );
 }
