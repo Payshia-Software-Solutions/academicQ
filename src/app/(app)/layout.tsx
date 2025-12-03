@@ -1,3 +1,4 @@
+
 'use client';
 import { Logo } from '@/components/icons';
 import {
@@ -31,6 +32,7 @@ interface CurrentUser {
   f_name?: string;
   l_name?: string;
   email?: string;
+  student_number?: string;
   [key: string]: any;
 }
 
@@ -228,6 +230,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                         <div>
                             <p className="text-sm font-semibold text-sidebar-footer-foreground">{user?.f_name} {user?.l_name}</p>
                             <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">{user?.email}</p>
+                            {!isAdmin && user?.student_number && (
+                                <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground font-mono">{user.student_number}</p>
+                            )}
                         </div>
                     ),
                     className: "bg-sidebar-footer border-none p-2"
@@ -245,6 +250,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <div className="group-data-[state=collapsed]:hidden">
                     <p className="text-sm font-semibold text-sidebar-footer-foreground">{user?.f_name} {user?.l_name}</p>
                     <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">{user?.email}</p>
+                    {!isAdmin && user?.student_number && (
+                        <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground font-mono">{user.student_number}</p>
+                    )}
                 </div>
             </div>
            </SidebarMenuButton>
