@@ -7,11 +7,13 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock } from 'lucide-react';
+import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PaymentSlipUploadForm } from './payment-slip-upload-form';
 
 interface BucketContent {
     id: string;
@@ -28,6 +30,8 @@ interface BucketContentListProps {
     courseId: string;
     bucketId: string;
     isLocked: boolean;
+    bucketAmount: string;
+    isAdmin: boolean;
 }
 
 const getIconForType = (type: string) => {
@@ -40,10 +44,12 @@ const getIconForType = (type: string) => {
     }
 };
 
-export function BucketContentList({ courseId, bucketId, isLocked }: BucketContentListProps) {
+export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, isAdmin }: BucketContentListProps) {
     const [content, setContent] = useState<BucketContent[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
+    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+
 
     useEffect(() => {
         if (!bucketId || !courseId) return;
@@ -87,7 +93,33 @@ export function BucketContentList({ courseId, bucketId, isLocked }: BucketConten
     }
 
     return (
-        <Card>
+        <Card className="relative">
+             {isLocked && !isAdmin && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-4 text-center p-4">
+                    <Lock className="h-12 w-12 text-destructive" />
+                    <h3 className="text-xl font-bold">Content Locked</h3>
+                    <p className="text-muted-foreground">You must complete the payment for this bucket to view its content.</p>
+                    <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button>
+                                <DollarSign className="mr-2 h-4 w-4" />
+                                Add Payment
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                                <DialogTitle>Upload Payment Slip</DialogTitle>
+                                <DialogDescription>
+                                    To access this content, please upload your proof of payment.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4">
+                                <PaymentSlipUploadForm bucketAmount={bucketAmount || '0'} />
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+             )}
             <CardHeader>
                 <CardTitle>Bucket Content</CardTitle>
                 <CardDescription>
@@ -109,9 +141,8 @@ export function BucketContentList({ courseId, bucketId, isLocked }: BucketConten
                                  <Wrapper {...props}>
                                      <div className={cn(
                                          "flex items-center justify-between p-4 rounded-lg border transition-colors gap-4",
-                                         isLocked ? "bg-muted/50 cursor-not-allowed relative overflow-hidden" : "hover:bg-muted/50",
+                                         isLocked ? "bg-muted/50 cursor-not-allowed" : "hover:bg-muted/50",
                                      )}>
-                                        {isLocked && <div className="absolute inset-0 bg-background/30 backdrop-blur-sm z-10" />}
                                         <div className="flex items-center gap-4">
                                              <div className="p-2 bg-accent/10 rounded-lg">
                                                 {getIconForType(item.content_type)}

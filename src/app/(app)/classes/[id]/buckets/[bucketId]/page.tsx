@@ -87,9 +87,7 @@ function BucketContentPageContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [isPaid, setIsPaid] = useState(false);
-  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
-
-
+  
    useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const currentUser = storedUser ? JSON.parse(storedUser) : null;
@@ -151,38 +149,24 @@ function BucketContentPageContent() {
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{bucket?.name}</h1>
                 <p className="text-muted-foreground mt-1">Content available in this payment bucket.</p>
             </div>
-            {isAdmin ? (
+            {isAdmin && (
                 <Button asChild>
                     <Link href={`/classes/${courseId}/buckets/${bucketId}/add-content`}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add New Content
                     </Link>
                 </Button>
-            ) : !canViewContent && (
-                <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button>
-                            <DollarSign className="mr-2 h-4 w-4" />
-                            Add Payment
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle>Upload Payment Slip</DialogTitle>
-                            <DialogDescription>
-                                To access this content, please upload your proof of payment.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="py-4">
-                            <PaymentSlipUploadForm bucketAmount={bucket?.payment_amount || '0'} />
-                        </div>
-                    </DialogContent>
-                </Dialog>
             )}
         </div>
       </header>
       
-      <BucketContentList courseId={courseId} bucketId={bucketId} isLocked={!canViewContent} />
+      <BucketContentList 
+        courseId={courseId} 
+        bucketId={bucketId} 
+        isLocked={!canViewContent}
+        bucketAmount={bucket?.payment_amount || '0'}
+        isAdmin={isAdmin}
+       />
 
     </div>
   );
