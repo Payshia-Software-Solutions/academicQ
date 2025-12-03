@@ -53,19 +53,22 @@ export default function StudentDashboardPage() {
         setLoading(true);
         try {
           const [enrollmentsRes, coursesRes] = await Promise.all([
-            api.get(`/student-courses/student/${user.student_number}`),
+            api.get(`/enrollments/?student_id=${user.student_number}`),
             api.get('/courses')
           ]);
 
-          const enrollments: Enrollment[] = enrollmentsRes.data.data || [];
+          const enrollments: Enrollment[] = enrollmentsRes.data || [];
           const allCourses: Course[] = coursesRes.data.data || [];
           
           const coursesWithStatus = enrollments.map(enrollment => {
-            const courseDetails = allCourses.find(c => c.id === enrollment.course_id);
-            return {
-              ...courseDetails,
-              enrollment_status: enrollment.status,
-            };
+            const courseDetails = allCourses.find(c => c.id.toString() === enrollment.course_id.toString());
+            if (courseDetails) {
+              return {
+                ...courseDetails,
+                enrollment_status: enrollment.status,
+              };
+            }
+            return null;
           }).filter(Boolean) as Course[];
 
           setEnrolledCourses(coursesWithStatus);
@@ -82,6 +85,9 @@ export default function StudentDashboardPage() {
         }
       }
       fetchDashboardData();
+    } else if (user) {
+        // If user exists but has no student number, stop loading.
+        setLoading(false);
     }
   }, [user, toast]);
   
