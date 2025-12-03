@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus, Tag, DollarSign, Info, FileText, BookOpen, Clock, Folder, Users, List, File } from "lucide-react";
+import { ChevronRight, Plus, Folder, List, FileText, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import api from '@/lib/api';
@@ -53,6 +52,12 @@ interface CurrentUser {
   [key: string]: any;
 }
 
+interface StudentPayment {
+    id: string;
+    course_bucket_id: string;
+    status: string;
+}
+
 
 async function getCourseDetails(id: string): Promise<Course | null> {
     try {
@@ -76,6 +81,20 @@ async function getCourseBuckets(id: string): Promise<Bucket[]> {
     }
 }
 
+async function getStudentPayments(studentNumber: string): Promise<StudentPayment[]> {
+    try {
+        const response = await api.get(`/student_payment_courses/student/${studentNumber}`);
+        if (response.data.status === 'success') {
+            return response.data.data || [];
+        }
+        return [];
+    } catch (error) {
+        console.error("Failed to fetch student payments:", error);
+        return [];
+    }
+}
+
+
 export default function ClassDetailsPage({ params }: { params: { id: string } }) {
     const [course, setCourse] = useState<Course | null>(null);
     const [buckets, setBuckets] = useState<Bucket[]>([]);
@@ -84,6 +103,8 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     const [isEnrolling, setIsEnrolling] = useState(false);
     const [enrollmentStatus, setEnrollmentStatus] = useState<string | null>(null);
     const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true);
+    const [studentPayments, setStudentPayments] = useState<StudentPayment[]>([]);
+
     const { toast } = useToast();
 
     useEffect(() => {
@@ -109,23 +130,29 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
 
     useEffect(() => {
         if (user?.user_status === 'student' && user.student_number && course?.id) {
-            const checkEnrollment = async () => {
+            const checkEnrollmentAndPayments = async () => {
                 setIsCheckingEnrollment(true);
                 try {
-                    const response = await api.get(`/enrollments/?student_id=${user.student_number}&course_id=${course.id}`);
-                    if (response.data && response.data.length > 0) {
-                        setEnrollmentStatus(response.data[0].status);
+                    const [enrollmentRes, paymentsRes] = await Promise.all([
+                        api.get(`/enrollments/?student_id=${user.student_number}&course_id=${course.id}`),
+                        getStudentPayments(user.student_number as string)
+                    ]);
+
+                    if (enrollmentRes.data && enrollmentRes.data.length > 0) {
+                        setEnrollmentStatus(enrollmentRes.data[0].status);
                     } else {
                         setEnrollmentStatus(null);
                     }
+                    setStudentPayments(paymentsRes);
                 } catch (error) {
                     setEnrollmentStatus(null);
-                    console.error("Failed to check enrollment status:", error);
+                    setStudentPayments([]);
+                    console.error("Failed to check enrollment status or payments:", error);
                 } finally {
                     setIsCheckingEnrollment(false);
                 }
             };
-            checkEnrollment();
+            checkEnrollmentAndPayments();
         } else {
              setIsCheckingEnrollment(false);
         }
@@ -278,15 +305,24 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                     {buckets.map((bucket: any) => {
                        const totalContent = bucket.contents?.length || 0;
                        const totalAssignments = bucket.assignments?.length || 0;
+                       
+                       const isPaid = !isAdmin && studentPayments.some(p => p.course_bucket_id === bucket.id && p.status === 'approved');
+
                        return (
                         <Link href={`/classes/${course.id}/buckets/${bucket.id}`} key={bucket.id} className="block group">
                             <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
                                 <CardHeader>
                                     <div className="flex items-start justify-between">
                                         <Folder className="h-10 w-10 text-primary" />
-                                        <Badge variant={bucket.is_active === "1" ? 'secondary' : 'destructive'}>
-                                            {bucket.is_active === "1" ? "Active" : "Inactive"}
-                                        </Badge>
+                                        {isAdmin ? (
+                                            <Badge variant={bucket.is_active === "1" ? 'secondary' : 'destructive'}>
+                                                {bucket.is_active === "1" ? "Active" : "Inactive"}
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant={isPaid ? 'secondary' : 'destructive'}>
+                                                {isPaid ? "Paid" : "Not Paid"}
+                                            </Badge>
+                                        )}
                                     </div>
                                 </CardHeader>
                                 <CardContent>
@@ -325,7 +361,3 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
-
-    
-
-    
