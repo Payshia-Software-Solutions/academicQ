@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -36,6 +37,8 @@ interface Order {
     tracking_number?: string;
     cod_amount?: string;
     package_weight?: string;
+    course_name?: string;
+    bucket_name?: string;
 }
 
 interface Course {
@@ -129,7 +132,14 @@ export function OrdersList() {
     };
 
     const handleOpenDialog = (order: Order) => {
-        setSelectedOrder(order);
+        const courseName = courses.find(c => c.id === order.course_id)?.course_name;
+        const bucketName = buckets.find(b => b.id === order.course_bucket_id)?.bucket_name;
+        
+        setSelectedOrder({
+            ...order,
+            course_name: courseName,
+            bucket_name: bucketName,
+        });
         setIsDialogOpen(true);
     };
 

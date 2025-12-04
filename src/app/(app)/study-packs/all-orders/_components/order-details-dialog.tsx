@@ -32,6 +32,8 @@ interface Order {
     package_weight?: string;
     course_id?: string;
     course_bucket_id?: string;
+    course_name?: string;
+    bucket_name?: string;
 }
 
 interface OrderDetailsDialogProps {
@@ -141,6 +143,16 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                  <div>
                     <p className="text-muted-foreground text-sm">Order Item</p>
                     <p className="font-semibold text-lg">{order.item_name}</p>
+                </div>
+                 <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-muted-foreground">Course</p>
+                        <p className="font-semibold">{order.course_name || 'N/A'}</p>
+                    </div>
+                     <div>
+                        <p className="text-muted-foreground">Bucket</p>
+                        <p className="font-semibold">{order.bucket_name || 'N/A'}</p>
+                    </div>
                 </div>
                 <div className="space-y-1">
                     <p className="text-muted-foreground text-sm">Delivery Address</p>
