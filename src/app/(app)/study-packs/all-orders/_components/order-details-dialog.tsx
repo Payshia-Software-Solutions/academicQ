@@ -89,7 +89,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
             package_weight: parseFloat(packageWeight) || 0,
         };
 
-        const response = await api.post(`/student-orders/update/${order.id}`, updateData);
+        const response = await api.post(`/student-orders/${order.id}`, updateData);
 
         if (response.status === 200) {
             toast({
