@@ -41,7 +41,9 @@ export function ShippingLabel({ order }: ShippingLabelProps) {
                 <div className="bg-[#1E8A5A] text-white p-2 rounded-lg flex items-center gap-4">
                     <div className="bg-white p-1 rounded-md">
                          <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M30 0C13.43 0 0 13.43 0 30C0 46.57 13.43 60 30 60C46.57 60 60 46.57 60 30C60 13.43 46.57 0 30 0ZM45 33H33V45H27V33H15V27H27V15H33V27H45V33Z" fill="#1E8A5A"/>
+                            <rect width="60" height="60" rx="4" fill="#1E8A5A"/>
+                            <rect x="8" y="8" width="44" height="44" rx="4" fill="white"/>
+                            <path d="M28 20V28H20V32H28V40H32V32H40V28H32V20H28Z" fill="#1E8A5A"/>
                         </svg>
                     </div>
                     <div>
