@@ -70,8 +70,8 @@ export function ItemOrderForm() {
             setIsLoading(true);
             try {
                 const response = await api.get(`/orderable-items/${contentId}`);
-                if (response.data.status === 'success') {
-                    setItem(response.data.data);
+                if (response.data) {
+                    setItem(response.data);
                 } else {
                     setItem(null);
                     toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch item details.' });
