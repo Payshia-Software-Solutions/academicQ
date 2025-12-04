@@ -24,8 +24,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useEffect, useState, useMemo } from 'react';
+import { ProfileCheckHandler } from './_components/profile-check-handler';
 
 interface CurrentUser {
   id?: string;
@@ -51,7 +51,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       const parsedUser: CurrentUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      // Redirect student from admin dashboard
+      // Redirect student from admin dashboard to their own dashboard
       if (parsedUser.user_status === 'student' && pathname === '/dashboard') {
           router.replace('/student-dashboard');
       }
@@ -82,6 +82,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex">
+      {user?.student_number && <ProfileCheckHandler studentNumber={user.student_number} />}
       <Sidebar>
         <SidebarHeader>
           <Link href={homePath} className="block">
