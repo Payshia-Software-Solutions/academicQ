@@ -8,50 +8,50 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, Package, FileVideo, Image, Link as LinkIcon, FileText, File } from 'lucide-react';
+import { ArrowLeft, Package, FileVideo, Image as ImageIcon, Link as LinkIcon, FileText, File, DollarSign } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
 
-interface BucketContent {
+interface OrderableItem {
     id: string;
-    content_title: string;
-    content_type: string;
+    name: string;
+    price: string;
+    description: string;
+    img_url: string;
 }
 
-const getIconForType = (type: string) => {
-    switch (type.toLowerCase()) {
-        case 'video': return <FileVideo className="h-5 w-5 text-accent" />;
-        case 'image': return <Image className="h-5 w-5 text-accent" />;
-        case 'link': return <LinkIcon className="h-5 w-5 text-accent" />;
-        case 'pdf': return <FileText className="h-5 w-5 text-accent" />;
-        default: return <File className="h-5 w-5 text-accent" />;
-    }
+const getFullFileUrl = (filePath?: string) => {
+    if (!filePath || filePath.startsWith('http')) return filePath || 'https://placehold.co/600x400';
+    const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
+    return `${baseUrl}${filePath}`;
 };
 
 export function OrderableItemsList() {
     const params = useParams();
     const { id: courseId, bucketId } = params;
-    const [content, setContent] = useState<BucketContent[]>([]);
+    const [items, setItems] = useState<OrderableItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
     useEffect(() => {
-        if (!bucketId || !courseId) return;
+        if (!bucketId) return;
 
         async function fetchContent() {
             setIsLoading(true);
             try {
-                const response = await api.get(`/course-bucket-contents?course_id=${courseId}&course_bucket_id=${bucketId}`);
+                const response = await api.get(`/orderable-items/bucket/${bucketId}`);
                 if (response.data.status === 'success') {
-                    setContent(response.data.data || []);
+                    setItems(response.data.data || []);
                 } else {
-                    setContent([]);
+                    setItems([]);
                 }
             } catch (error: any) {
-                setContent([]);
+                setItems([]);
                 toast({
                     variant: 'destructive',
                     title: 'API Error',
-                    description: error.message || 'Could not fetch bucket content.',
+                    description: error.message || 'Could not fetch orderable items.',
                 });
             } finally {
                 setIsLoading(false);
@@ -69,26 +69,52 @@ export function OrderableItemsList() {
             </CardHeader>
             <CardContent>
                 {isLoading ? (
-                    <div className="space-y-4">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Array.from({length: 3}).map((_, i) => (
+                             <Card key={i}>
+                                <CardContent className="p-4">
+                                    <Skeleton className="h-40 w-full mb-4" />
+                                    <Skeleton className="h-6 w-3/4 mb-2" />
+                                    <Skeleton className="h-4 w-1/2" />
+                                </CardContent>
+                                <CardFooter>
+                                    <Skeleton className="h-10 w-full" />
+                                </CardFooter>
+                            </Card>
+                        ))}
                     </div>
-                ) : content.length > 0 ? (
-                    <div className="space-y-4">
-                        {content.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                                <div className="flex items-center gap-3">
-                                    {getIconForType(item.content_type)}
-                                    <span className="font-medium">{item.content_title}</span>
-                                </div>
-                                <Button size="sm" asChild>
-                                    <Link href={`/study-packs/${courseId}/bucket/${bucketId}/order/${item.id}`}>
-                                        <Package className="mr-2 h-4 w-4" />
-                                        Order Now
-                                    </Link>
-                                </Button>
-                            </div>
+                ) : items.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {items.map((item) => (
+                            <Card key={item.id} className="flex flex-col">
+                                <CardHeader className="p-0">
+                                    <div className="relative h-48 w-full">
+                                        <Image
+                                            src={getFullFileUrl(item.img_url)}
+                                            alt={item.name}
+                                            fill
+                                            style={{ objectFit: 'cover' }}
+                                            className="rounded-t-lg"
+                                        />
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-4 flex-grow">
+                                     <h3 className="font-semibold text-lg">{item.name}</h3>
+                                     <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                                     <Badge className="mt-2 text-base" variant="secondary">
+                                        <DollarSign className="mr-1 h-4 w-4"/>
+                                        {parseFloat(item.price).toFixed(2)}
+                                     </Badge>
+                                </CardContent>
+                                <CardFooter className="p-4 pt-0">
+                                    <Button size="sm" asChild className="w-full">
+                                        <Link href={`/study-packs/${courseId}/bucket/${bucketId}/order/${item.id}`}>
+                                            <Package className="mr-2 h-4 w-4" />
+                                            Order Now
+                                        </Link>
+                                    </Button>
+                                </CardFooter>
+                            </Card>
                         ))}
                     </div>
                 ) : (

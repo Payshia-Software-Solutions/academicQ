@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { OrderForm } from './_components/order-form';
+import { ItemOrderForm } from './_components/item-order-form';
 
 function OrderItemPageContent() {
   const params = useParams();
@@ -27,7 +27,7 @@ function OrderItemPageContent() {
         <p className="text-muted-foreground mt-1">Please confirm your delivery details below.</p>
       </header>
       
-      <OrderForm />
+      <ItemOrderForm />
       
     </div>
   );
