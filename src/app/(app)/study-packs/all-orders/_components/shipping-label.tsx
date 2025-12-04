@@ -38,14 +38,7 @@ export function ShippingLabel({ order }: ShippingLabelProps) {
         <div className="bg-white text-black p-4 font-sans" style={{ width: '105mm', height: '148mm' }}>
             <div className="border border-black h-full flex flex-col p-2">
                 {/* Header */}
-                <div className="bg-[#1E8A5A] text-white p-2 rounded-lg flex items-center gap-4">
-                    <div className="bg-white p-1 rounded-md">
-                         <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="60" height="60" rx="4" fill="#1E8A5A"/>
-                            <rect x="8" y="8" width="44" height="44" rx="4" fill="white"/>
-                            <path d="M28 20V28H20V32H28V40H32V32H40V28H32V20H28Z" fill="#1E8A5A"/>
-                        </svg>
-                    </div>
+                <div className="bg-[#1E8A5A] text-white p-2 rounded-lg">
                     <div>
                         <h1 className="font-bold text-lg whitespace-nowrap">CEYLON PHARMA COLLEGE (PVT) LTD.</h1>
                         <p className="text-xs">Level 35, West Tower, World trade Center, Colombo 01, 00100</p>
@@ -90,7 +83,7 @@ export function ShippingLabel({ order }: ShippingLabelProps) {
                         <div className="col-span-2 text-center font-semibold">{new Date().toLocaleDateString()}</div>
                     </div>
                     <div className="grid grid-cols-3 items-center">
-                        <div className="bg-[#1E8A5A] text-white text-center p-1 rounded-md col-span-1">Index Number</div>
+                        <div className="bg-[#1E8A5A] text-white text-center p-1 rounded-md col-span-1">Student number</div>
                         <div className="col-span-2 text-center font-semibold">{order.student_number}</div>
                     </div>
                      <div className="grid grid-cols-3 items-center">
