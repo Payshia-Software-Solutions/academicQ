@@ -17,40 +17,23 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, BookOpen, UploadCloud, FileVideo } from 'lucide-react';
+import { Loader2, ArrowLeft, BookOpen, UploadCloud, FileText, DollarSign, Package } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 const addItemSchema = z.object({
-  content_type: z.string().min(1, { message: 'Content type is required.' }),
-  content_title: z.string().min(1, { message: 'Item title is required.' }),
-  content: z.string().optional(),
-  file: z.any().optional(),
-  is_active: z.boolean().default(true),
-}).superRefine((data, ctx) => {
-  const fileBasedTypes = ['VIDEO', 'IMAGE', 'PDF'];
-  const textBasedTypes = ['LINK', 'TEXT'];
-
-  if (fileBasedTypes.includes(data.content_type) && (!data.file || data.file.length === 0)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'A file is required for this content type.',
-      path: ['file'],
-    });
-  }
-
-  if (textBasedTypes.includes(data.content_type) && !data.content) {
-     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Content is required for this content type.',
-      path: ['content'],
-    });
-  }
+  name: z.string().min(1, { message: 'Item name is required.' }),
+  price: z.coerce.number().positive({ message: 'Price must be a positive number.' }),
+  description: z.string().min(1, { message: 'Description is required.' }),
+  img_url: z
+    .any()
+    .refine((files) => files?.length == 1, "Item image is required.")
+    .refine((files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type), ".jpg, .jpeg, .png and .webp files are accepted."),
 });
 
 
@@ -66,55 +49,33 @@ export function AddItemForm() {
 
   const form = useForm<AddItemFormValues>({
     resolver: zodResolver(addItemSchema),
-    defaultValues: {
-      content_type: 'PDF',
-      content_title: '',
-      content: '',
-      is_active: true,
-    },
   });
   
-  const fileRef = form.register("file");
-  const contentType = form.watch('content_type');
-  const isFileBased = ['VIDEO', 'IMAGE', 'PDF'].includes(contentType);
+  const imgUrlRef = form.register("img_url");
 
   const onSubmit = async (data: AddItemFormValues) => {
     setIsSubmitting(true);
     try {
-       const user = JSON.parse(localStorage.getItem('user') || '{}');
-       const userId = user.id || 5; // Fallback user ID
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('price', data.price.toString());
+      formData.append('description', data.description);
+      formData.append('course_bucket_id', bucketId);
 
-       const formData = new FormData();
-       const postData: any = {
-        content_type: data.content_type,
-        content_title: data.content_title,
-        is_active: data.is_active,
-        course_id: parseInt(courseId),
-        course_bucket_id: parseInt(bucketId),
-        created_by: userId,
-        updated_by: userId,
-      };
 
-      if (!isFileBased) {
-        postData.content = data.content;
-      }
-
-      formData.append('data', JSON.stringify(postData));
-
-      if (isFileBased && data.file && data.file.length > 0) {
-        formData.append('file', data.file[0]);
-      } else if (isFileBased) {
+      if (data.img_url && data.img_url.length > 0) {
+        formData.append('img_url', data.img_url[0]);
+      } else {
          toast({
             variant: 'destructive',
-            title: 'File Required',
-            description: `Please select a file for the ${data.content_type} content type.`,
+            title: 'Image Required',
+            description: `Please upload an image for the item.`,
          });
          setIsSubmitting(false);
          return;
       }
 
-
-      const response = await api.post('/course-bucket-contents', formData, {
+      const response = await api.post('/orderable-items', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -123,7 +84,7 @@ export function AddItemForm() {
       if (response.status === 201 || response.status === 200) {
         toast({
           title: 'Item Added',
-          description: `The item "${data.content_title}" has been successfully added.`,
+          description: `The item "${data.name}" has been successfully added.`,
         });
         router.push(`/study-packs/${courseId}/bucket/${bucketId}`);
       } else {
@@ -157,119 +118,77 @@ export function AddItemForm() {
                 <CardDescription>Fill in the details to add a new item to this study pack bucket.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-            <FormField
-                control={form.control}
-                name="content_title"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Item Title</FormLabel>
-                    <div className="relative">
-                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <FormControl>
-                        <Input placeholder="e.g. Full Course Notes PDF" {...field} className="pl-8" />
-                    </FormControl>
-                    </div>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-
-            <FormField
-                control={form.control}
-                name="content_type"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Item Type</FormLabel>
-                    <div className="relative">
-                    <FileVideo className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                    <Select onValueChange={(value) => {
-                        field.onChange(value);
-                        form.setValue('content', '');
-                        form.setValue('file', null);
-                        form.clearErrors(['content', 'file']);
-                    }} defaultValue={field.value}>
+                <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Item Name</FormLabel>
+                        <div className="relative">
+                        <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <FormControl>
-                        <SelectTrigger className="pl-8">
-                            <SelectValue placeholder="Select an item type" />
-                        </SelectTrigger>
+                            <Input placeholder="e.g. Full Course Notes PDF" {...field} className="pl-8" />
                         </FormControl>
-                        <SelectContent>
-                        <SelectItem value="PDF">PDF</SelectItem>
-                        <SelectItem value="VIDEO">Video</SelectItem>
-                        <SelectItem value="IMAGE">Image</SelectItem>
-                        <SelectItem value="LINK">Link</SelectItem>
-                        <SelectItem value="TEXT">Text</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    </div>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-
-            {isFileBased ? (
+                        </div>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Price</FormLabel>
+                        <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="e.g. 50.00" {...field} className="pl-8" />
+                        </FormControl>
+                        </div>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
                  <FormField
                   control={form.control}
-                  name="file"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Upload File</FormLabel>
+                      <FormLabel>Description</FormLabel>
+                       <div className="relative">
+                         <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                            <Textarea
+                              placeholder="e.g., A sturdy stand for your laptop."
+                              className="resize-none pl-8"
+                              {...field}
+                            />
+                          </FormControl>
+                       </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="img_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Item Image</FormLabel>
                       <FormControl>
                         <div className="relative">
                            <UploadCloud className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input 
                                 type="file" 
                                 className="pl-10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                                {...fileRef}
+                                {...imgUrlRef}
                             />
                         </div>
                       </FormControl>
                        <FormMessage />
                     </FormItem>
                   )}
-                />
-            ) : (
-                <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Content / Link</FormLabel>
-                         <FormControl>
-                            <Textarea
-                              placeholder="Enter content or URL..."
-                              className="resize-none"
-                              rows={4}
-                              {...field}
-                            />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-            )}
-            
-            <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                        Activate Item
-                        </FormLabel>
-                        <FormDescription>
-                        Make this item immediately available for ordering.
-                        </FormDescription>
-                    </div>
-                    <FormControl>
-                        <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        />
-                    </FormControl>
-                    </FormItem>
-                )}
                 />
 
             </CardContent>

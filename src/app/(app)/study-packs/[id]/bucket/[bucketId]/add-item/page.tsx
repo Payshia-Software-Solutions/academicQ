@@ -22,7 +22,7 @@ function AddItemPageContent() {
              <ChevronRight className="h-4 w-4 mx-1" />
             <Link href={`/study-packs/${courseId}/bucket/${bucketId}`} className="hover:underline">Bucket</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span>Add Item</span>
+            <span>Add Orderable Item</span>
         </div>
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">Add New Orderable Item</h1>
         <p className="text-muted-foreground mt-1">Configure and add a new item to this study pack bucket.</p>
