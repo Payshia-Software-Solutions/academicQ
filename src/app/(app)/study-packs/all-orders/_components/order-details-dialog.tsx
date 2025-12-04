@@ -207,18 +207,6 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
               Close
             </Button>
           </DialogClose>
-          <Button onClick={() => handleUpdate()} disabled={isSubmitting}>
-             {isSubmitting ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                </>
-             ) : (
-                <>
-                    Save Changes
-                </>
-             )}
-          </Button>
            {nextStatus && (
              <Button onClick={() => handleUpdate(nextStatus)} disabled={isSubmitting}>
                 {isSubmitting ? (
