@@ -173,10 +173,16 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                       <p className="text-muted-foreground">Course / Bucket</p>
                       <p className="font-semibold">{order.course_name} / {order.course_bucket_name}</p>
                   </div>
-                  <div>
+                   <div className="grid grid-cols-2 gap-4">
+                     <div>
                         <p className="text-muted-foreground">Order Date</p>
                         <p className="font-semibold">{format(new Date(order.created_at), 'yyyy-MM-dd HH:mm')}</p>
                     </div>
+                     <div>
+                        <p className="text-muted-foreground">Delivered Date</p>
+                        <p className="font-semibold">{order.delivery_date ? format(new Date(order.delivery_date), 'yyyy-MM-dd HH:mm') : 'N/A'}</p>
+                    </div>
+                  </div>
               </div>
               
               <div className="md:col-span-2 space-y-4 text-sm">
