@@ -166,7 +166,6 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                 </div>
                  <div className="flex gap-2">
                     <Button variant="outline"><Printer className="mr-2 h-4 w-4" /> Print Delivery Label</Button>
-                    <Button variant="destructive"><Trash2 className="mr-2 h-4 w-4" /> Remove</Button>
                 </div>
             </div>
              <div className="md:col-span-1 space-y-4 text-sm">
