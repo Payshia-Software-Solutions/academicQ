@@ -8,8 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, Package, FileVideo, Image, Link as LinkIcon, FileText, File } from 'lucide-react';
+import { ArrowLeft, Package, FileVideo, Image, Link as LinkIcon, FileText, File, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface BucketContent {
     id: string;
@@ -33,6 +45,12 @@ export function OrderStudyPackForm() {
     const [content, setContent] = useState<BucketContent[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [selectedItem, setSelectedItem] = useState<BucketContent | null>(null);
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
 
     useEffect(() => {
         if (!bucketId || !courseId) return;
@@ -60,56 +78,121 @@ export function OrderStudyPackForm() {
         fetchContent();
     }, [courseId, bucketId, toast]);
 
-    const handleOrderSubmit = (itemTitle: string) => {
+    const handleOrderSubmit = async () => {
+        if (!selectedItem || !deliveryAddress) {
+            toast({
+                variant: 'destructive',
+                title: "Validation Error",
+                description: "Please provide a delivery address.",
+            });
+            return;
+        }
+
+        setIsSubmitting(true);
         // Placeholder for order submission logic
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
         toast({
             title: "Order Placed (Simulation)",
-            description: `Your order for "${itemTitle}" has been submitted.`,
+            description: `Your order for "${selectedItem.content_title}" will be sent to your address.`,
         });
+
+        setIsSubmitting(false);
+        setIsDialogOpen(false);
+        setDeliveryAddress('');
+        setSelectedItem(null);
+    }
+    
+    const openOrderDialog = (item: BucketContent) => {
+        setSelectedItem(item);
+        setIsDialogOpen(true);
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Orderable Items</CardTitle>
-                <CardDescription>Select the item you wish to order from this study pack bucket.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {isLoading ? (
-                    <div className="space-y-4">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                    </div>
-                ) : content.length > 0 ? (
-                    <div className="space-y-4">
-                        {content.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                                <div className="flex items-center gap-3">
-                                    {getIconForType(item.content_type)}
-                                    <span className="font-medium">{item.content_title}</span>
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Orderable Items</CardTitle>
+                    <CardDescription>Select the item you wish to order from this study pack bucket.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isLoading ? (
+                        <div className="space-y-4">
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                            <Skeleton className="h-12 w-full" />
+                        </div>
+                    ) : content.length > 0 ? (
+                        <div className="space-y-4">
+                            {content.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
+                                    <div className="flex items-center gap-3">
+                                        {getIconForType(item.content_type)}
+                                        <span className="font-medium">{item.content_title}</span>
+                                    </div>
+                                    <Button size="sm" onClick={() => openOrderDialog(item)}>
+                                        <Package className="mr-2 h-4 w-4" />
+                                        Order Now
+                                    </Button>
                                 </div>
-                                <Button size="sm" onClick={() => handleOrderSubmit(item.content_title)}>
-                                    <Package className="mr-2 h-4 w-4" />
-                                    Order Now
-                                </Button>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                            <p className="text-muted-foreground">No orderable items found in this bucket.</p>
+                        </div>
+                    )}
+                </CardContent>
+                <CardFooter>
+                    <Button variant="outline" asChild>
+                        <Link href={`/study-packs/${courseId}`}>
+                            <ArrowLeft className="mr-2 h-4 w-4"/>
+                            Back to Buckets
+                        </Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+
+             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirm Your Order</DialogTitle>
+                        <DialogDescription>
+                            Please provide your delivery address to complete the order for {'"'}
+                            <span className="font-semibold">{selectedItem?.content_title}</span>{'"'}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                       <div className="grid gap-2">
+                         <Label htmlFor="delivery-address">Delivery Address</Label>
+                         <Textarea 
+                            id="delivery-address"
+                            placeholder="Enter your full delivery address..." 
+                            value={deliveryAddress}
+                            onChange={(e) => setDeliveryAddress(e.target.value)}
+                            rows={4}
+                         />
+                       </div>
                     </div>
-                ) : (
-                    <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                        <p className="text-muted-foreground">No orderable items found in this bucket.</p>
-                    </div>
-                )}
-            </CardContent>
-            <CardFooter>
-                 <Button variant="outline" asChild>
-                    <Link href={`/study-packs/${courseId}`}>
-                        <ArrowLeft className="mr-2 h-4 w-4"/>
-                        Back to Buckets
-                    </Link>
-                </Button>
-            </CardFooter>
-        </Card>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">
+                            Cancel
+                            </Button>
+                        </DialogClose>
+                        <Button type="button" onClick={handleOrderSubmit} disabled={isSubmitting}>
+                             {isSubmitting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Placing Order...
+                                </>
+                                ) : (
+                                'Confirm Order'
+                             )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }
