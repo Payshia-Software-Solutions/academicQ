@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -35,6 +36,8 @@ interface Order {
     course_bucket_id?: string;
     course_name?: string;
     bucket_name?: string;
+    orderable_item_name?: string;
+    course_bucket_name?: string;
 }
 
 interface OrderDetailsDialogProps {
@@ -147,7 +150,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                   </div>
                   <div>
                       <p className="text-muted-foreground text-sm">Order Item</p>
-                      <p className="font-semibold text-lg">{order.item_name}</p>
+                      <p className="font-semibold text-lg">{order.orderable_item_name}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
@@ -156,7 +159,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                       </div>
                       <div>
                           <p className="text-muted-foreground">Bucket</p>
-                          <p className="font-semibold">{order.bucket_name || 'N/A'}</p>
+                          <p className="font-semibold">{order.course_bucket_name || 'N/A'}</p>
                       </div>
                   </div>
                   <div className="space-y-1">

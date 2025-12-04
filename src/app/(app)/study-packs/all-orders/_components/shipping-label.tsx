@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -22,6 +23,8 @@ interface Order {
     package_weight?: string;
     course_name?: string;
     bucket_name?: string;
+    orderable_item_name?: string;
+    course_bucket_name?: string;
 }
 
 interface ShippingLabelProps {
@@ -43,7 +46,7 @@ export function ShippingLabel({ order }: ShippingLabelProps) {
                 </div>
 
                 {/* Sender/Receiver */}
-                <div className="grid grid-cols-2 gap-2 mt-2 text-xs flex-grow">
+                <div className="grid grid-cols-2 gap-2 mt-2 text-xs flex-grow" style={{ minHeight: '50px' }}>
                     <div className="border border-gray-400 p-2 rounded-md">
                         <p className="font-bold underline">Sender:</p>
                         <p className="font-bold">Ceylon Pharma College Pvt Ltd</p>
@@ -71,7 +74,7 @@ export function ShippingLabel({ order }: ShippingLabelProps) {
                 <div className="mt-2 space-y-1 text-sm">
                     <div className="grid grid-cols-3 items-center">
                         <div className="bg-[#1E8A5A] text-white text-center p-1.5 rounded-md col-span-1 text-sm">Item Code</div>
-                        <div className="col-span-2 text-center font-semibold">{order.item_name || 'N/A'}</div>
+                        <div className="col-span-2 text-center font-semibold">{order.orderable_item_name || 'N/A'}</div>
                     </div>
                     <div className="grid grid-cols-3 items-center">
                         <div className="bg-[#1E8A5A] text-white text-center p-1.5 rounded-md col-span-1 text-sm">Packed Date</div>

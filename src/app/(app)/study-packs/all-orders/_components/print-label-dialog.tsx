@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useRef } from 'react';
@@ -27,7 +28,10 @@ interface Order {
     package_weight?: string;
     course_name?: string;
     bucket_name?: string;
+    orderable_item_name?: string;
+    course_bucket_name?: string;
 }
+
 
 interface PrintLabelDialogProps {
   order: Order;

@@ -32,14 +32,20 @@ interface Order {
     phone_number_1: string;
     phone_number_2: string;
     created_at: string;
-    course_id?: string; 
-    course_bucket_id?: string;
     tracking_number?: string;
     cod_amount?: string;
     package_weight?: string;
+    order_date?: string;
+    delivery_date?: string;
+    price?: string;
+    course_id?: string;
+    course_bucket_id?: string;
+    orderable_item_name?: string;
     course_name?: string;
+    course_bucket_name?: string;
     bucket_name?: string;
 }
+
 
 interface Course {
   id: string;
@@ -132,19 +138,12 @@ export function OrdersList() {
     };
 
     const handleOpenDialog = (order: Order) => {
-        const courseName = courses.find(c => c.id === order.course_id)?.course_name;
-        const bucketName = buckets.find(b => b.id === order.course_bucket_id)?.bucket_name;
-        
-        setSelectedOrder({
-            ...order,
-            course_name: courseName,
-            bucket_name: bucketName,
-        });
+        setSelectedOrder(order);
         setIsDialogOpen(true);
     };
 
     const handleOrderUpdate = (updatedOrder: Order) => {
-        setOrders(prevOrders => prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+        setOrders(prevOrders => prevOrders.map(o => o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o));
     };
 
     const getStatusVariant = (status: string) => {
@@ -251,7 +250,7 @@ export function OrdersList() {
                                             <TableCell className="font-mono text-xs">#{order.id}</TableCell>
                                             <TableCell className="font-mono text-xs">{order.student_number}</TableCell>
                                             <TableCell>
-                                                {order.item_name || `Item #${order.orderable_item_id}`}
+                                                {order.orderable_item_name || `Item #${order.orderable_item_id}`}
                                             </TableCell>
                                             <TableCell className="text-xs">
                                                 {order.address_line_1}, {order.city}
