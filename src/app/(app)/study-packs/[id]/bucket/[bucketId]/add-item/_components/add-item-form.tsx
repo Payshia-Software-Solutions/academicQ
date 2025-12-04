@@ -60,6 +60,7 @@ export function AddItemForm() {
       formData.append('name', data.name);
       formData.append('price', data.price.toString());
       formData.append('description', data.description);
+      formData.append('course_id', courseId);
       formData.append('course_bucket_id', bucketId);
 
 
