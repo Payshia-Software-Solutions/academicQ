@@ -10,8 +10,6 @@ import { ArrowRight, Plus } from "lucide-react";
 import type { Class } from "@/lib/types";
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -101,40 +99,16 @@ function ClassCard({ cls, enrollmentStatus }: { cls: Class, enrollmentStatus?: s
 }
 
 function CourseListSection({ title, courses, enrollmentStatusMap }: { title: string, courses: Class[], enrollmentStatusMap?: Map<string, string> }) {
-    const isMobile = useIsMobile();
     if (courses.length === 0) return null;
 
-    const renderContent = () => {
-        if (isMobile) {
-            return (
-                <Carousel opts={{ align: "start", loop: false }} className="w-full">
-                    <CarouselContent>
-                        {courses.map((cls) => (
-                            <CarouselItem key={cls.id} className="basis-full sm:basis-1/2">
-                               <div className="p-1 h-full">
-                                 <ClassCard cls={cls} enrollmentStatus={enrollmentStatusMap?.get(cls.id)} />
-                               </div>
-                            </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="hidden sm:flex" />
-                    <CarouselNext className="hidden sm:flex" />
-                </Carousel>
-            )
-        }
-        return (
+    return (
+        <section className="space-y-4">
+            <h2 className="text-xl font-bold">{title}</h2>
              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {courses.map((cls) => (
                     <ClassCard key={cls.id} cls={cls} enrollmentStatus={enrollmentStatusMap?.get(cls.id)} />
                 ))}
             </div>
-        )
-    };
-
-    return (
-        <section className="space-y-4">
-            <h2 className="text-xl font-bold">{title}</h2>
-            {renderContent()}
         </section>
     )
 }
