@@ -45,7 +45,7 @@ export function ShippingLabel({ order }: ShippingLabelProps) {
                         </svg>
                     </div>
                     <div>
-                        <h1 className="font-bold text-lg">CEYLON PHARMA COLLEGE (PVT) LTD.</h1>
+                        <h1 className="font-bold text-lg whitespace-nowrap">CEYLON PHARMA COLLEGE (PVT) LTD.</h1>
                         <p className="text-xs">Level 35, West Tower, World trade Center, Colombo 01, 00100</p>
                         <p className="text-xs">011 7 494 335 | 071 5 884 884</p>
                         <p className="text-xs">E-mail: info@pharmacollege.lk | Web: www.pharmacolege.lk</p>
