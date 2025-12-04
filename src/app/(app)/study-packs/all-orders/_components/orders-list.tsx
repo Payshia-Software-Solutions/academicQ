@@ -143,7 +143,8 @@ export function OrdersList() {
     };
 
     const handleOrderUpdate = (updatedOrder: Order) => {
-        setOrders(prevOrders => prevOrders.map(o => o.id === updatedOrder.id ? { ...o, ...updatedOrder } : o));
+        // Refetch the orders to get the latest list based on current filters
+        handleApplyFilters();
     };
 
     const getStatusVariant = (status: string) => {
