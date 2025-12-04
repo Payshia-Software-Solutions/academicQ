@@ -207,7 +207,11 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
 
           <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full">
             <div>
-                 <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)}>
+                 <Button
+                    variant="outline"
+                    onClick={() => setIsPrintDialogOpen(true)}
+                    disabled={order.order_status === 'pending'}
+                  >
                     <Printer className="mr-2 h-4 w-4" /> Print Delivery Label
                 </Button>
             </div>
