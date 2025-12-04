@@ -192,7 +192,7 @@ const Sidebar = React.forwardRef<
     return (
       <aside
         ref={ref}
-        className={cn("group fixed top-0 left-0 z-20 hidden h-screen flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border md:flex",
+        className={cn("group sticky top-0 z-20 hidden h-screen flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border md:flex", 
           "transition-all duration-300 ease-in-out",
           state === 'expanded' ? 'w-[var(--sidebar-width)]' : 'w-[var(--sidebar-width-icon)]',
           className
@@ -256,12 +256,7 @@ const SidebarInset = React.forwardRef<
   return (
     <main
       ref={ref}
-      className={cn(
-        "transition-all duration-300 ease-in-out",
-        "group-data-[state=expanded]/sidebar-wrapper:md:ml-[var(--sidebar-width)]",
-        "group-data-[state=collapsed]/sidebar-wrapper:md:ml-[var(--sidebar-width-icon)]",
-        className
-      )}
+      className={cn("flex-1 overflow-y-auto", className)}
       {...props}
     />
   )

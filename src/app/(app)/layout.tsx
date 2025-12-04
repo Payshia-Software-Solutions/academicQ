@@ -74,7 +74,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const homePath = isAdmin ? '/dashboard' : '/student-dashboard';
 
   return (
-    <>
+    <div className="flex min-h-screen">
       <Sidebar>
         <SidebarHeader>
           <Link href={homePath} className="block">
@@ -258,7 +258,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
            </SidebarMenuButton>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="min-h-screen bg-background">
+      <SidebarInset>
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
               <div className="md:hidden">
                 <SidebarMenuButton asChild variant="ghost" size="icon" className="h-10 w-10">
@@ -279,7 +279,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             Powered By Payshia software Solutions
           </footer>
       </SidebarInset>
-    </>
+    </div>
   )
 }
 
