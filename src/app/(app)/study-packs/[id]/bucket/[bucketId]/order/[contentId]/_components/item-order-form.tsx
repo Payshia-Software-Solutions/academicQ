@@ -13,10 +13,12 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-interface BucketContent {
+interface OrderableItem {
     id: string;
-    content_title: string;
-    content_type: string;
+    name: string;
+    price: string;
+    description: string;
+    img_url: string;
 }
 
 interface DeliveryDetails {
@@ -40,7 +42,7 @@ export function ItemOrderForm() {
     const router = useRouter();
     const { id: courseId, bucketId, contentId } = params;
     
-    const [item, setItem] = useState<BucketContent | null>(null);
+    const [item, setItem] = useState<OrderableItem | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -119,7 +121,7 @@ export function ItemOrderForm() {
             if (response.data.message === 'Record created successfully.') {
                 toast({
                     title: "Order Placed",
-                    description: `Your order for "${item.content_title}" has been placed successfully.`,
+                    description: `Your order for "${item.name}" has been placed successfully.`,
                 });
                 router.push(`/study-packs/history`);
             } else {
@@ -181,7 +183,7 @@ export function ItemOrderForm() {
             <CardHeader>
                 <CardTitle>Confirm Your Order</CardTitle>
                 <CardDescription>
-                    You are ordering: <span className="font-semibold">{item.content_title}</span>. Please provide your delivery details below.
+                    You are ordering: <span className="font-semibold">{item.name}</span>. Please provide your delivery details below.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -259,4 +261,3 @@ export function ItemOrderForm() {
         </Card>
     );
 }
-

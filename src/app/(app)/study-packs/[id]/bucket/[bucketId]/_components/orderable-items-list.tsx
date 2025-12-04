@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, Package, FileVideo, Image as ImageIcon, Link as LinkIcon, FileText, File, DollarSign } from 'lucide-react';
+import { ArrowLeft, Package, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -35,12 +35,12 @@ export function OrderableItemsList() {
     const { toast } = useToast();
 
     useEffect(() => {
-        if (!bucketId) return;
+        if (!courseId || !bucketId) return;
 
         async function fetchContent() {
             setIsLoading(true);
             try {
-                const response = await api.get(`/orderable-items/bucket/${bucketId}`);
+                const response = await api.get(`/orderable-items/by-course?course_id=${courseId}&course_bucket_id=${bucketId}`);
                 if (response.data.status === 'success') {
                     setItems(response.data.data || []);
                 } else {
