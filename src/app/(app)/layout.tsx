@@ -17,7 +17,7 @@ import {
   SidebarSubMenuButton,
 } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck, Package } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { useToast } from '@/hooks/use-toast';
@@ -74,7 +74,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const homePath = isAdmin ? '/dashboard' : '/student-dashboard';
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex">
       <Sidebar>
         <SidebarHeader>
           <Link href={homePath} className="block">
@@ -134,6 +134,19 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <Link href="/classes">
                   <BookOpen />
                   <span className="group-data-[state=collapsed]:hidden">Classes</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isActive('/study-packs')}
+                tooltip="Study Packs"
+              >
+                <Link href="/study-packs">
+                  <Package />
+                  <span className="group-data-[state=collapsed]:hidden">Study Packs</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
