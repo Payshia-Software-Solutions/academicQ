@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -115,6 +116,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
   }
 
   const nextStatus = statusFlow[currentStatus];
+  const printUrl = `/study-packs/all-orders/print/${order.id}`;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -165,7 +167,11 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                     </address>
                 </div>
                  <div className="flex gap-2">
-                    <Button variant="outline"><Printer className="mr-2 h-4 w-4" /> Print Delivery Label</Button>
+                    <Button variant="outline" asChild>
+                        <Link href={printUrl} target="_blank">
+                            <Printer className="mr-2 h-4 w-4" /> Print Delivery Label
+                        </Link>
+                    </Button>
                 </div>
             </div>
              <div className="md:col-span-1 space-y-4 text-sm">
