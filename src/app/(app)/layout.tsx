@@ -28,6 +28,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { useEffect, useState } from 'react';
 
 interface CurrentUser {
+  id?: string;
   user_status: 'admin' | 'student';
   f_name?: string;
   l_name?: string;
@@ -72,6 +73,21 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   
   const isAdmin = user?.user_status === 'admin';
   const homePath = isAdmin ? '/dashboard' : '/student-dashboard';
+
+  const profilePath = useMemo(() => {
+    if (!user) return '#';
+    if (isAdmin) {
+      // Admins might not have a public profile page in the same way,
+      // direct them to a relevant page or a placeholder.
+      // For now, let's point to the dashboard.
+      return '/dashboard'; 
+    }
+    // For students, the user object from the API now seems to have a top-level `id`
+    // which corresponds to the user record ID, not the student ID. The student profile page
+    // `src/app/(app)/students/[id]/page.tsx` seems to use the user ID from `users` data.
+    // The `user` object in localStorage has an `id` that should work.
+    return `/students/${user.id}`;
+  }, [user, isAdmin]);
 
   return (
     <div className="flex">
@@ -262,6 +278,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
              </SidebarMenuButton>
            </div>
            <SidebarMenuButton 
+                asChild
                 tooltip={{
                     children: (
                         <div>
@@ -279,19 +296,21 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     state === 'collapsed' && 'justify-center'
                 )}
            >
-            <div className={cn("flex items-center gap-3")}>
-                <Avatar className="h-9 w-9">
-                    <AvatarImage src="https://placehold.co/100x100.png" alt={user?.f_name} data-ai-hint="person avatar" />
-                    <AvatarFallback>{user?.f_name?.charAt(0)}{user?.l_name?.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="group-data-[state=collapsed]:hidden">
-                    <p className="text-sm font-semibold text-sidebar-footer-foreground">{user?.f_name} {user?.l_name}</p>
-                    <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">{user?.email}</p>
-                    {!isAdmin && user?.student_number && (
-                        <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground font-mono">{user.student_number}</p>
-                    )}
+            <Link href={profilePath}>
+                <div className={cn("flex items-center gap-3")}>
+                    <Avatar className="h-9 w-9">
+                        <AvatarImage src="https://placehold.co/100x100.png" alt={user?.f_name} data-ai-hint="person avatar" />
+                        <AvatarFallback>{user?.f_name?.charAt(0)}{user?.l_name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="group-data-[state=collapsed]:hidden">
+                        <p className="text-sm font-semibold text-sidebar-footer-foreground">{user?.f_name} {user?.l_name}</p>
+                        <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">{user?.email}</p>
+                        {!isAdmin && user?.student_number && (
+                            <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground font-mono">{user.student_number}</p>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </Link>
            </SidebarMenuButton>
         </SidebarFooter>
       </Sidebar>
