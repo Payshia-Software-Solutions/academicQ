@@ -19,6 +19,7 @@ type OrderStatus = 'pending' | 'packed' | 'handed over' | 'delivered' | 'returne
 interface Order {
     id: string;
     student_number: string;
+    orderable_item_id: string;
     item_name?: string;
     order_status: OrderStatus;
     address_line_1: string;
@@ -32,12 +33,15 @@ interface Order {
     tracking_number?: string;
     cod_amount?: string;
     package_weight?: string;
+    order_date?: string;
+    delivery_date?: string;
+    price?: string;
     course_id?: string;
     course_bucket_id?: string;
-    course_name?: string;
-    bucket_name?: string;
     orderable_item_name?: string;
+    course_name?: string;
     course_bucket_name?: string;
+    bucket_name?: string;
 }
 
 interface OrderDetailsDialogProps {
@@ -93,7 +97,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                 description: `Order #${order.id} has been successfully updated.`,
             });
             onOrderUpdate(response.data.data);
-            if (newStatus) { // Only close if a status transition happened
+            if (newStatus) { 
               onOpenChange(false);
             }
         } else {
@@ -128,31 +132,33 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              Order Details
-              <Badge variant={getStatusVariant(order.order_status)} className="capitalize text-base ml-4">{order.order_status}</Badge>
-            </DialogTitle>
-            <DialogDescription>
-              Reference ID: #{order.id}
-            </DialogDescription>
+            <div className="flex items-start justify-between">
+                <div>
+                    <DialogTitle>
+                    Order Details
+                    </DialogTitle>
+                    <DialogDescription>
+                    Reference ID: #{order.id}
+                    </DialogDescription>
+                </div>
+                 <Badge variant={getStatusVariant(order.order_status)} className="capitalize text-base ml-4">{order.order_status}</Badge>
+            </div>
           </DialogHeader>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 max-h-[70vh] overflow-y-auto px-1">
-              <div className="md:col-span-2 space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+              {/* Left Column */}
+              <div className="md:col-span-2 space-y-4 text-sm">
+                  <div className="grid grid-cols-2 gap-4">
                       <div>
                           <p className="text-muted-foreground">Student Number</p>
                           <p className="font-semibold font-mono">{order.student_number}</p>
                       </div>
-                      <div>
-                          <p className="text-muted-foreground">Order Date</p>
-                          <p className="font-semibold">{format(new Date(order.created_at), 'yyyy-MM-dd HH:mm')}</p>
+                       <div>
+                          <p className="text-muted-foreground">Order Item</p>
+                          <p className="font-semibold text-lg">{order.orderable_item_name}</p>
                       </div>
                   </div>
-                  <div>
-                      <p className="text-muted-foreground text-sm">Order Item</p>
-                      <p className="font-semibold text-lg">{order.orderable_item_name}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                   <div className="grid grid-cols-2 gap-4">
                       <div>
                           <p className="text-muted-foreground">Course</p>
                           <p className="font-semibold">{order.course_name || 'N/A'}</p>
@@ -162,9 +168,9 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                           <p className="font-semibold">{order.course_bucket_name || 'N/A'}</p>
                       </div>
                   </div>
-                  <div className="space-y-1">
-                      <p className="text-muted-foreground text-sm">Delivery Address</p>
-                      <address className="not-italic font-medium text-sm">
+                  <div>
+                      <p className="text-muted-foreground">Delivery Address</p>
+                      <address className="not-italic font-medium">
                           {order.address_line_1}<br />
                           {order.address_line_2 && <>{order.address_line_2}<br /></>}
                           {order.city}, {order.district}<br />
@@ -172,13 +178,19 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                           {order.phone_number_1}
                       </address>
                   </div>
-                  <div className="flex gap-2">
+                   <div className="pt-2">
                       <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)}>
                           <Printer className="mr-2 h-4 w-4" /> Print Delivery Label
                       </Button>
                   </div>
               </div>
+              
+              {/* Right Column */}
               <div className="md:col-span-1 space-y-4 text-sm">
+                   <div>
+                        <p className="text-muted-foreground">Order Date</p>
+                        <p className="font-semibold">{format(new Date(order.created_at), 'yyyy-MM-dd HH:mm')}</p>
+                    </div>
                   <div>
                       <p className="text-muted-foreground">Packed Date</p>
                       <p className="font-semibold">Not Set</p>
