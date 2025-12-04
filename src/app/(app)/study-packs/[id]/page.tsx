@@ -9,6 +9,7 @@ import { ChevronRight, Plus, Folder, List, FileText, Package } from "lucide-reac
 import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from '@/lib/api';
+import { Badge } from "@/components/ui/badge";
 
 interface Course {
   id: string;
@@ -127,7 +128,7 @@ export default function StudyPackDetailsPage({ params }: { params: { id: string 
                         {buckets.map((bucket) => {
                         const totalContent = bucket.contents?.length || 0;
                         return (
-                            <Link href={`/study-packs/${course.id}/bucket/${bucket.id}/order`} key={bucket.id} className="block group">
+                            <Link href={`/study-packs/${course.id}/bucket/${bucket.id}`} key={bucket.id} className="block group">
                                 <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
                                     <CardHeader>
                                         <div className="flex items-start justify-between">
