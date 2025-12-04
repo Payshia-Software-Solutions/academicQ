@@ -15,12 +15,14 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { OrderDetailsDialog } from './order-details-dialog';
 
+type OrderStatus = 'pending' | 'packed' | 'handed over' | 'delivered' | 'returned' | 'cancelled';
+
 interface Order {
     id: string;
     student_number: string;
     orderable_item_id: string;
     item_name?: string;
-    order_status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
+    order_status: OrderStatus;
     address_line_1: string;
     address_line_2: string;
     city: string;
@@ -45,7 +47,7 @@ interface Bucket {
   bucket_name: string;
 }
 
-const statusOptions: Order['order_status'][] = ['pending', 'shipped', 'delivered', 'cancelled'];
+const statusOptions: OrderStatus[] = ['pending', 'packed', 'handed over', 'delivered', 'returned', 'cancelled'];
 
 
 export function OrdersList() {
@@ -58,7 +60,7 @@ export function OrdersList() {
     
     const [selectedCourse, setSelectedCourse] = useState('all');
     const [selectedBucket, setSelectedBucket] = useState('all');
-    const [selectedStatus, setSelectedStatus] = useState<Order['order_status'] | 'all'>('pending');
+    const [selectedStatus, setSelectedStatus] = useState<OrderStatus | 'all'>('pending');
     
     const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
     const [filterTrigger, setFilterTrigger] = useState(0);
@@ -138,14 +140,14 @@ export function OrdersList() {
     const getStatusVariant = (status: string) => {
         switch (status) {
             case 'delivered': return 'secondary';
-            case 'shipped': return 'default';
-            case 'cancelled': return 'destructive';
-            case 'pending':
+            case 'shipped': case 'handed over': return 'default';
+            case 'cancelled': case 'returned': return 'destructive';
+            case 'pending': case 'packed':
             default: return 'outline';
         }
     }
     
-    const StatusBadge = ({ status }: { status: Order['order_status']}) => (
+    const StatusBadge = ({ status }: { status: OrderStatus}) => (
         <Badge variant={getStatusVariant(status)} className="capitalize">{status}</Badge>
     );
 

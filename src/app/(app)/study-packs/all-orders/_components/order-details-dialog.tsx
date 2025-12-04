@@ -11,19 +11,14 @@ import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { format } from 'date-fns';
 import { Loader2, Printer, Trash2, Truck } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
+type OrderStatus = 'pending' | 'packed' | 'handed over' | 'delivered' | 'returned' | 'cancelled';
 
 interface Order {
     id: string;
     student_number: string;
     item_name?: string;
-    order_status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
+    order_status: OrderStatus;
     address_line_1: string;
     address_line_2: string;
     city: string;
@@ -46,28 +41,38 @@ interface OrderDetailsDialogProps {
   onOrderUpdate: (updatedOrder: Order) => void;
 }
 
-const statusOptions: Order['order_status'][] = ['pending', 'shipped', 'delivered', 'cancelled'];
+const statusFlow: Record<OrderStatus, OrderStatus | null> = {
+    'pending': 'packed',
+    'packed': 'handed over',
+    'handed over': 'delivered',
+    'delivered': null, // End of primary flow
+    'returned': null, // Terminal state
+    'cancelled': null, // Terminal state
+};
+
 
 export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate }: OrderDetailsDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState(order.tracking_number || '');
   const [codAmount, setCodAmount] = useState(order.cod_amount || '0.00');
   const [packageWeight, setPackageWeight] = useState(order.package_weight || '0.00');
-  const [currentStatus, setCurrentStatus] = useState<Order['order_status']>(order.order_status);
+  const [currentStatus, setCurrentStatus] = useState<OrderStatus>(order.order_status);
   const { toast } = useToast();
 
   useEffect(() => {
-    setTrackingNumber(order.tracking_number || '');
-    setCodAmount(order.cod_amount || '0.00');
-    setPackageWeight(order.package_weight || '0.00');
-    setCurrentStatus(order.order_status);
-  }, [order]);
+    if (isOpen) {
+        setTrackingNumber(order.tracking_number || '');
+        setCodAmount(order.cod_amount || '0.00');
+        setPackageWeight(order.package_weight || '0.00');
+        setCurrentStatus(order.order_status);
+    }
+  }, [order, isOpen]);
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (newStatus?: OrderStatus) => {
     setIsSubmitting(true);
     try {
         const updateData = {
-            order_status: currentStatus,
+            order_status: newStatus || currentStatus,
             tracking_number: trackingNumber,
             cod_amount: parseFloat(codAmount) || 0,
             package_weight: parseFloat(packageWeight) || 0,
@@ -80,7 +85,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                 title: 'Order Updated',
                 description: `Order #${order.id} has been successfully updated.`,
             });
-            onOrderUpdate(response.data.data); // Assuming API returns the updated order
+            onOrderUpdate(response.data.data);
             onOpenChange(false);
         } else {
             throw new Error(response.data.message || 'An unknown error occurred.');
@@ -100,13 +105,14 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
   const getStatusVariant = (status: string) => {
     switch (status) {
         case 'delivered': return 'secondary';
-        case 'shipped': return 'default';
-        case 'cancelled': return 'destructive';
-        case 'pending':
+        case 'shipped': case 'handed over': return 'default';
+        case 'cancelled': case 'returned': return 'destructive';
+        case 'pending': case 'packed':
         default: return 'outline';
     }
   }
 
+  const nextStatus = statusFlow[currentStatus];
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -169,7 +175,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
             </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end border-t pt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end border-t pt-4">
             <div className="space-y-2">
                 <Label htmlFor="tracking-number">Tracking Number</Label>
                 <Input id="tracking-number" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} />
@@ -182,19 +188,6 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                 <Label htmlFor="package-weight">Package Weight (KG)</Label>
                 <Input id="package-weight" type="number" value={packageWeight} onChange={(e) => setPackageWeight(e.target.value)} />
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="status-update">Status Update</Label>
-                 <Select value={currentStatus} onValueChange={(val) => setCurrentStatus(val as any)}>
-                    <SelectTrigger id="status-update">
-                        <SelectValue placeholder="Update status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {statusOptions.map(status => (
-                            <SelectItem key={status} value={status} className="capitalize">{status}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
         </div>
 
         <DialogFooter>
@@ -203,19 +196,33 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
               Close
             </Button>
           </DialogClose>
-          <Button onClick={handleUpdate} disabled={isSubmitting}>
+          <Button onClick={() => handleUpdate()} disabled={isSubmitting}>
              {isSubmitting ? (
                 <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
+                    Saving...
                 </>
              ) : (
                 <>
-                    <Truck className="mr-2 h-4 w-4"/>
-                    Update Order
+                    Save Changes
                 </>
              )}
           </Button>
+           {nextStatus && (
+             <Button onClick={() => handleUpdate(nextStatus)} disabled={isSubmitting}>
+                {isSubmitting ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                    </>
+                ) : (
+                    <>
+                        <Truck className="mr-2 h-4 w-4"/>
+                        Update to {nextStatus}
+                    </>
+                )}
+             </Button>
+           )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
