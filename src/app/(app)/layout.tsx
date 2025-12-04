@@ -163,6 +163,13 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                           <Link href="/study-packs/history">> Order History</Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                     {isAdmin && (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={isActive('/study-packs/all-orders')}>
+                                <Link href="/study-packs/all-orders">> All Orders</Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                     )}
                   </SidebarSubMenuContent>
                 </SidebarMenuItem>
               </SidebarSubMenu>
