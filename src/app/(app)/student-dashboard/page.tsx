@@ -20,9 +20,12 @@ interface CurrentUser {
   [key: string]: any;
 }
 
-interface Enrollment {
+interface EnrolledCourse {
   id: string;
   course_id: string;
+  course_name: string;
+  description?: string; // Assuming this might come from another source if not from this endpoint
+  img_url?: string; // Assuming this might come from another source
   status: 'pending' | 'approved' | 'rejected';
 }
 
@@ -52,23 +55,22 @@ export default function StudentDashboardPage() {
       async function fetchDashboardData() {
         setLoading(true);
         try {
-          const [enrollmentsRes, coursesRes] = await Promise.all([
-            api.get(`/enrollments/?student_id=${user.student_number}`),
-            api.get('/courses')
-          ]);
-
-          const enrollments: Enrollment[] = enrollmentsRes.data || [];
+          // Fetch all courses to get details like description and image
+          const coursesRes = await api.get('/courses');
           const allCourses: Course[] = coursesRes.data.data || [];
           
+          // Fetch student-specific enrollments which include the status
+          const enrollmentsRes = await api.get(`/enrollments/student/${user.student_number}`);
+          const enrollments: EnrolledCourse[] = enrollmentsRes.data || [];
+
           const coursesWithStatus = enrollments.map(enrollment => {
             const courseDetails = allCourses.find(c => c.id.toString() === enrollment.course_id.toString());
-            if (courseDetails) {
-              return {
-                ...courseDetails,
-                enrollment_status: enrollment.status,
-              };
-            }
-            return null;
+            return {
+              ...courseDetails, // contains description, img_url etc.
+              id: enrollment.course_id,
+              course_name: enrollment.course_name,
+              enrollment_status: enrollment.status,
+            };
           }).filter(Boolean) as Course[];
 
           setEnrolledCourses(coursesWithStatus);
@@ -86,7 +88,6 @@ export default function StudentDashboardPage() {
       }
       fetchDashboardData();
     } else if (user) {
-        // If user exists but has no student number, stop loading.
         setLoading(false);
     }
   }, [user, toast]);
