@@ -43,15 +43,14 @@ export function ShippingLabel({ order }: ShippingLabelProps) {
                 </div>
 
                 {/* Sender/Receiver */}
-                <div className="grid grid-cols-2 gap-2 mt-1 text-[9px]">
-                    <div className="bg-[#1E8A5A] text-white text-center p-0.5 rounded-md text-xs col-span-2">Details</div>
-                    <div className="border border-gray-400 p-1 rounded-md">
+                <div className="grid grid-cols-2 gap-2 mt-2 text-xs flex-grow">
+                    <div className="border border-gray-400 p-2 rounded-md">
                         <p className="font-bold underline">Sender:</p>
                         <p className="font-bold">Ceylon Pharma College Pvt Ltd</p>
                         <p>Warehouse Pelmadulla</p>
                         <p>0715 884 884</p>
                     </div>
-                    <div className="border border-gray-400 p-1 rounded-md">
+                    <div className="border border-gray-400 p-2 rounded-md">
                          <p className="font-bold underline">Receiver:</p>
                         <p className="font-bold">{order.student_number}</p>
                         <p>{order.address_line_1}{order.address_line_2 && `, ${order.address_line_2}`}</p>
@@ -61,44 +60,44 @@ export function ShippingLabel({ order }: ShippingLabelProps) {
                 </div>
                 
                 {/* Tracking */}
-                <div className="bg-[#1E8A5A] text-white text-center mt-1 p-0.5 rounded-lg">
+                <div className="bg-[#1E8A5A] text-white text-center mt-2 p-1 rounded-lg">
                     <p className="text-xs">Tracking Number</p>
-                    <div className="bg-white text-black font-bold text-base p-0.5 rounded-md mt-0.5 w-2/3 mx-auto">
+                    <div className="bg-white text-black font-bold text-lg p-1 rounded-md mt-1 w-2/3 mx-auto">
                         {order.tracking_number || 'N/A'}
                     </div>
                 </div>
                 
                 {/* Details */}
-                <div className="mt-1 space-y-0.5 text-xs">
+                <div className="mt-2 space-y-1 text-sm">
                     <div className="grid grid-cols-3 items-center">
-                        <div className="bg-[#1E8A5A] text-white text-center p-1 rounded-md col-span-1 text-xs">Item Code</div>
+                        <div className="bg-[#1E8A5A] text-white text-center p-1.5 rounded-md col-span-1 text-sm">Item Code</div>
                         <div className="col-span-2 text-center font-semibold">{order.item_name || 'N/A'}</div>
                     </div>
                     <div className="grid grid-cols-3 items-center">
-                        <div className="bg-[#1E8A5A] text-white text-center p-1 rounded-md col-span-1 text-xs">Packed Date</div>
+                        <div className="bg-[#1E8A5A] text-white text-center p-1.5 rounded-md col-span-1 text-sm">Packed Date</div>
                         <div className="col-span-2 text-center font-semibold">{new Date().toLocaleDateString()}</div>
                     </div>
                     <div className="grid grid-cols-3 items-center">
-                        <div className="bg-[#1E8A5A] text-white text-center p-1 rounded-md col-span-1 text-xs">Student number</div>
+                        <div className="bg-[#1E8A5A] text-white text-center p-1.5 rounded-md col-span-1 text-sm">Student number</div>
                         <div className="col-span-2 text-center font-semibold">{order.student_number}</div>
                     </div>
                      <div className="grid grid-cols-3 items-center">
-                        <div className="bg-[#1E8A5A] text-white text-center p-1 rounded-md col-span-1 text-xs">Weight</div>
+                        <div className="bg-[#1E8A5A] text-white text-center p-1.5 rounded-md col-span-1 text-sm">Weight</div>
                         <div className="col-span-2 text-center font-semibold">{parseFloat(order.package_weight || '0').toFixed(3)} Kg</div>
                     </div>
                 </div>
                 
                 {/* Footer */}
-                <div className="border border-gray-400 rounded-lg p-1 mt-auto flex justify-between items-center text-[9px]">
+                <div className="border border-gray-400 rounded-lg p-2 mt-auto flex justify-between items-center text-xs">
                     <div>
                         <p className="font-bold">Remarks</p>
                         <p>බෙදා හැරීමේදී ගැටලුවක් ඇත්නම්</p>
                         <p className="font-bold">071 5 884 884 ට අමතන්න. ස්තූතියි!</p>
-                        <p className="mt-1">COD Amount: <span className="font-bold text-sm">LKR {parseFloat(order.cod_amount || '0').toFixed(2)}</span></p>
+                        <p className="mt-1">COD Amount: <span className="font-bold text-lg">LKR {parseFloat(order.cod_amount || '0').toFixed(2)}</span></p>
                     </div>
                     <div className="text-center">
-                        <Image src={qrCodeUrl} alt="QR Code" width={60} height={60} />
-                        <p className="text-[8px] bg-black text-white p-0.5 rounded-b-md -mt-1">Scan Me</p>
+                        <Image src={qrCodeUrl} alt="QR Code" width={70} height={70} />
+                        <p className="text-[9px] bg-black text-white p-0.5 rounded-b-md -mt-1">Scan Me</p>
                     </div>
                 </div>
             </div>
