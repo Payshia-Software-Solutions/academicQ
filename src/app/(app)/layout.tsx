@@ -74,7 +74,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const homePath = isAdmin ? '/dashboard' : '/student-dashboard';
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Sidebar>
         <SidebarHeader>
           <Link href={homePath} className="block">

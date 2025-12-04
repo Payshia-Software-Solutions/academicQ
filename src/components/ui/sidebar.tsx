@@ -169,7 +169,7 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile, toggleSidebar } = useSidebar()
+    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
     
     if (isMobile) {
       return (
@@ -192,7 +192,7 @@ const Sidebar = React.forwardRef<
     return (
       <aside
         ref={ref}
-        className={cn("group hidden flex-col md:flex bg-sidebar text-sidebar-foreground border-r border-sidebar-border",
+        className={cn("group fixed top-0 left-0 h-screen hidden flex-col md:flex bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-20",
           "transition-all duration-300 ease-in-out",
           state === 'expanded' ? 'w-[var(--sidebar-width)]' : 'w-[var(--sidebar-width-icon)]',
           className
@@ -257,7 +257,7 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "flex-1 md:transition-[margin-left] md:duration-300 md:ease-in-out",
+        "transition-all duration-300 ease-in-out",
         "group-data-[state=expanded]/sidebar-wrapper:md:ml-[var(--sidebar-width)]",
         "group-data-[state=collapsed]/sidebar-wrapper:md:ml-[var(--sidebar-width-icon)]",
         className
