@@ -17,7 +17,7 @@ import {
   SidebarSubMenuButton,
 } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck, Package } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck, Package, History } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { useToast } from '@/hooks/use-toast';
@@ -139,16 +139,33 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
 
             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive('/study-packs')}
-                tooltip="Study Packs"
-              >
-                <Link href="/study-packs">
-                  <Package />
-                  <span className="group-data-[state=collapsed]:hidden">Study Packs</span>
-                </Link>
-              </SidebarMenuButton>
+              <SidebarSubMenu>
+                <SidebarMenuItem value="study-packs">
+                   <SidebarSubMenuButton
+                      isActive={isActive('/study-packs')}
+                      tooltip="Study Packs"
+                      className="justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Package />
+                        <span className="group-data-[state=collapsed]:hidden">Study Packs</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 group-data-[state=collapsed]:hidden" />
+                    </SidebarSubMenuButton>
+                  <SidebarSubMenuContent>
+                     <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={pathname === '/study-packs'}>
+                        <Link href="/study-packs">> Order Packs</Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                     <SidebarMenuItem>
+                      <SidebarMenuButton asChild isActive={isActive('/study-packs/history')}>
+                          <Link href="/study-packs/history">> Order History</Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarSubMenuContent>
+                </SidebarMenuItem>
+              </SidebarSubMenu>
             </SidebarMenuItem>
             
              {isAdmin && (
