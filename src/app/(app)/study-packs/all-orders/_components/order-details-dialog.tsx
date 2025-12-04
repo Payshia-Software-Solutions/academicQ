@@ -90,13 +90,13 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
         };
 
         const response = await api.post(`/student-orders/${order.id}`, updateData);
-
-        if (response.status === 200) {
+        
+        if (response.status === 200 && response.data) {
             toast({
                 title: 'Order Updated',
                 description: `Order #${order.id} has been successfully updated.`,
             });
-            onOrderUpdate(response.data.data);
+            onOrderUpdate(response.data);
             if (newStatus) { 
               onOpenChange(false);
             }
