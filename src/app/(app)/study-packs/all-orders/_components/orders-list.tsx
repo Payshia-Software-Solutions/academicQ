@@ -18,6 +18,7 @@ interface Order {
     id: string;
     student_number: string;
     orderable_item_id: string;
+    item_name?: string;
     order_status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
     address_line_1: string;
     city: string;
@@ -86,9 +87,9 @@ export function OrdersList() {
                 const params = new URLSearchParams();
                 if (selectedCourse !== 'all') params.append('course_id', selectedCourse);
                 if (selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
-                if (selectedStatus !== 'all') params.append('order_status', selectedStatus);
+                if (selectedStatus !== 'all') params.append('status', selectedStatus);
 
-                const response = await api.get(`/student-orders?${params.toString()}`);
+                const response = await api.get(`/student-orders/filter?${params.toString()}`);
                 if (Array.isArray(response.data)) {
                     setOrders(response.data);
                 } else {
@@ -106,7 +107,7 @@ export function OrdersList() {
             }
         }
         fetchOrders();
-    }, [toast, filterTrigger]);
+    }, [toast, filterTrigger, selectedCourse, selectedBucket, selectedStatus]);
 
 
     const handleApplyFilters = () => {
@@ -217,7 +218,7 @@ export function OrdersList() {
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle>Orders List</CardTitle>
+                    <CardTitle>Pending Orders List</CardTitle>
                     <CardDescription>
                         Displaying {orders.length} order(s).
                     </CardDescription>
@@ -229,7 +230,7 @@ export function OrdersList() {
                                 <TableRow>
                                     <TableHead>Order ID</TableHead>
                                     <TableHead>Student No.</TableHead>
-                                    <TableHead>Item ID</TableHead>
+                                    <TableHead>Item</TableHead>
                                     <TableHead>Address</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Date</TableHead>
@@ -249,7 +250,9 @@ export function OrdersList() {
                                         <TableRow key={order.id}>
                                             <TableCell className="font-mono text-xs">#{order.id}</TableCell>
                                             <TableCell className="font-mono text-xs">{order.student_number}</TableCell>
-                                            <TableCell>#{order.orderable_item_id}</TableCell>
+                                            <TableCell>
+                                                {order.item_name || `Item #${order.orderable_item_id}`}
+                                            </TableCell>
                                             <TableCell className="text-xs">
                                                 {order.address_line_1}, {order.city}
                                             </TableCell>
