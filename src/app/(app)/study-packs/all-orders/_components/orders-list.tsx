@@ -39,8 +39,7 @@ const statusOptions: Order['order_status'][] = ['pending', 'shipped', 'delivered
 
 
 export function OrdersList() {
-    const [allOrders, setAllOrders] = useState<Order[]>([]);
-    const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
@@ -52,20 +51,16 @@ export function OrdersList() {
     const [selectedStatus, setSelectedStatus] = useState<Order['order_status'] | 'all'>('pending');
     
     const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+    const [filterTrigger, setFilterTrigger] = useState(0);
 
     useEffect(() => {
-        async function fetchInitialData() {
-            setIsLoading(true);
+        async function fetchFilterData() {
             try {
-                const [ordersRes, coursesRes, bucketsRes] = await Promise.all([
-                    api.get('/student-orders'),
+                const [coursesRes, bucketsRes] = await Promise.all([
                     api.get('/courses'),
                     api.get('/course_buckets') 
                 ]);
 
-                if (Array.isArray(ordersRes.data)) {
-                    setAllOrders(ordersRes.data);
-                }
                 if (coursesRes.data.status === 'success') {
                     setCourses(coursesRes.data.data || []);
                 }
@@ -77,31 +72,46 @@ export function OrdersList() {
                 toast({
                     variant: 'destructive',
                     title: 'API Error',
-                    description: error.message || 'Could not fetch initial data.',
+                    description: error.message || 'Could not fetch filter data.',
                 });
+            }
+        }
+        fetchFilterData();
+    }, [toast]);
+    
+    useEffect(() => {
+        async function fetchOrders() {
+            setIsLoading(true);
+            try {
+                const params = new URLSearchParams();
+                if (selectedCourse !== 'all') params.append('course_id', selectedCourse);
+                if (selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
+                if (selectedStatus !== 'all') params.append('order_status', selectedStatus);
+
+                const response = await api.get(`/student-orders?${params.toString()}`);
+                if (Array.isArray(response.data)) {
+                    setOrders(response.data);
+                } else {
+                    setOrders([]);
+                }
+            } catch (error: any) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'API Error',
+                    description: 'Could not fetch orders.',
+                });
+                setOrders([]);
             } finally {
                 setIsLoading(false);
             }
         }
-        fetchInitialData();
-    }, [toast]);
-    
-    // Filtering logic
-    useEffect(() => {
-        let orders = allOrders;
+        fetchOrders();
+    }, [toast, filterTrigger]);
 
-        if (selectedStatus !== 'all') {
-            orders = orders.filter(o => o.order_status === selectedStatus);
-        }
-        if (selectedCourse !== 'all') {
-             orders = orders.filter(o => o.course_id === selectedCourse);
-        }
-         if (selectedBucket !== 'all') {
-             orders = orders.filter(o => o.course_bucket_id === selectedBucket);
-        }
 
-        setFilteredOrders(orders);
-    }, [allOrders, selectedCourse, selectedBucket, selectedStatus]);
+    const handleApplyFilters = () => {
+        setFilterTrigger(prev => prev + 1);
+    };
 
     const getStatusVariant = (status: string) => {
         switch (status) {
@@ -121,9 +131,9 @@ export function OrdersList() {
         if (!newStatus) return;
         setUpdatingStatus(orderId);
 
-        const originalOrders = [...allOrders];
+        const originalOrders = [...orders];
         
-        setAllOrders(prev => prev.map(o => o.id === orderId ? { ...o, order_status: newStatus } : o));
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, order_status: newStatus } : o));
 
         try {
             const response = await api.put(`/student-orders/${orderId}/status`, { order_status: newStatus });
@@ -134,8 +144,12 @@ export function OrdersList() {
                 title: 'Status Updated',
                 description: `Order #${orderId} status set to ${newStatus}.`,
             });
+            // Refetch orders if the status filter is not 'all'
+            if (selectedStatus !== 'all' && newStatus !== selectedStatus) {
+                handleApplyFilters();
+            }
         } catch (error: any) {
-            setAllOrders(originalOrders); // Revert on failure
+            setOrders(originalOrders); // Revert on failure
             toast({
                 variant: 'destructive',
                 title: 'Update Failed',
@@ -157,7 +171,7 @@ export function OrdersList() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <Select value={selectedCourse} onValueChange={setSelectedCourse}>
                             <SelectTrigger>
                                 <BookOpen className="mr-2 h-4 w-4" />
@@ -194,6 +208,10 @@ export function OrdersList() {
                                 ))}
                             </SelectContent>
                         </Select>
+                         <Button onClick={handleApplyFilters} disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Apply Filters
+                        </Button>
                     </div>
                 </CardContent>
             </Card>
@@ -201,7 +219,7 @@ export function OrdersList() {
                 <CardHeader>
                     <CardTitle>Orders List</CardTitle>
                     <CardDescription>
-                        Displaying {filteredOrders.length} order(s).
+                        Displaying {orders.length} order(s).
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -226,8 +244,8 @@ export function OrdersList() {
                                             </TableCell>
                                         </TableRow>
                                     ))
-                                ) : filteredOrders.length > 0 ? (
-                                    filteredOrders.map((order) => (
+                                ) : orders.length > 0 ? (
+                                    orders.map((order) => (
                                         <TableRow key={order.id}>
                                             <TableCell className="font-mono text-xs">#{order.id}</TableCell>
                                             <TableCell className="font-mono text-xs">{order.student_number}</TableCell>
