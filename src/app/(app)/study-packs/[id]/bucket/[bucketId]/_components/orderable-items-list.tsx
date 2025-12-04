@@ -41,8 +41,8 @@ export function OrderableItemsList() {
             setIsLoading(true);
             try {
                 const response = await api.get(`/orderable-items/by-course?course_id=${courseId}&course_bucket_id=${bucketId}`);
-                if (response.data.status === 'success') {
-                    setItems(response.data.data || []);
+                if (Array.isArray(response.data)) {
+                    setItems(response.data);
                 } else {
                     setItems([]);
                 }
