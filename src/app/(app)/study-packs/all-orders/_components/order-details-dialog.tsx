@@ -64,8 +64,8 @@ const statusFlow: Record<OrderStatus, OrderStatus | null> = {
 export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate }: OrderDetailsDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState(order.tracking_number || '');
-  const [codAmount, setCodAmount] = useState(order.cod_amount || '0.00');
-  const [packageWeight, setPackageWeight] = useState(order.package_weight || '0.00');
+  const [codAmount, setCodAmount] = useState(order.cod_amount || '500');
+  const [packageWeight, setPackageWeight] = useState(order.package_weight || '1');
   const [currentStatus, setCurrentStatus] = useState<OrderStatus>(order.order_status);
   const { toast } = useToast();
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
@@ -73,8 +73,8 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
   useEffect(() => {
     if (isOpen) {
         setTrackingNumber(order.tracking_number || '');
-        setCodAmount(order.cod_amount || '0.00');
-        setPackageWeight(order.package_weight || '0.00');
+        setCodAmount(order.cod_amount || '500');
+        setPackageWeight(order.package_weight || '1');
         setCurrentStatus(order.order_status);
     }
   }, [order, isOpen]);
@@ -145,105 +145,88 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
             </div>
           </DialogHeader>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 max-h-[70vh] overflow-y-auto px-1">
-              {/* Left Column */}
-              <div className="md:col-span-2 space-y-4 text-sm">
-                  <div className="grid grid-cols-2 gap-4">
-                      <div>
-                          <p className="text-muted-foreground">Student Number</p>
-                          <p className="font-semibold font-mono">{order.student_number}</p>
-                      </div>
-                       <div>
-                          <p className="text-muted-foreground">Order Item</p>
-                          <p className="font-semibold text-lg">{order.orderable_item_name}</p>
-                      </div>
-                  </div>
-                   <div className="grid grid-cols-2 gap-4">
-                      <div>
-                          <p className="text-muted-foreground">Course</p>
-                          <p className="font-semibold">{order.course_name || 'N/A'}</p>
-                      </div>
-                      <div>
-                          <p className="text-muted-foreground">Bucket</p>
-                          <p className="font-semibold">{order.course_bucket_name || 'N/A'}</p>
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 py-4 max-h-[70vh] overflow-y-auto px-1">
+              <div className="space-y-4 text-sm">
+                  <h3 className="font-semibold text-base border-b pb-2">Recipient Info</h3>
+                   <div>
+                      <p className="text-muted-foreground">Student Number</p>
+                      <p className="font-semibold font-mono">{order.student_number}</p>
                   </div>
                   <div>
                       <p className="text-muted-foreground">Delivery Address</p>
                       <address className="not-italic font-medium">
                           {order.address_line_1}<br />
                           {order.address_line_2 && <>{order.address_line_2}<br /></>}
-                          {order.city}, {order.district}<br />
-                          {order.postal_code}<br />
+                          {order.city}, {order.district}, {order.postal_code}<br />
                           {order.phone_number_1}
                       </address>
                   </div>
-                   <div className="pt-2">
-                      <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)}>
-                          <Printer className="mr-2 h-4 w-4" /> Print Delivery Label
-                      </Button>
-                  </div>
               </div>
               
-              {/* Right Column */}
-              <div className="md:col-span-1 space-y-4 text-sm">
+              <div className="space-y-4 text-sm">
+                  <h3 className="font-semibold text-base border-b pb-2">Order Info</h3>
                    <div>
+                      <p className="text-muted-foreground">Order Item</p>
+                      <p className="font-semibold">{order.orderable_item_name}</p>
+                  </div>
+                   <div>
+                      <p className="text-muted-foreground">Course / Bucket</p>
+                      <p className="font-semibold">{order.course_name} / {order.course_bucket_name}</p>
+                  </div>
+                  <div>
                         <p className="text-muted-foreground">Order Date</p>
                         <p className="font-semibold">{format(new Date(order.created_at), 'yyyy-MM-dd HH:mm')}</p>
                     </div>
-                  <div>
-                      <p className="text-muted-foreground">Packed Date</p>
-                      <p className="font-semibold">Not Set</p>
-                  </div>
-                  <div>
-                      <p className="text-muted-foreground">Delivered Date</p>
-                      <p className="font-semibold">Not Set</p>
-                  </div>
-                  <div>
-                      <p className="text-muted-foreground">QR Code</p>
-                      <div className="w-24 h-24 bg-muted rounded-md mt-1 flex items-center justify-center text-xs text-muted-foreground">
-                          Placeholder
-                      </div>
-                  </div>
+              </div>
+              
+              <div className="md:col-span-2 space-y-4 text-sm">
+                  <h3 className="font-semibold text-base border-b pb-2">Shipping Details</h3>
+                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+                        <div className="space-y-2">
+                            <Label htmlFor="tracking-number">Tracking Number</Label>
+                            <Input id="tracking-number" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="cod-amount">COD Amount (LKR)</Label>
+                            <Input id="cod-amount" type="number" value={codAmount} onChange={(e) => setCodAmount(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="package-weight">Weight (KG)</Label>
+                            <Input id="package-weight" type="number" value={packageWeight} onChange={(e) => setPackageWeight(e.target.value)} />
+                        </div>
+                    </div>
               </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end border-t pt-4">
-              <div className="space-y-2">
-                  <Label htmlFor="tracking-number">Tracking Number</Label>
-                  <Input id="tracking-number" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                  <Label htmlFor="cod-amount">COD Amount</Label>
-                  <Input id="cod-amount" type="number" value={codAmount} onChange={(e) => setCodAmount(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                  <Label htmlFor="package-weight">Package Weight (KG)</Label>
-                  <Input id="package-weight" type="number" value={packageWeight} onChange={(e) => setPackageWeight(e.target.value)} />
-              </div>
-          </div>
 
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Close
-              </Button>
-            </DialogClose>
-            {nextStatus && (
-              <Button onClick={() => handleUpdate(nextStatus)} disabled={isSubmitting}>
-                  {isSubmitting ? (
-                      <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Updating...
-                      </>
-                  ) : (
-                      <>
-                          <Truck className="mr-2 h-4 w-4"/>
-                          Update to {nextStatus}
-                      </>
-                  )}
-              </Button>
-            )}
+          <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full">
+            <div>
+                 <Button variant="outline" onClick={() => setIsPrintDialogOpen(true)}>
+                    <Printer className="mr-2 h-4 w-4" /> Print Delivery Label
+                </Button>
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <DialogClose asChild>
+                <Button type="button" variant="outline">
+                    Close
+                </Button>
+                </DialogClose>
+                {nextStatus && (
+                <Button onClick={() => handleUpdate(nextStatus)} disabled={isSubmitting}>
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Updating...
+                        </>
+                    ) : (
+                        <>
+                            <Truck className="mr-2 h-4 w-4"/>
+                            Update to {nextStatus}
+                        </>
+                    )}
+                </Button>
+                )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
