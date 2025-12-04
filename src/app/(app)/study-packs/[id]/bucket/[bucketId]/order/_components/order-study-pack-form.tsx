@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, Package, FileVideo, Image, Link as LinkIcon, FileText, File, Loader2 } from 'lucide-react';
+import { ArrowLeft, Package, FileVideo, Image, Link as LinkIcon, FileText, File, Loader2, Home, Building, MapPin, Mailbox, Phone } from 'lucide-react';
 import Link from 'next/link';
 import {
   Dialog,
@@ -20,13 +20,23 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface BucketContent {
     id: string;
     content_title: string;
     content_type: string;
+}
+
+interface DeliveryDetails {
+    address1: string;
+    address2: string;
+    city: string;
+    district: string;
+    postalCode: string;
+    phone1: string;
+    phone2: string;
 }
 
 const getIconForType = (type: string) => {
@@ -48,8 +58,23 @@ export function OrderStudyPackForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [selectedItem, setSelectedItem] = useState<BucketContent | null>(null);
-    const [deliveryAddress, setDeliveryAddress] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    
+    const initialDeliveryDetails: DeliveryDetails = {
+        address1: '',
+        address2: '',
+        city: '',
+        district: '',
+        postalCode: '',
+        phone1: '',
+        phone2: ''
+    };
+    const [deliveryDetails, setDeliveryDetails] = useState<DeliveryDetails>(initialDeliveryDetails);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target;
+        setDeliveryDetails(prev => ({ ...prev, [id]: value }));
+    };
 
 
     useEffect(() => {
@@ -79,11 +104,11 @@ export function OrderStudyPackForm() {
     }, [courseId, bucketId, toast]);
 
     const handleOrderSubmit = async () => {
-        if (!selectedItem || !deliveryAddress) {
+        if (!selectedItem || !deliveryDetails.address1 || !deliveryDetails.city || !deliveryDetails.postalCode || !deliveryDetails.phone1) {
             toast({
                 variant: 'destructive',
                 title: "Validation Error",
-                description: "Please provide a delivery address.",
+                description: "Please fill in all required fields: Address Line 1, City, Postal Code, and Phone Number 1.",
             });
             return;
         }
@@ -99,8 +124,8 @@ export function OrderStudyPackForm() {
 
         setIsSubmitting(false);
         setIsDialogOpen(false);
-        setDeliveryAddress('');
         setSelectedItem(null);
+        setDeliveryDetails(initialDeliveryDetails);
     }
     
     const openOrderDialog = (item: BucketContent) => {
@@ -154,24 +179,66 @@ export function OrderStudyPackForm() {
             </Card>
 
              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
                         <DialogTitle>Confirm Your Order</DialogTitle>
                         <DialogDescription>
-                            Please provide your delivery address to complete the order for {'"'}
+                            Please provide your delivery details to complete the order for {'"'}
                             <span className="font-semibold">{selectedItem?.content_title}</span>{'"'}.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
-                       <div className="grid gap-2">
-                         <Label htmlFor="delivery-address">Delivery Address</Label>
-                         <Textarea 
-                            id="delivery-address"
-                            placeholder="Enter your full delivery address..." 
-                            value={deliveryAddress}
-                            onChange={(e) => setDeliveryAddress(e.target.value)}
-                            rows={4}
-                         />
+                       <div className="grid gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="address1">Address Line 1</Label>
+                                <div className="relative">
+                                    <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input id="address1" placeholder="e.g., 123 Main Street" value={deliveryDetails.address1} onChange={handleInputChange} className="pl-8" />
+                                </div>
+                            </div>
+                             <div className="grid gap-2">
+                                <Label htmlFor="address2">Address Line 2 (Optional)</Label>
+                                <div className="relative">
+                                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input id="address2" placeholder="e.g., Apartment, studio, or floor" value={deliveryDetails.address2} onChange={handleInputChange} className="pl-8" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="city">City</Label>
+                                     <div className="relative">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input id="city" placeholder="e.g., Colombo" value={deliveryDetails.city} onChange={handleInputChange} className="pl-8" />
+                                    </div>
+                                </div>
+                                 <div className="grid gap-2">
+                                    <Label htmlFor="district">District</Label>
+                                    <Input id="district" placeholder="e.g., Colombo" value={deliveryDetails.district} onChange={handleInputChange} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="postalCode">Postal Code</Label>
+                                     <div className="relative">
+                                         <Mailbox className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input id="postalCode" placeholder="e.g., 10100" value={deliveryDetails.postalCode} onChange={handleInputChange} className="pl-8" />
+                                     </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="phone1">Phone Number 1</Label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input id="phone1" type="tel" placeholder="e.g., 0771234567" value={deliveryDetails.phone1} onChange={handleInputChange} className="pl-8" />
+                                    </div>
+                                </div>
+                            </div>
+                             <div className="grid gap-2">
+                                <Label htmlFor="phone2">Phone Number 2 (Optional)</Label>
+                                <div className="relative">
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input id="phone2" type="tel" placeholder="e.g., 0719876543" value={deliveryDetails.phone2} onChange={handleInputChange} className="pl-8" />
+                                </div>
+                            </div>
                        </div>
                     </div>
                     <DialogFooter>
