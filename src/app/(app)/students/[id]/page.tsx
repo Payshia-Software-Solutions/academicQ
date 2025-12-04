@@ -1,3 +1,4 @@
+
 import { users, classes as allClasses } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
