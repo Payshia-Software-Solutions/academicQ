@@ -132,7 +132,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
             <div className="md:col-span-2 space-y-4">
                  <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                        <p className="text-muted-foreground">Index Number</p>
+                        <p className="text-muted-foreground">Student Number</p>
                         <p className="font-semibold font-mono">{order.student_number}</p>
                     </div>
                      <div>
