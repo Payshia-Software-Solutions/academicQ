@@ -9,8 +9,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { ArrowLeft, Package, FileVideo, Image, Link as LinkIcon, FileText, File } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 
 interface BucketContent {
@@ -62,11 +60,11 @@ export function OrderStudyPackForm() {
         fetchContent();
     }, [courseId, bucketId, toast]);
 
-    const handleOrderSubmit = () => {
+    const handleOrderSubmit = (itemTitle: string) => {
         // Placeholder for order submission logic
         toast({
             title: "Order Placed (Simulation)",
-            description: "Your study pack order has been submitted.",
+            description: `Your order for "${itemTitle}" has been submitted.`,
         });
     }
 
@@ -74,7 +72,7 @@ export function OrderStudyPackForm() {
         <Card>
             <CardHeader>
                 <CardTitle>Orderable Items</CardTitle>
-                <CardDescription>Select the items you wish to include in your study pack order.</CardDescription>
+                <CardDescription>Select the item you wish to order from this study pack bucket.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
@@ -86,14 +84,15 @@ export function OrderStudyPackForm() {
                 ) : content.length > 0 ? (
                     <div className="space-y-4">
                         {content.map((item) => (
-                            <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50">
-                                <Checkbox id={`item-${item.id}`} />
-                                <div className="flex-1 flex items-center justify-between">
-                                    <Label htmlFor={`item-${item.id}`} className="flex items-center gap-3 cursor-pointer">
-                                        {getIconForType(item.content_type)}
-                                        {item.content_title}
-                                    </Label>
+                            <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
+                                <div className="flex items-center gap-3">
+                                    {getIconForType(item.content_type)}
+                                    <span className="font-medium">{item.content_title}</span>
                                 </div>
+                                <Button size="sm" onClick={() => handleOrderSubmit(item.content_title)}>
+                                    <Package className="mr-2 h-4 w-4" />
+                                    Order Now
+                                </Button>
                             </div>
                         ))}
                     </div>
@@ -103,16 +102,12 @@ export function OrderStudyPackForm() {
                     </div>
                 )}
             </CardContent>
-            <CardFooter className="flex justify-between">
+            <CardFooter>
                  <Button variant="outline" asChild>
                     <Link href={`/study-packs/${courseId}`}>
                         <ArrowLeft className="mr-2 h-4 w-4"/>
                         Back to Buckets
                     </Link>
-                </Button>
-                <Button onClick={handleOrderSubmit} disabled={isLoading || content.length === 0}>
-                    <Package className="mr-2 h-4 w-4" />
-                    Place Order
                 </Button>
             </CardFooter>
         </Card>
