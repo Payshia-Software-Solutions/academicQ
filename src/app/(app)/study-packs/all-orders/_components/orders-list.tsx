@@ -10,9 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Package, ChevronDown, Loader2 } from 'lucide-react';
+import { BookOpen, Inbox, Package, ChevronDown, Loader2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { OrderDetailsDialog } from './order-details-dialog';
 
 interface Order {
     id: string;
@@ -21,10 +22,18 @@ interface Order {
     item_name?: string;
     order_status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
     address_line_1: string;
+    address_line_2: string;
     city: string;
+    district: string;
+    postal_code: string;
+    phone_number_1: string;
+    phone_number_2: string;
     created_at: string;
     course_id?: string; 
-    course_bucket_id?: string; 
+    course_bucket_id?: string;
+    tracking_number?: string;
+    cod_amount?: string;
+    package_weight?: string;
 }
 
 interface Course {
@@ -53,6 +62,9 @@ export function OrdersList() {
     
     const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
     const [filterTrigger, setFilterTrigger] = useState(0);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
 
     useEffect(() => {
         async function fetchFilterData() {
@@ -114,6 +126,15 @@ export function OrdersList() {
         setFilterTrigger(prev => prev + 1);
     };
 
+    const handleOpenDialog = (order: Order) => {
+        setSelectedOrder(order);
+        setIsDialogOpen(true);
+    };
+
+    const handleOrderUpdate = (updatedOrder: Order) => {
+        setOrders(prevOrders => prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+    };
+
     const getStatusVariant = (status: string) => {
         switch (status) {
             case 'delivered': return 'secondary';
@@ -127,40 +148,6 @@ export function OrdersList() {
     const StatusBadge = ({ status }: { status: Order['order_status']}) => (
         <Badge variant={getStatusVariant(status)} className="capitalize">{status}</Badge>
     );
-    
-    const handleStatusChange = async (orderId: string, newStatus: Order['order_status']) => {
-        if (!newStatus) return;
-        setUpdatingStatus(orderId);
-
-        const originalOrders = [...orders];
-        
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, order_status: newStatus } : o));
-
-        try {
-            const response = await api.put(`/student-orders/${orderId}/status`, { order_status: newStatus });
-            if (response.status !== 200) {
-                throw new Error(response.data.message || 'Failed to update status.');
-            }
-            toast({
-                title: 'Status Updated',
-                description: `Order #${orderId} status set to ${newStatus}.`,
-            });
-            // Refetch orders if the status filter is not 'all'
-            if (selectedStatus !== 'all' && newStatus !== selectedStatus) {
-                handleApplyFilters();
-            }
-        } catch (error: any) {
-            setOrders(originalOrders); // Revert on failure
-            toast({
-                variant: 'destructive',
-                title: 'Update Failed',
-                description: error.message || 'Could not update order status.',
-            });
-        } finally {
-            setUpdatingStatus(null);
-        }
-    };
-
 
     return (
         <div className="space-y-6">
@@ -234,13 +221,14 @@ export function OrdersList() {
                                     <TableHead>Address</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Date</TableHead>
+                                    <TableHead>Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {isLoading ? (
                                     Array.from({ length: 5 }).map((_, i) => (
                                         <TableRow key={i}>
-                                            <TableCell colSpan={6}>
+                                            <TableCell colSpan={7}>
                                                 <Skeleton className="h-8 w-full" />
                                             </TableCell>
                                         </TableRow>
@@ -257,36 +245,20 @@ export function OrdersList() {
                                                 {order.address_line_1}, {order.city}
                                             </TableCell>
                                             <TableCell>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="sm" className="flex items-center gap-1" disabled={updatingStatus === order.id}>
-                                                            {updatingStatus === order.id 
-                                                                ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                                : <StatusBadge status={order.order_status} />
-                                                            }
-                                                            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        {statusOptions.map(status => (
-                                                            <DropdownMenuItem 
-                                                                key={status} 
-                                                                onSelect={() => handleStatusChange(order.id, status)}
-                                                                disabled={order.order_status === status}
-                                                                className="capitalize"
-                                                            >
-                                                            {status}
-                                                            </DropdownMenuItem>
-                                                        ))}
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                <StatusBadge status={order.order_status} />
                                             </TableCell>
                                             <TableCell className="text-xs">{format(new Date(order.created_at), 'PP p')}</TableCell>
+                                            <TableCell>
+                                                <Button variant="outline" size="sm" onClick={() => handleOpenDialog(order)}>
+                                                    <Eye className="mr-2 h-4 w-4"/>
+                                                    View Details
+                                                </Button>
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
+                                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
                                             No orders found for the selected filters.
                                         </TableCell>
                                     </TableRow>
@@ -296,6 +268,14 @@ export function OrdersList() {
                     </div>
                 </CardContent>
             </Card>
+            {selectedOrder && (
+                <OrderDetailsDialog 
+                    order={selectedOrder}
+                    isOpen={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    onOrderUpdate={handleOrderUpdate}
+                />
+            )}
         </div>
     );
 }
