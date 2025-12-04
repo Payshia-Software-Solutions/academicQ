@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -126,6 +125,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
   }
 
   const nextStatus = statusFlow[currentStatus];
+  const isHandedOver = order.order_status === 'handed over';
 
   return (
     <>
@@ -171,7 +171,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                   </div>
                    <div>
                       <p className="text-muted-foreground">Course / Bucket</p>
-                      <p className="font-semibold">{order.course_name} / {order.course_bucket_name}</p>
+                      <p className="font-semibold">{order.course_name} / {order.bucket_name || order.course_bucket_name}</p>
                   </div>
                    <div className="grid grid-cols-2 gap-4">
                      <div>
@@ -190,15 +190,15 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
                         <div className="space-y-2">
                             <Label htmlFor="tracking-number">Tracking Number</Label>
-                            <Input id="tracking-number" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} />
+                            <Input id="tracking-number" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} disabled={isHandedOver} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="cod-amount">COD Amount (LKR)</Label>
-                            <Input id="cod-amount" type="number" value={codAmount} onChange={(e) => setCodAmount(e.target.value)} />
+                            <Input id="cod-amount" type="number" value={codAmount} onChange={(e) => setCodAmount(e.target.value)} disabled={isHandedOver} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="package-weight">Weight (KG)</Label>
-                            <Input id="package-weight" type="number" value={packageWeight} onChange={(e) => setPackageWeight(e.target.value)} />
+                            <Input id="package-weight" type="number" value={packageWeight} onChange={(e) => setPackageWeight(e.target.value)} disabled={isHandedOver} />
                         </div>
                     </div>
               </div>
