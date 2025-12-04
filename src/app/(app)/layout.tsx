@@ -17,7 +17,7 @@ import {
   SidebarSubMenuButton,
 } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck, Package, History } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck, Package, History, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { useToast } from '@/hooks/use-toast';
@@ -76,18 +76,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   const profilePath = useMemo(() => {
     if (!user) return '#';
-    if (isAdmin) {
-      // Admins might not have a public profile page in the same way,
-      // direct them to a relevant page or a placeholder.
-      // For now, let's point to the dashboard.
-      return '/dashboard'; 
-    }
-    // For students, the user object from the API now seems to have a top-level `id`
-    // which corresponds to the user record ID, not the student ID. The student profile page
-    // `src/app/(app)/students/[id]/page.tsx` seems to use the user ID from `users` data.
-    // The `user` object in localStorage has an `id` that should work.
-    return `/students/${user.id}`;
-  }, [user, isAdmin]);
+    // All users now go to the dedicated my-profile page
+    return '/my-profile';
+  }, [user]);
 
   return (
     <div className="flex">
@@ -127,6 +118,18 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive('/my-profile')}
+                  tooltip="My Profile"
+                >
+                  <Link href="/my-profile">
+                    <UserIcon />
+                    <span className="group-data-[state=collapsed]:hidden">My Profile</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             {isAdmin && (
               <SidebarMenuItem>
                 <SidebarMenuButton
