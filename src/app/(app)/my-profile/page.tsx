@@ -65,7 +65,7 @@ export default function MyProfilePage() {
     const loggedInUser: CurrentUser = JSON.parse(storedUserStr);
 
     async function fetchUserDetails() {
-        if (loggedInUser.user_status === 'student' && loggedInUser.student_number) {
+        if (loggedInUser.student_number) {
             try {
                 const response = await api.get(`/user-full-details/get/student/?student_number=${loggedInUser.student_number}`);
                 if (response.data.found) {
@@ -73,11 +73,13 @@ export default function MyProfilePage() {
                 } else {
                     // Fallback to local storage user if full details not found
                     setUser(loggedInUser);
-                    toast({
-                        variant: 'destructive',
-                        title: 'Profile Incomplete',
-                        description: 'Please complete your profile details.',
-                    });
+                     if (loggedInUser.user_status === 'student') {
+                        toast({
+                            variant: 'destructive',
+                            title: 'Profile Incomplete',
+                            description: 'Please complete your profile details.',
+                        });
+                    }
                 }
             } catch (error) {
                  setUser(loggedInUser); // Fallback on API error
@@ -90,7 +92,7 @@ export default function MyProfilePage() {
                 setLoading(false);
             }
         } else {
-            setUser(loggedInUser); // For admins or users without student number
+            setUser(loggedInUser); // For users without student number
             setLoading(false);
         }
     }
