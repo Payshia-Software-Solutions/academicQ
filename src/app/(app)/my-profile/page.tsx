@@ -7,8 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Smartphone, Edit, Briefcase } from 'lucide-react';
+import { User, Mail, Smartphone, Edit, Briefcase, Home, Cake, UserSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -18,17 +22,29 @@ interface CurrentUser {
   phone_number: string;
   student_number?: string;
   nic?: string;
+  civil_status?: string;
+  gender?: string;
+  address_line_1?: string;
+  address_line_2?: string;
+  city_id?: string;
+  telephone_1?: string;
+  telephone_2?: string;
+  e_mail?: string;
+  birth_day?: string;
+  full_name?: string;
+  name_with_initials?: string;
+  name_on_certificate?: string;
   [key: string]: any;
 }
 
-function ProfileDetail({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value?: string }) {
+function ProfileDetail({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value?: string | null }) {
     if (!value) return null;
     return (
         <div className="flex items-start gap-4">
-            <Icon className="h-5 w-5 text-muted-foreground mt-1" />
+            <Icon className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
             <div>
                 <p className="text-sm text-muted-foreground">{label}</p>
-                <p className="font-medium">{value}</p>
+                <p className="font-medium break-words">{value}</p>
             </div>
         </div>
     )
@@ -38,25 +54,60 @@ export default function MyProfilePage() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-        // If no user, redirect to login
+    const storedUserStr = localStorage.getItem('user');
+    if (!storedUserStr) {
         router.push('/login');
+        return;
     }
-    setLoading(false);
-  }, [router]);
+    const loggedInUser: CurrentUser = JSON.parse(storedUserStr);
+
+    async function fetchUserDetails() {
+        if (loggedInUser.user_status === 'student' && loggedInUser.student_number) {
+            try {
+                const response = await api.get(`/user-full-details/get/student/?student_number=${loggedInUser.student_number}`);
+                if (response.data.found) {
+                    setUser(response.data.data);
+                } else {
+                    // Fallback to local storage user if full details not found
+                    setUser(loggedInUser);
+                    toast({
+                        variant: 'destructive',
+                        title: 'Profile Incomplete',
+                        description: 'Please complete your profile details.',
+                    });
+                }
+            } catch (error) {
+                 setUser(loggedInUser); // Fallback on API error
+                 toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'Could not fetch your full profile details.',
+                });
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            setUser(loggedInUser); // For admins or users without student number
+            setLoading(false);
+        }
+    }
+
+    fetchUserDetails();
+  }, [router, toast]);
 
   if (loading) {
     return (
         <div className="space-y-6">
-            <Skeleton className="h-10 w-1/3" />
+            <header>
+                <Skeleton className="h-10 w-1/3 mb-2" />
+                <Skeleton className="h-5 w-1/2" />
+            </header>
             <Card>
                 <CardHeader>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-6">
                         <Skeleton className="h-20 w-20 rounded-full" />
                         <div className="space-y-2">
                              <Skeleton className="h-8 w-48" />
@@ -64,10 +115,17 @@ export default function MyProfilePage() {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
+                <CardContent className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div className="space-y-6">
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                     </div>
+                     <div className="space-y-6">
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                     </div>
                 </CardContent>
             </Card>
         </div>
@@ -78,8 +136,9 @@ export default function MyProfilePage() {
     return null; // or a message saying user not found
   }
 
-  const fullName = `${user.f_name} ${user.l_name}`;
+  const fullName = user.full_name || `${user.f_name} ${user.l_name}`;
   const isAdmin = user.user_status === 'admin';
+  const address = [user.address_line_1, user.address_line_2, user.city_id].filter(Boolean).join(', ');
 
   return (
     <div className="space-y-6">
@@ -100,6 +159,7 @@ export default function MyProfilePage() {
                         <CardTitle className="text-2xl">{fullName}</CardTitle>
                         <CardDescription className="flex items-center gap-2 mt-1">
                             <Badge variant={isAdmin ? "destructive" : "secondary"} className="capitalize">{user.user_status}</Badge>
+                             {!isAdmin && user.student_number && <Badge variant="outline">{user.student_number}</Badge>}
                         </CardDescription>
                     </div>
                 </div>
@@ -110,15 +170,22 @@ export default function MyProfilePage() {
             </div>
         </CardHeader>
         <CardContent className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            <ProfileDetail icon={Mail} label="Email Address" value={user.email} />
-            <ProfileDetail icon={Smartphone} label="Phone Number" value={user.phone_number} />
-            
-            {!isAdmin && (
-                <>
-                 <ProfileDetail icon={User} label="Student Number" value={user.student_number} />
+            <div className="space-y-6">
+                 <h3 className="font-semibold border-b pb-2">Personal Information</h3>
+                 <ProfileDetail icon={UserSquare} label="Name with Initials" value={user.name_with_initials} />
+                 <ProfileDetail icon={UserSquare} label="Name on Certificate" value={user.name_on_certificate} />
                  <ProfileDetail icon={Briefcase} label="NIC" value={user.nic} />
-                </>
-            )}
+                 <ProfileDetail icon={User} label="Gender" value={user.gender} />
+                 <ProfileDetail icon={User} label="Civil Status" value={user.civil_status} />
+                 {user.birth_day && <ProfileDetail icon={Cake} label="Birthday" value={format(new Date(user.birth_day), 'MMMM dd, yyyy')} />}
+            </div>
+             <div className="space-y-6">
+                <h3 className="font-semibold border-b pb-2">Contact & Address</h3>
+                <ProfileDetail icon={Mail} label="Email Address" value={user.e_mail || user.email} />
+                <ProfileDetail icon={Smartphone} label="Primary Phone" value={user.telephone_1 || user.phone_number} />
+                <ProfileDetail icon={Smartphone} label="Secondary Phone" value={user.telephone_2} />
+                <ProfileDetail icon={Home} label="Address" value={address} />
+            </div>
         </CardContent>
       </Card>
     </div>
