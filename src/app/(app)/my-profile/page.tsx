@@ -26,7 +26,7 @@ interface CurrentUser {
   gender?: string;
   address_line_1?: string;
   address_line_2?: string;
-  city_id?: string;
+  city?: string; // Changed from city_id to city
   telephone_1?: string;
   telephone_2?: string;
   e_mail?: string;
@@ -65,21 +65,21 @@ export default function MyProfilePage() {
     const loggedInUser: CurrentUser = JSON.parse(storedUserStr);
 
     async function fetchUserDetails() {
-        if (loggedInUser.student_number) {
+        // Only fetch full details if the user is a student and has a student number
+        if (loggedInUser.user_status === 'student' && loggedInUser.student_number) {
             try {
                 const response = await api.get(`/user-full-details/get/student/?student_number=${loggedInUser.student_number}`);
                 if (response.data.found) {
-                    setUser(response.data.data);
+                    // Combine the fetched full details with the base logged-in user data
+                    setUser({ ...loggedInUser, ...response.data.data });
                 } else {
-                    // Fallback to local storage user if full details not found
+                    // Fallback to local storage user if full details not found, and prompt student to complete
                     setUser(loggedInUser);
-                     if (loggedInUser.user_status === 'student') {
-                        toast({
-                            variant: 'destructive',
-                            title: 'Profile Incomplete',
-                            description: 'Please complete your profile details.',
-                        });
-                    }
+                    toast({
+                        variant: 'destructive',
+                        title: 'Profile Incomplete',
+                        description: 'Please complete your profile details.',
+                    });
                 }
             } catch (error) {
                  setUser(loggedInUser); // Fallback on API error
@@ -92,7 +92,8 @@ export default function MyProfilePage() {
                 setLoading(false);
             }
         } else {
-            setUser(loggedInUser); // For users without student number
+            // For admins or users without a student number, just use the local storage data
+            setUser(loggedInUser);
             setLoading(false);
         }
     }
@@ -140,7 +141,7 @@ export default function MyProfilePage() {
 
   const fullName = user.full_name || `${user.f_name} ${user.l_name}`;
   const isAdmin = user.user_status === 'admin';
-  const address = [user.address_line_1, user.address_line_2, user.city_id].filter(Boolean).join(', ');
+  const address = [user.address_line_1, user.address_line_2, user.city].filter(Boolean).join(', ');
 
   return (
     <div className="space-y-6">
@@ -174,19 +175,25 @@ export default function MyProfilePage() {
         <CardContent className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             <div className="space-y-6">
                  <h3 className="font-semibold border-b pb-2">Personal Information</h3>
-                 <ProfileDetail icon={UserSquare} label="Name with Initials" value={user.name_with_initials} />
-                 <ProfileDetail icon={UserSquare} label="Name on Certificate" value={user.name_on_certificate} />
-                 <ProfileDetail icon={Briefcase} label="NIC" value={user.nic} />
-                 <ProfileDetail icon={User} label="Gender" value={user.gender} />
-                 <ProfileDetail icon={User} label="Civil Status" value={user.civil_status} />
-                 {user.birth_day && <ProfileDetail icon={Cake} label="Birthday" value={format(new Date(user.birth_day), 'MMMM dd, yyyy')} />}
+                 {!isAdmin ? (
+                    <>
+                        <ProfileDetail icon={UserSquare} label="Name with Initials" value={user.name_with_initials} />
+                        <ProfileDetail icon={UserSquare} label="Name on Certificate" value={user.name_on_certificate} />
+                        <ProfileDetail icon={Briefcase} label="NIC" value={user.nic} />
+                        <ProfileDetail icon={User} label="Gender" value={user.gender} />
+                        <ProfileDetail icon={User} label="Civil Status" value={user.civil_status} />
+                        {user.birth_day && <ProfileDetail icon={Cake} label="Birthday" value={format(new Date(user.birth_day), 'MMMM dd, yyyy')} />}
+                    </>
+                 ) : (
+                    <ProfileDetail icon={Briefcase} label="NIC" value={user.nic} />
+                 )}
             </div>
              <div className="space-y-6">
                 <h3 className="font-semibold border-b pb-2">Contact & Address</h3>
                 <ProfileDetail icon={Mail} label="Email Address" value={user.e_mail || user.email} />
                 <ProfileDetail icon={Smartphone} label="Primary Phone" value={user.telephone_1 || user.phone_number} />
-                <ProfileDetail icon={Smartphone} label="Secondary Phone" value={user.telephone_2} />
-                <ProfileDetail icon={Home} label="Address" value={address} />
+                {!isAdmin && <ProfileDetail icon={Smartphone} label="Secondary Phone" value={user.telephone_2} />}
+                {!isAdmin && <ProfileDetail icon={Home} label="Address" value={address} />}
             </div>
         </CardContent>
       </Card>
