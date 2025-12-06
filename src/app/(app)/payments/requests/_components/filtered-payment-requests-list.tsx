@@ -219,7 +219,7 @@ export function FilteredPaymentRequestsList() {
                                                 <DialogTrigger asChild>
                                                     <Button variant="ghost" size="sm"><Eye className="mr-2 h-4 w-4" />View</Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="sm:max-w-md">
+                                                <DialogContent className="sm:max-w-lg">
                                                     <DialogHeader>
                                                         <DialogTitle>Request Details (#{req.id})</DialogTitle>
                                                         <DialogDescription>
@@ -232,8 +232,8 @@ export function FilteredPaymentRequestsList() {
                                                                 <Image 
                                                                     src={getFullImageUrl(req.slip_url)} 
                                                                     alt={`Slip for ${req.student_number}`}
-                                                                    width={300}
-                                                                    height={400}
+                                                                    width={250}
+                                                                    height={350}
                                                                     className="rounded-md object-contain"
                                                                 />
                                                             </div>
