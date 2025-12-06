@@ -114,7 +114,11 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="py-4">
-                                <PaymentSlipUploadForm bucketAmount={bucketAmount || '0'} />
+                                <PaymentSlipUploadForm 
+                                    bucketAmount={bucketAmount || '0'}
+                                    courseId={courseId}
+                                    bucketId={bucketId}
+                                />
                             </div>
                         </DialogContent>
                     </Dialog>

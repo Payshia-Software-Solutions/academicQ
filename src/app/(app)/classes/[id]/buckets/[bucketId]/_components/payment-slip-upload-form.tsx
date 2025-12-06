@@ -44,9 +44,11 @@ interface LoggedInUser {
 
 interface PaymentSlipUploadFormProps {
     bucketAmount: string;
+    courseId: string;
+    bucketId: string;
 }
 
-export function PaymentSlipUploadForm({ bucketAmount }: PaymentSlipUploadFormProps) {
+export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId }: PaymentSlipUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const { toast } = useToast();
@@ -92,6 +94,8 @@ export function PaymentSlipUploadForm({ bucketAmount }: PaymentSlipUploadFormPro
     
     const paymentData = {
         student_number: user.student_number,
+        course_id: courseId,
+        course_bucket_id: bucketId,
         payment_amount: data.payment_amount,
         bank: data.bank,
         branch: data.branch,
