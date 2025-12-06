@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -12,7 +11,7 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw, Package } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { CoursePaymentForm } from '../../course-payment/_components/course-payment-form';
 
@@ -51,6 +50,8 @@ interface Student {
   l_name: string;
 }
 
+const statusOptions: PaymentRequest['request_status'][] = ['pending', 'approved', 'rejected'];
+
 export function FilteredPaymentRequestsList() {
     const [requests, setRequests] = useState<PaymentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +64,7 @@ export function FilteredPaymentRequestsList() {
     const [selectedCourse, setSelectedCourse] = useState('all');
     const [selectedBucket, setSelectedBucket] = useState('all');
     const [selectedStudent, setSelectedStudent] = useState('all');
+    const [selectedStatus, setSelectedStatus] = useState<PaymentRequest['request_status'] | 'all'>('all');
     const [filterTrigger, setFilterTrigger] = useState(0);
 
     const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
@@ -106,6 +108,7 @@ export function FilteredPaymentRequestsList() {
             if (selectedStudent !== 'all') params.append('student_number', selectedStudent);
             if (selectedCourse !== 'all') params.append('course_id', selectedCourse);
             if (selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
+            if (selectedStatus !== 'all') params.append('request_status', selectedStatus);
             
             const response = await api.get(`/payment_requests/filter/?${params.toString()}`);
             
@@ -222,7 +225,19 @@ export function FilteredPaymentRequestsList() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Button onClick={handleApplyFilters} disabled={isLoading}>
+                        <Select value={selectedStatus} onValueChange={(val) => setSelectedStatus(val as any)}>
+                            <SelectTrigger>
+                                <Package className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Filter by status..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Statuses</SelectItem>
+                                {statusOptions.map(status => (
+                                    <SelectItem key={status} value={status} className="capitalize">{status}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button onClick={handleApplyFilters} disabled={isLoading} className="lg:col-span-4">
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Apply Filters
                         </Button>
