@@ -272,6 +272,11 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                               <Link href="/payments/request">> Payment Request</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
+                         <SidebarMenuItem>
+                          <SidebarMenuButton asChild isActive={isActive('/payments/requests')}>
+                              <Link href="/payments/requests">> Filtered Requests</Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
                       </SidebarSubMenuContent>
                     </SidebarMenuItem>
                   </SidebarSubMenu>
