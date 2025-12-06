@@ -3,18 +3,18 @@
 
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
-import { CompleteProfileDialog } from './complete-profile-dialog';
+import { useRouter } from 'next/navigation';
 
 interface ProfileCheckHandlerProps {
   studentNumber: string;
 }
 
 export function ProfileCheckHandler({ studentNumber }: ProfileCheckHandlerProps) {
-  const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // Only run this check once per session to avoid annoying the user.
+    // Only run this check once per session to avoid infinite loops.
     const hasChecked = sessionStorage.getItem('profileCheckComplete');
     if (hasChecked || !studentNumber) {
         setIsLoading(false);
@@ -25,10 +25,11 @@ export function ProfileCheckHandler({ studentNumber }: ProfileCheckHandlerProps)
       try {
         const response = await api.get(`/user-full-details/get/student/?student_number=${studentNumber}`);
         if (!response.data.found) {
-          setShowDialog(true);
+          // Redirect to the complete profile page
+          router.push('/complete-profile');
         }
       } catch (error) {
-        // If the endpoint fails, we won't show the dialog.
+        // If the endpoint fails, we won't redirect.
         console.error('Failed to check user details:', error);
       } finally {
         setIsLoading(false);
@@ -37,17 +38,8 @@ export function ProfileCheckHandler({ studentNumber }: ProfileCheckHandlerProps)
     }
 
     checkProfile();
-  }, [studentNumber]);
+  }, [studentNumber, router]);
 
-  if (isLoading) {
-    return null; // Or a loading spinner if you prefer
-  }
-
-  return (
-    <CompleteProfileDialog
-      isOpen={showDialog}
-      onOpenChange={setShowDialog}
-      studentNumber={studentNumber}
-    />
-  );
+  // This component doesn't render anything visible
+  return null;
 }
