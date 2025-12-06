@@ -69,11 +69,11 @@ export function PaymentRequestsList() {
     
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
-        if (slipUrl.startsWith('http://') || slipUrl.startsWith('https://')) {
-            return slipUrl;
+        if (slipUrl.startsWith('http')) {
+            return slipUrl.replace(/^http:\/\/[^/]+/, '');
         }
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
-        return `${baseUrl}${slipUrl.replace(/^http:\/\/[^/]+/, '')}`;
+        return `${baseUrl}${slipUrl}`;
     };
 
     const handleViewDetails = (req: PaymentRequest) => {
@@ -171,47 +171,53 @@ export function PaymentRequestsList() {
             {/* Details Dialog */}
             <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
                  {selectedRequest && (
-                    <DialogContent className="sm:max-w-md">
+                    <DialogContent className="max-w-3xl">
                         <DialogHeader>
                             <DialogTitle>Request Details (#{selectedRequest.id})</DialogTitle>
                             <DialogDescription>
                                 Full details for the payment request.
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-2 py-4 text-sm">
-                            {selectedRequest.slip_url && (
-                                <div className="flex justify-center mb-4">
-                                    <Image 
-                                        src={getFullImageUrl(selectedRequest.slip_url)} 
-                                        alt={`Slip for ${selectedRequest.student_number}`}
-                                        width={200}
-                                        height={280}
-                                        className="rounded-md object-contain"
-                                    />
+                        <div className="grid md:grid-cols-2 gap-6 py-4 max-h-[70vh] overflow-y-auto px-1">
+                            <div className="space-y-4">
+                                {selectedRequest.slip_url && (
+                                    <div className="relative w-full h-96 bg-muted rounded-lg">
+                                        <Image 
+                                            src={getFullImageUrl(selectedRequest.slip_url)} 
+                                            alt={`Slip for ${selectedRequest.student_number}`}
+                                            fill
+                                            style={{objectFit: "contain"}}
+                                            className="rounded-md"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="space-y-3 text-sm">
+                                <div className="flex justify-between p-2 rounded-md bg-muted">
+                                    <span className="text-muted-foreground">Student:</span>
+                                    <span className="font-semibold">{selectedRequest.student_number}</span>
                                 </div>
-                            )}
-                             <div className="flex justify-between p-2 rounded-md bg-muted">
-                                <span className="text-muted-foreground">Student:</span>
-                                <span className="font-semibold">{selectedRequest.student_number}</span>
-                            </div>
-                             <div className="flex justify-between p-2 rounded-md bg-muted">
-                                <span className="text-muted-foreground">Amount:</span>
-                                <span className="font-semibold">${parseFloat(selectedRequest.payment_amount).toFixed(2)}</span>
-                            </div>
-                             <div className="flex justify-between p-2 rounded-md bg-muted">
-                                <span className="text-muted-foreground">Course:</span>
-                                <span className="font-semibold text-right">{selectedRequest.course_name || 'N/A'}</span>
-                            </div>
-                            <div className="flex justify-between p-2 rounded-md bg-muted">
-                                <span className="text-muted-foreground">Bucket:</span>
-                                <span className="font-semibold text-right">{selectedRequest.course_bucket_name || 'N/A'}</span>
-                            </div>
-                            <div className="p-3 rounded-md border space-y-2">
-                                <div className="flex items-center gap-2"><Building className="h-4 w-4 text-muted-foreground" /> <span>{selectedRequest.bank} - {selectedRequest.branch}</span></div>
-                                <div className="flex items-center gap-2"><Info className="h-4 w-4 text-muted-foreground" /> <span>{selectedRequest.ref}</span></div>
-                                <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /> <span>{format(new Date(selectedRequest.created_at), 'PP p')}</span></div>
+                                <div className="flex justify-between p-2 rounded-md bg-muted">
+                                    <span className="text-muted-foreground">Amount:</span>
+                                    <span className="font-semibold">${parseFloat(selectedRequest.payment_amount).toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between p-2 rounded-md bg-muted">
+                                    <span className="text-muted-foreground">Course:</span>
+                                    <span className="font-semibold text-right">{selectedRequest.course_name || 'N/A'}</span>
+                                </div>
+                                <div className="flex justify-between p-2 rounded-md bg-muted">
+                                    <span className="text-muted-foreground">Bucket:</span>
+                                    <span className="font-semibold text-right">{selectedRequest.course_bucket_name || 'N/A'}</span>
+                                </div>
+                                <div className="p-3 rounded-md border space-y-2">
+                                    <h4 className="font-medium text-base border-b pb-1 mb-2">Bank Details</h4>
+                                    <div className="flex items-center gap-2"><Building className="h-4 w-4 text-muted-foreground" /> <span>{selectedRequest.bank} - {selectedRequest.branch}</span></div>
+                                    <div className="flex items-center gap-2"><Info className="h-4 w-4 text-muted-foreground" /> <span>{selectedRequest.ref}</span></div>
+                                    <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /> <span>{format(new Date(selectedRequest.created_at), 'PP p')}</span></div>
+                                </div>
                             </div>
                         </div>
+
                         <DialogFooter>
                             <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
                              {selectedRequest.request_status === 'pending' && (
