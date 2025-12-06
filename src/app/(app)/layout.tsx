@@ -298,9 +298,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     children: (
                         <div>
                             <p className="text-sm font-semibold text-sidebar-footer-foreground">{user?.f_name} {user?.l_name}</p>
-                            <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">{user?.email}</p>
+                            <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground break-all">{user?.email}</p>
                             {!isAdmin && user?.student_number && (
-                                <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground font-mono">{user.student_number}</p>
+                                <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground font-mono break-all">{user.student_number}</p>
                             )}
                         </div>
                     ),
@@ -317,11 +317,11 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                         <AvatarImage src="https://placehold.co/100x100.png" alt={user?.f_name} data-ai-hint="person avatar" />
                         <AvatarFallback>{user?.f_name?.charAt(0)}{user?.l_name?.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="group-data-[state=collapsed]:hidden">
-                        <p className="text-sm font-semibold text-sidebar-footer-foreground">{user?.f_name} {user?.l_name}</p>
-                        <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground">{user?.email}</p>
+                    <div className="group-data-[state=collapsed]:hidden min-w-0">
+                        <p className="text-sm font-semibold text-sidebar-footer-foreground truncate">{user?.f_name} {user?.l_name}</p>
+                        <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground break-all">{user?.email}</p>
                         {!isAdmin && user?.student_number && (
-                            <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground font-mono">{user.student_number}</p>
+                            <p className="text-xs text-muted-foreground group-hover:text-sidebar-footer-foreground font-mono break-all">{user.student_number}</p>
                         )}
                     </div>
                 </div>
