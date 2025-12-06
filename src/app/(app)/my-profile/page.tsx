@@ -7,11 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Smartphone, Edit, Briefcase, Home, Cake, UserSquare } from 'lucide-react';
+import { User, Mail, Smartphone, Edit, Briefcase, Home, Cake, UserSquare, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import Link from 'next/link';
 
 
 interface CurrentUser {
@@ -55,6 +57,7 @@ export default function MyProfilePage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
+  const [profileSkipped, setProfileSkipped] = useState(false);
 
   useEffect(() => {
     const storedUserStr = localStorage.getItem('user');
@@ -64,21 +67,17 @@ export default function MyProfilePage() {
     }
     const loggedInUser: CurrentUser = JSON.parse(storedUserStr);
 
+    const isSkipped = sessionStorage.getItem('profileSkipped') === 'true';
+    setProfileSkipped(isSkipped);
+
     async function fetchUserDetails() {
         if (loggedInUser.student_number) {
             try {
                 const response = await api.get(`/user-full-details/get/student/?student_number=${loggedInUser.student_number}`);
-                if (response.data.found) {
+                if (response.data && response.data.message !== "User not found.") {
                     setUser({ ...loggedInUser, ...response.data.data });
                 } else {
                     setUser(loggedInUser);
-                     if (loggedInUser.user_status === 'student') {
-                        toast({
-                            variant: 'destructive',
-                            title: 'Profile Incomplete',
-                            description: 'Please complete your profile details.',
-                        });
-                    }
                 }
             } catch (error) {
                  setUser(loggedInUser);
@@ -140,6 +139,7 @@ export default function MyProfilePage() {
   const fullName = user.full_name || `${user.f_name} ${user.l_name}`;
   const isAdmin = user.user_status === 'admin';
   const address = [user.address_line_1, user.address_line_2, user.city].filter(Boolean).join(', ');
+  const hasFullDetails = !!user.full_name;
 
   return (
     <div className="space-y-6">
@@ -147,6 +147,19 @@ export default function MyProfilePage() {
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">My Profile</h1>
         <p className="text-muted-foreground mt-1">View and manage your personal information.</p>
       </header>
+
+       {profileSkipped && !hasFullDetails && (
+         <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Profile Incomplete</AlertTitle>
+          <AlertDescription>
+            Your profile details are missing. Please complete your profile to access all features.
+             <Button asChild variant="link" className="p-0 h-auto ml-2 text-destructive-foreground">
+                <Link href="/complete-profile">Complete Profile Now</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>
@@ -164,9 +177,11 @@ export default function MyProfilePage() {
                         </CardDescription>
                     </div>
                 </div>
-                <Button variant="outline" disabled>
-                    <Edit className="mr-2 h-4 w-4"/>
-                    Edit Profile
+                <Button asChild variant="outline">
+                    <Link href="/complete-profile">
+                        <Edit className="mr-2 h-4 w-4"/>
+                        Edit Profile
+                    </Link>
                 </Button>
             </div>
         </CardHeader>

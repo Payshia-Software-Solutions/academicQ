@@ -35,6 +35,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 
 interface CurrentUser {
+  user_status?: 'admin' | 'student';
   student_number?: string;
   email?: string;
   nic?: string;
@@ -70,6 +71,13 @@ export function CompleteProfileForm() {
     },
   });
 
+  const handleSkip = () => {
+    sessionStorage.setItem('profileSkipped', 'true');
+    sessionStorage.setItem('profileCheckComplete', 'true');
+    const homePath = currentUser?.user_status === 'admin' ? '/dashboard' : '/student-dashboard';
+    router.push(homePath);
+  };
+
   const onSubmit = async (data: ProfileFormValues) => {
     if (!currentUser?.student_number) {
         toast({
@@ -96,8 +104,9 @@ export function CompleteProfileForm() {
                 title: 'Profile Updated',
                 description: 'Your details have been saved successfully. Redirecting...',
             });
-            // Redirect to a different page, e.g., the dashboard
-            router.push('/dashboard');
+            sessionStorage.removeItem('profileSkipped');
+            const homePath = currentUser?.user_status === 'admin' ? '/dashboard' : '/student-dashboard';
+            router.push(homePath);
         } else {
              throw new Error(response.data.message || "An unknown error occurred.");
         }
@@ -229,7 +238,8 @@ export function CompleteProfileForm() {
                     )} />
                 </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex justify-between">
+              <Button type="button" variant="ghost" onClick={handleSkip}>Skip for now</Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>

@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -22,12 +23,15 @@ interface CurrentUser {
 export default function DashboardPage() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileSkipped, setProfileSkipped] = useState(false);
   
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    const isSkipped = sessionStorage.getItem('profileSkipped') === 'true';
+    setProfileSkipped(isSkipped);
     setLoading(false);
   }, []);
 
@@ -85,6 +89,19 @@ export default function DashboardPage() {
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{getDashboardTitle()}</h1>
         <p className="text-muted-foreground">{getDashboardDescription()}</p>
       </header>
+
+      {profileSkipped && (
+         <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Complete Your Profile</AlertTitle>
+          <AlertDescription>
+            Your profile details are incomplete. Please fill them out to ensure full access to all features.
+            <Button asChild variant="link" className="p-0 h-auto ml-2 text-destructive-foreground">
+                <Link href="/complete-profile">Complete Profile</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link href="/students" className="block">

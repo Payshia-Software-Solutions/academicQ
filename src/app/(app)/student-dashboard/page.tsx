@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, AlertCircle } from 'lucide-react';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -39,12 +40,15 @@ export default function StudentDashboardPage() {
   const [approvedCourses, setApprovedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [profileSkipped, setProfileSkipped] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    const isSkipped = sessionStorage.getItem('profileSkipped') === 'true';
+    setProfileSkipped(isSkipped);
   }, []);
 
   useEffect(() => {
@@ -108,6 +112,19 @@ export default function StudentDashboardPage() {
           Here is an overview of your enrolled courses and their status.
         </p>
       </header>
+
+      {profileSkipped && (
+         <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Complete Your Profile</AlertTitle>
+          <AlertDescription>
+            Your profile details are incomplete. Please fill them out to ensure full access to all features.
+             <Button asChild variant="link" className="p-0 h-auto ml-2 text-destructive-foreground">
+                <Link href="/complete-profile">Complete Profile</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <section>
         <h2 className="text-xl font-bold mb-4">My Classes</h2>
