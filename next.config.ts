@@ -34,6 +34,12 @@ const nextConfig: NextConfig = {
         hostname: 'student-lms-ftp.payshia.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'payshia.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
