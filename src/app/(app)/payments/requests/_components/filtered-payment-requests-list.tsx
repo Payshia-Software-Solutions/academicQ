@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle } from 'lucide-react';
+import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { CoursePaymentForm } from '../../course-payment/_components/course-payment-form';
 
@@ -68,13 +68,19 @@ export function FilteredPaymentRequestsList() {
     const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [zoom, setZoom] = useState(1);
 
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
-        if (slipUrl.startsWith('http')) {
-            return slipUrl.replace(/^http:\/\/[^/]+/, '');
-        }
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
+        // If slipUrl is already a full URL, don't prepend the base URL.
+        if (/^https?:\/\//.test(slipUrl)) {
+            return slipUrl;
+        }
+        // Special handling for malformed URLs from the API
+        if (slipUrl.includes('student-lms-ftp.payshia.com')) {
+            return `https://${slipUrl.substring(slipUrl.indexOf('student-lms-ftp.payshia.com'))}`;
+        }
         return `${baseUrl}${slipUrl}`;
     };
 
@@ -140,6 +146,7 @@ export function FilteredPaymentRequestsList() {
     const handleViewDetails = (req: PaymentRequest) => {
         setSelectedRequest(req);
         setIsDetailsOpen(true);
+        setZoom(1);
     }
     
     const handleProceed = () => {
@@ -310,26 +317,37 @@ export function FilteredPaymentRequestsList() {
             {/* Details Dialog */}
             <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
                  {selectedRequest && (
-                    <DialogContent className="max-w-3xl">
+                    <DialogContent className="max-w-4xl">
                         <DialogHeader>
                             <DialogTitle>Request Details (#{selectedRequest.id})</DialogTitle>
                             <DialogDescription>
                                 Full details for the payment request.
                             </DialogDescription>
                         </DialogHeader>
-                         <div className="grid md:grid-cols-2 gap-6 py-4 max-h-[70vh] overflow-y-auto px-1">
-                            <div className="space-y-4">
+                         <div className="grid md:grid-cols-2 gap-x-8 gap-y-6 py-4 max-h-[70vh] overflow-y-auto px-1">
+                             <div className="space-y-2">
                                 {selectedRequest.slip_url && (
-                                    <div className="relative w-full h-96 bg-muted rounded-lg">
+                                    <div className="relative w-full h-[450px] bg-muted rounded-lg overflow-hidden border">
                                         <Image 
                                             src={getFullImageUrl(selectedRequest.slip_url)} 
                                             alt={`Slip for ${selectedRequest.student_number}`}
                                             fill
-                                            style={{objectFit: "contain"}}
-                                            className="rounded-md"
+                                            className="transition-transform duration-300"
+                                            style={{objectFit: "contain", transform: `scale(${zoom})`}}
                                         />
                                     </div>
                                 )}
+                                <div className="flex items-center justify-center gap-2">
+                                    <Button variant="outline" size="icon" onClick={() => setZoom(z => Math.max(0.5, z - 0.2))}>
+                                        <ZoomOut className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="outline" size="icon" onClick={() => setZoom(1)}>
+                                        <RotateCcw className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="outline" size="icon" onClick={() => setZoom(z => Math.min(3, z + 0.2))}>
+                                        <ZoomIn className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between p-2 rounded-md bg-muted">
