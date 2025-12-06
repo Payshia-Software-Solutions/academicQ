@@ -123,15 +123,9 @@ export function CompleteProfileForm() {
 
   return (
     <Card>
-        <CardHeader>
-             <CardTitle>Complete Your Profile</CardTitle>
-            <CardDescription>
-                Please provide your full details. This is required to continue.
-            </CardDescription>
-        </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4 max-h-[70vh] overflow-y-auto pr-6 pl-1">
+            <CardContent className="space-y-4 pt-6">
                 <FormField control={form.control} name="full_name" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Full Name</FormLabel>
