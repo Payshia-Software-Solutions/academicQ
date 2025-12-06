@@ -12,8 +12,9 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { CoursePaymentForm } from '../../course-payment/_components/course-payment-form';
 
 
 interface PaymentRequest {
@@ -24,7 +25,7 @@ interface PaymentRequest {
     bank: string;
     branch: string;
     ref: string;
-    request_status: string;
+    request_status: 'pending' | 'approved' | 'rejected';
     created_at: string;
     course_id: string;
     course_bucket_id: string;
@@ -63,7 +64,10 @@ export function FilteredPaymentRequestsList() {
     const [selectedBucket, setSelectedBucket] = useState('all');
     const [selectedStudent, setSelectedStudent] = useState('all');
     const [filterTrigger, setFilterTrigger] = useState(0);
+
     const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
@@ -72,54 +76,56 @@ export function FilteredPaymentRequestsList() {
         return `${baseUrl}${slipUrl.replace(/^http:\/\/[^/]+/, '')}`;
     };
 
-    useEffect(() => {
-        async function fetchFilters() {
-            try {
-                const [coursesRes, bucketsRes, studentsRes] = await Promise.all([
-                    api.get('/courses'),
-                    api.get('/course_buckets'),
-                    api.get('/users?status=student')
-                ]);
-                setCourses(coursesRes.data.data || []);
-                setBuckets(bucketsRes.data.data || []);
-                setStudents(studentsRes.data.data || []);
-            } catch(e) {
-                toast({ variant: 'destructive', title: 'Error', description: 'Could not load filter options.' });
-            }
+    const fetchFilters = async () => {
+        try {
+            const [coursesRes, bucketsRes, studentsRes] = await Promise.all([
+                api.get('/courses'),
+                api.get('/course_buckets'),
+                api.get('/users?status=student')
+            ]);
+            setCourses(coursesRes.data.data || []);
+            setBuckets(bucketsRes.data.data || []);
+            setStudents(studentsRes.data.data || []);
+        } catch(e) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load filter options.' });
         }
+    };
+    
+    const fetchPaymentRequests = async () => {
+        setIsLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (selectedStudent !== 'all') params.append('student_number', selectedStudent);
+            if (selectedCourse !== 'all') params.append('course_id', selectedCourse);
+            if (selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
+            
+            const response = await api.get(`/payment_requests/filter/?${params.toString()}`);
+            
+            if (response.data.status === 'success') {
+                setRequests(response.data.data || []);
+            } else {
+                setRequests([]);
+            }
+        } catch (error: any) {
+            setRequests([]);
+            toast({
+                variant: 'destructive',
+                title: 'API Error',
+                description: error.message || 'Could not fetch payment requests.',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchFilters();
     }, [toast]);
     
-
     useEffect(() => {
-        async function fetchPaymentRequests() {
-            setIsLoading(true);
-            try {
-                const params = new URLSearchParams();
-                if (selectedStudent !== 'all') params.append('student_number', selectedStudent);
-                if (selectedCourse !== 'all') params.append('course_id', selectedCourse);
-                if (selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
-                
-                const response = await api.get(`/payment_requests/filter/?${params.toString()}`);
-                
-                if (response.data.status === 'success') {
-                    setRequests(response.data.data || []);
-                } else {
-                    setRequests([]);
-                }
-            } catch (error: any) {
-                setRequests([]);
-                toast({
-                    variant: 'destructive',
-                    title: 'API Error',
-                    description: error.message || 'Could not fetch payment requests.',
-                });
-            } finally {
-                setIsLoading(false);
-            }
-        }
         fetchPaymentRequests();
-    }, [toast, filterTrigger, selectedCourse, selectedBucket, selectedStudent]);
+    }, [toast, filterTrigger]);
+
 
     const handleApplyFilters = () => {
         setFilterTrigger(prev => prev + 1);
@@ -129,153 +135,214 @@ export function FilteredPaymentRequestsList() {
         ? buckets 
         : buckets.filter(b => b.course_id.toString() === selectedCourse.toString());
 
+    const handleViewDetails = (req: PaymentRequest) => {
+        setSelectedRequest(req);
+        setIsDetailsOpen(true);
+    }
+    
+    const handleProceed = () => {
+        setIsDetailsOpen(false);
+        setIsPaymentOpen(true);
+    }
+
+     const handlePaymentSuccess = async () => {
+        setIsPaymentOpen(false);
+        if (selectedRequest) {
+            try {
+                await api.put(`/payment_requests/update/status/?id=${selectedRequest.id}&status=approved`);
+                toast({
+                    title: 'Request Approved',
+                    description: `Payment request #${selectedRequest.id} has been marked as approved.`,
+                });
+                fetchPaymentRequests();
+            } catch (error: any) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Approval Failed',
+                    description: error.message || 'Could not update the payment request status.',
+                });
+            }
+        }
+        setSelectedRequest(null);
+    }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Filter Requests</CardTitle>
-                <CardDescription>
-                    Use the dropdowns to filter the payment requests. Click "Apply" to see results.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                        <SelectTrigger>
-                            <Users className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Filter by student..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Students</SelectItem>
-                            {students.map(student => (
-                                <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                     <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-                        <SelectTrigger>
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Filter by course..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Courses</SelectItem>
-                            {courses.map(course => (
-                                <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                     <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={filteredBuckets.length === 0}>
-                        <SelectTrigger>
-                            <Inbox className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Filter by bucket..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Buckets</SelectItem>
-                            {filteredBuckets.map(bucket => (
-                                <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Button onClick={handleApplyFilters} disabled={isLoading}>
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Apply Filters
-                    </Button>
-                </div>
-                 <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Request ID</TableHead>
-                                <TableHead>Student No.</TableHead>
-                                <TableHead>Course</TableHead>
-                                <TableHead>Bucket</TableHead>
-                                <TableHead>Amount</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                Array.from({ length: 5 }).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell colSpan={7}>
-                                            <Skeleton className="h-8 w-full" />
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : requests.length > 0 ? (
-                                requests.map((req) => (
-                                    <TableRow key={req.id}>
-                                        <TableCell className="font-mono text-xs">#{req.id}</TableCell>
-                                        <TableCell>{req.student_number}</TableCell>
-                                        <TableCell>{req.course_name || 'N/A'}</TableCell>
-                                        <TableCell>{req.course_bucket_name || 'N/A'}</TableCell>
-                                        <TableCell>${parseFloat(req.payment_amount).toFixed(2)}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={req.request_status === 'approved' ? 'secondary' : 'destructive'} className="capitalize">{req.request_status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                             <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="ghost" size="sm"><Eye className="mr-2 h-4 w-4" />View</Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="sm:max-w-md">
-                                                    <DialogHeader>
-                                                        <DialogTitle>Request Details (#{req.id})</DialogTitle>
-                                                        <DialogDescription>
-                                                            Full details for the payment request.
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="space-y-2 py-4 text-sm">
-                                                        {req.slip_url && (
-                                                            <div className="flex justify-center mb-4">
-                                                                <Image 
-                                                                    src={getFullImageUrl(req.slip_url)} 
-                                                                    alt={`Slip for ${req.student_number}`}
-                                                                    width={200}
-                                                                    height={280}
-                                                                    className="rounded-md object-contain"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                         <div className="flex justify-between p-2 rounded-md bg-muted">
-                                                            <span className="text-muted-foreground">Student:</span>
-                                                            <span className="font-semibold">{req.student_number}</span>
-                                                        </div>
-                                                         <div className="flex justify-between p-2 rounded-md bg-muted">
-                                                            <span className="text-muted-foreground">Amount:</span>
-                                                            <span className="font-semibold">${parseFloat(req.payment_amount).toFixed(2)}</span>
-                                                        </div>
-                                                        <div className="flex justify-between p-2 rounded-md bg-muted">
-                                                            <span className="text-muted-foreground">Course:</span>
-                                                            <span className="font-semibold text-right">{req.course_name || 'N/A'}</span>
-                                                        </div>
-                                                        <div className="flex justify-between p-2 rounded-md bg-muted">
-                                                            <span className="text-muted-foreground">Bucket:</span>
-                                                            <span className="font-semibold text-right">{req.course_bucket_name || 'N/A'}</span>
-                                                        </div>
-                                                        <div className="p-3 rounded-md border space-y-2">
-                                                            <div className="flex items-center gap-2"><Building className="h-4 w-4 text-muted-foreground" /> <span>{req.bank} - {req.branch}</span></div>
-                                                            <div className="flex items-center gap-2"><Info className="h-4 w-4 text-muted-foreground" /> <span>{req.ref}</span></div>
-                                                            <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /> <span>{format(new Date(req.created_at), 'PP p')}</span></div>
-                                                        </div>
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Filter Requests</CardTitle>
+                    <CardDescription>
+                        Use the dropdowns to filter the payment requests. Click "Apply" to see results.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                            <SelectTrigger>
+                                <Users className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Filter by student..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Students</SelectItem>
+                                {students.map(student => (
+                                    <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                            <SelectTrigger>
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Filter by course..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Courses</SelectItem>
+                                {courses.map(course => (
+                                    <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={filteredBuckets.length === 0}>
+                            <SelectTrigger>
+                                <Inbox className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Filter by bucket..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Buckets</SelectItem>
+                                {filteredBuckets.map(bucket => (
+                                    <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button onClick={handleApplyFilters} disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Apply Filters
+                        </Button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
-                                    No payment requests found for the selected filters.
-                                    </TableCell>
+                                    <TableHead>Request ID</TableHead>
+                                    <TableHead>Student No.</TableHead>
+                                    <TableHead>Course</TableHead>
+                                    <TableHead>Bucket</TableHead>
+                                    <TableHead>Amount</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell colSpan={7}>
+                                                <Skeleton className="h-8 w-full" />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : requests.length > 0 ? (
+                                    requests.map((req) => (
+                                        <TableRow key={req.id}>
+                                            <TableCell className="font-mono text-xs">#{req.id}</TableCell>
+                                            <TableCell>{req.student_number}</TableCell>
+                                            <TableCell>{req.course_name || 'N/A'}</TableCell>
+                                            <TableCell>{req.course_bucket_name || 'N/A'}</TableCell>
+                                            <TableCell>${parseFloat(req.payment_amount).toFixed(2)}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={req.request_status === 'approved' ? 'secondary' : 'destructive'} className="capitalize">{req.request_status}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="sm" onClick={() => handleViewDetails(req)}><Eye className="mr-2 h-4 w-4" />View</Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                                        No payment requests found for the selected filters.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Details Dialog */}
+            <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+                 {selectedRequest && (
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Request Details (#{selectedRequest.id})</DialogTitle>
+                            <DialogDescription>
+                                Full details for the payment request.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-2 py-4 text-sm">
+                            {selectedRequest.slip_url && (
+                                <div className="flex justify-center mb-4">
+                                    <Image 
+                                        src={getFullImageUrl(selectedRequest.slip_url)} 
+                                        alt={`Slip for ${selectedRequest.student_number}`}
+                                        width={200}
+                                        height={280}
+                                        className="rounded-md object-contain"
+                                    />
+                                </div>
                             )}
-                        </TableBody>
-                    </Table>
-                 </div>
-            </CardContent>
-        </Card>
+                             <div className="flex justify-between p-2 rounded-md bg-muted">
+                                <span className="text-muted-foreground">Student:</span>
+                                <span className="font-semibold">{selectedRequest.student_number}</span>
+                            </div>
+                             <div className="flex justify-between p-2 rounded-md bg-muted">
+                                <span className="text-muted-foreground">Amount:</span>
+                                <span className="font-semibold">${parseFloat(selectedRequest.payment_amount).toFixed(2)}</span>
+                            </div>
+                             <div className="flex justify-between p-2 rounded-md bg-muted">
+                                <span className="text-muted-foreground">Course:</span>
+                                <span className="font-semibold text-right">{selectedRequest.course_name || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between p-2 rounded-md bg-muted">
+                                <span className="text-muted-foreground">Bucket:</span>
+                                <span className="font-semibold text-right">{selectedRequest.course_bucket_name || 'N/A'}</span>
+                            </div>
+                            <div className="p-3 rounded-md border space-y-2">
+                                <div className="flex items-center gap-2"><Building className="h-4 w-4 text-muted-foreground" /> <span>{selectedRequest.bank} - {selectedRequest.branch}</span></div>
+                                <div className="flex items-center gap-2"><Info className="h-4 w-4 text-muted-foreground" /> <span>{selectedRequest.ref}</span></div>
+                                <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /> <span>{format(new Date(selectedRequest.created_at), 'PP p')}</span></div>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+                            {selectedRequest.request_status === 'pending' && (
+                                <Button onClick={handleProceed}>
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Proceed to Payment
+                                </Button>
+                            )}
+                        </DialogFooter>
+                    </DialogContent>
+                 )}
+            </Dialog>
+
+            {/* Payment Dialog */}
+            <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
+                <DialogContent className="max-w-4xl">
+                     <DialogHeader>
+                        <DialogTitle>Create Student Payment</DialogTitle>
+                        <DialogDescription>
+                            Confirm the details to create a payment record for this request.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedRequest && (
+                        <CoursePaymentForm 
+                            paymentRequest={selectedRequest}
+                            onPaymentSuccess={handlePaymentSuccess}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }
