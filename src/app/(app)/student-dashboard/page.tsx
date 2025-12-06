@@ -20,12 +20,9 @@ interface CurrentUser {
   [key: string]: any;
 }
 
-interface EnrolledCourse {
+interface Enrollment {
   id: string;
   course_id: string;
-  course_name: string;
-  description?: string; // Assuming this might come from another source if not from this endpoint
-  img_url?: string; // Assuming this might come from another source
   status: 'pending' | 'approved' | 'rejected';
 }
 
@@ -39,7 +36,7 @@ interface Course {
 
 export default function StudentDashboardPage() {
   const [user, setUser] = useState<CurrentUser | null>(null);
-  const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
+  const [approvedCourses, setApprovedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -55,25 +52,19 @@ export default function StudentDashboardPage() {
       async function fetchDashboardData() {
         setLoading(true);
         try {
-          // Fetch all courses to get details like description and image
+          // 1. Fetch all courses to get details like description and image
           const coursesRes = await api.get('/courses');
           const allCourses: Course[] = coursesRes.data.data || [];
           
-          // Fetch student-specific enrollments which include the status
-          const enrollmentsRes = await api.get(`/enrollments/student/${user.student_number}`);
-          const enrollments: EnrolledCourse[] = enrollmentsRes.data || [];
+          // 2. Fetch student-specific approved enrollments
+          const enrollmentsRes = await api.get(`/enrollments/?student_number=${user.student_number}&status=approved`);
+          const enrollments: Enrollment[] = enrollmentsRes.data || [];
+          const approvedCourseIds = new Set(enrollments.map(e => e.course_id.toString()));
 
-          const coursesWithStatus = enrollments.map(enrollment => {
-            const courseDetails = allCourses.find(c => c.id.toString() === enrollment.course_id.toString());
-            return {
-              ...courseDetails, // contains description, img_url etc.
-              id: enrollment.course_id,
-              course_name: enrollment.course_name,
-              enrollment_status: enrollment.status,
-            };
-          }).filter(Boolean) as Course[];
+          // 3. Filter allCourses to get the details of the approved ones
+          const coursesToShow = allCourses.filter(course => approvedCourseIds.has(course.id.toString()));
 
-          setEnrolledCourses(coursesWithStatus);
+          setApprovedCourses(coursesToShow);
 
         } catch (error) {
           console.error("Failed to fetch dashboard data:", error);
@@ -106,8 +97,6 @@ export default function StudentDashboardPage() {
         default: return 'outline';
     }
   }
-
-  const approvedCourses = enrolledCourses.filter(c => c.enrollment_status === 'approved');
 
   return (
     <div className="space-y-6">
@@ -145,12 +134,12 @@ export default function StudentDashboardPage() {
                     <CardContent className="p-6 flex-grow">
                         <div className="flex justify-between items-start mb-2">
                              <CardTitle className="font-headline text-xl">{course.course_name}</CardTitle>
-                             <Badge variant={getStatusVariant(course.enrollment_status)} className="capitalize">{course.enrollment_status || 'Pending'}</Badge>
+                             <Badge variant="secondary" className="capitalize">Approved</Badge>
                         </div>
                         <CardDescription>{course.description}</CardDescription>
                     </CardContent>
                     <CardFooter className="p-6 pt-0">
-                         <Button asChild size="sm" className="w-full" disabled={course.enrollment_status !== 'approved'}>
+                         <Button asChild size="sm" className="w-full">
                             <Link href={`/classes/${course.id}`}>
                                 View Course
                                 <ArrowRight className="ml-2 h-4 w-4" />
