@@ -11,11 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from 'next/link';
 import { users, payments as allPayments } from "@/lib/data";
-import { DollarSign, Receipt, AlertCircle, Search, ArrowRight, ChevronDown } from "lucide-react";
+import { DollarSign, Receipt, AlertCircle, Search, ArrowRight, ChevronDown, Filter } from "lucide-react";
 import { format } from 'date-fns';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaymentRequestsList } from './_components/payment-requests-list';
+import { PaymentRequestsList } from '../_components/payment-requests-list';
 
 type PaymentStatus = "All" | "Paid" | "Pending";
 
@@ -212,7 +212,25 @@ export default function PaymentsPage() {
                 </Card>
             </TabsContent>
              <TabsContent value="requests">
-                <PaymentRequestsList />
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                             <div>
+                                <CardTitle>All Payment Requests</CardTitle>
+                                <CardDescription>A list of all submitted payment requests from students.</CardDescription>
+                            </div>
+                            <Button asChild variant="outline">
+                                <Link href="/payments/requests">
+                                    <Filter className="mr-2 h-4 w-4" />
+                                    Filter Requests
+                                </Link>
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <PaymentRequestsList />
+                    </CardContent>
+                </Card>
             </TabsContent>
         </Tabs>
     </div>
