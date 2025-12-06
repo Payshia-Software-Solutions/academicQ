@@ -71,7 +71,9 @@ export function FilteredPaymentRequestsList() {
 
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
-        if (slipUrl.startsWith('http')) return slipUrl;
+        if (slipUrl.startsWith('http://') || slipUrl.startsWith('https://')) {
+            return slipUrl;
+        }
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
         return `${baseUrl}${slipUrl.replace(/^http:\/\/[^/]+/, '')}`;
     };
