@@ -27,6 +27,8 @@ interface PaymentRequest {
     created_at: string;
     course_id: string;
     course_bucket_id: string;
+    course_name?: string;
+    course_bucket_name?: string;
 }
 
 interface Course {
@@ -63,12 +65,14 @@ export function FilteredPaymentRequestsList() {
 
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
+        // If it's already a full URL, return it as is.
         if (slipUrl.startsWith('http')) {
             return slipUrl;
         }
+        // Otherwise, prepend the base URL.
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
         return `${baseUrl}${slipUrl}`;
-    }
+    };
 
     useEffect(() => {
         async function fetchFilters() {
@@ -185,6 +189,7 @@ export function FilteredPaymentRequestsList() {
                             <TableRow>
                                 <TableHead>Request ID</TableHead>
                                 <TableHead>Student No.</TableHead>
+                                <TableHead>Course / Bucket</TableHead>
                                 <TableHead>Slip</TableHead>
                                 <TableHead>Amount</TableHead>
                                 <TableHead>Bank / Branch</TableHead>
@@ -197,7 +202,7 @@ export function FilteredPaymentRequestsList() {
                             {isLoading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <TableRow key={i}>
-                                        <TableCell colSpan={8}>
+                                        <TableCell colSpan={9}>
                                             <Skeleton className="h-8 w-full" />
                                         </TableCell>
                                     </TableRow>
@@ -207,6 +212,10 @@ export function FilteredPaymentRequestsList() {
                                     <TableRow key={req.id}>
                                         <TableCell className="font-mono text-xs">#{req.id}</TableCell>
                                         <TableCell>{req.student_number}</TableCell>
+                                        <TableCell>
+                                            <div className="font-medium">{req.course_name || 'N/A'}</div>
+                                            <div className="text-xs text-muted-foreground">{req.course_bucket_name || 'N/A'}</div>
+                                        </TableCell>
                                         <TableCell>
                                             {req.slip_url && (
                                                 <div className="relative h-10 w-10">
@@ -234,7 +243,7 @@ export function FilteredPaymentRequestsList() {
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                                    <TableCell colSpan={9} className="text-center h-24 text-muted-foreground">
                                     No payment requests found for the selected filters.
                                     </TableCell>
                                 </TableRow>
