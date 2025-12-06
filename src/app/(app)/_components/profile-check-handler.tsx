@@ -14,7 +14,6 @@ export function ProfileCheckHandler({ studentNumber }: ProfileCheckHandlerProps)
   const router = useRouter();
 
   useEffect(() => {
-    // Only run this check once per session to avoid infinite loops.
     const hasChecked = sessionStorage.getItem('profileCheckComplete');
     if (hasChecked || !studentNumber) {
         setIsLoading(false);
@@ -25,11 +24,9 @@ export function ProfileCheckHandler({ studentNumber }: ProfileCheckHandlerProps)
       try {
         const response = await api.get(`/user-full-details/get/student/?student_number=${studentNumber}`);
         if (!response.data.found) {
-          // Redirect to the complete profile page
           router.push('/complete-profile');
         }
       } catch (error) {
-        // If the endpoint fails, we won't redirect.
         console.error('Failed to check user details:', error);
       } finally {
         setIsLoading(false);
@@ -40,6 +37,5 @@ export function ProfileCheckHandler({ studentNumber }: ProfileCheckHandlerProps)
     checkProfile();
   }, [studentNumber, router]);
 
-  // This component doesn't render anything visible
   return null;
 }

@@ -51,12 +51,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       const parsedUser: CurrentUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      // Redirect student from admin dashboard to their own dashboard
       if (parsedUser.user_status === 'student' && pathname === '/dashboard') {
           router.replace('/student-dashboard');
       }
-    } else {
-        // Redirect to login if no user data found
+    } else if (pathname !== '/login' && pathname !== '/register') {
         router.push('/login');
     }
   }, [router, pathname]);
@@ -64,6 +62,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const handleSignOut = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
+    sessionStorage.removeItem('profileCheckComplete');
     toast({
       title: 'Signed Out',
       description: 'You have been successfully signed out.',
@@ -76,9 +75,16 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   const profilePath = useMemo(() => {
     if (!user) return '#';
-    // All users now go to the dedicated my-profile page
     return '/my-profile';
   }, [user]);
+
+  if (!user) {
+    return (
+        <div className="flex items-center justify-center h-screen">
+             {children}
+        </div>
+    );
+  }
 
   return (
     <div className="flex">
