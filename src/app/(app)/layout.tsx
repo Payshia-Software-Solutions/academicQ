@@ -263,17 +263,17 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                         </SidebarSubMenuButton>
                       <SidebarSubMenuContent>
                         <SidebarMenuItem>
-                          <SidebarMenuButton asChild isActive={isActive('/payments/student-payments')}>
+                          <SidebarMenuButton asChild isActive={pathname === '/payments/student-payments'}>
                             <Link href="/payments/student-payments">> Student Payments</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                          <SidebarMenuItem>
-                          <SidebarMenuButton asChild isActive={isActive('/payments/request')}>
+                          <SidebarMenuButton asChild isActive={pathname === '/payments/request'}>
                               <Link href="/payments/request">> Payment Request</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                          <SidebarMenuItem>
-                          <SidebarMenuButton asChild isActive={isActive('/payments/requests')}>
+                          <SidebarMenuButton asChild isActive={pathname === '/payments/requests'}>
                               <Link href="/payments/requests">> Filtered Requests</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
