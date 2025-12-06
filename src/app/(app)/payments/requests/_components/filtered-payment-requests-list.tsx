@@ -72,10 +72,10 @@ export function FilteredPaymentRequestsList() {
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
         if (slipUrl.startsWith('http://') || slipUrl.startsWith('https://')) {
-            return slipUrl;
+            return slipUrl.replace(/^http:\/\/[^/]+/, '');
         }
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
-        return `${baseUrl}${slipUrl.replace(/^http:\/\/[^/]+/, '')}`;
+        return `${baseUrl}${slipUrl}`;
     };
 
     const fetchFilters = async () => {
@@ -220,7 +220,43 @@ export function FilteredPaymentRequestsList() {
                             Apply Filters
                         </Button>
                     </div>
-                    <div className="overflow-x-auto">
+
+                    {/* Mobile View */}
+                    <div className="md:hidden space-y-4">
+                         {isLoading ? (
+                            Array.from({ length: 3 }).map((_, i) => (
+                                <Card key={i} className="p-4"><Skeleton className="h-24 w-full" /></Card>
+                            ))
+                         ) : requests.length > 0 ? (
+                            requests.map((req) => (
+                                <Card key={req.id}>
+                                    <CardContent className="p-4">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="font-semibold">{req.student_number}</p>
+                                                <p className="text-xs text-muted-foreground">{req.course_name}</p>
+                                            </div>
+                                            <Badge variant={req.request_status === 'approved' ? 'secondary' : 'destructive'} className="capitalize">{req.request_status}</Badge>
+                                        </div>
+                                        <div className="flex justify-between items-end mt-4">
+                                            <div className="text-sm">
+                                                <p className="font-bold text-lg">${parseFloat(req.payment_amount).toFixed(2)}</p>
+                                                <p className="text-xs text-muted-foreground">{format(new Date(req.created_at), 'PP p')}</p>
+                                            </div>
+                                            <Button variant="outline" size="sm" onClick={() => handleViewDetails(req)}>
+                                                <Eye className="mr-2 h-4 w-4"/>View
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                         ) : (
+                             <p className="text-center text-muted-foreground py-10">No requests found for filters.</p>
+                         )}
+                    </div>
+                    
+                    {/* Desktop View */}
+                    <div className="hidden md:block overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -284,13 +320,15 @@ export function FilteredPaymentRequestsList() {
                         <div className="space-y-2 py-4 text-sm">
                             {selectedRequest.slip_url && (
                                 <div className="flex justify-center mb-4">
-                                    <Image 
-                                        src={getFullImageUrl(selectedRequest.slip_url)} 
-                                        alt={`Slip for ${selectedRequest.student_number}`}
-                                        width={200}
-                                        height={280}
-                                        className="rounded-md object-contain"
-                                    />
+                                    <div className="relative w-full max-w-[250px] h-96">
+                                        <Image 
+                                            src={getFullImageUrl(selectedRequest.slip_url)} 
+                                            alt={`Slip for ${selectedRequest.student_number}`}
+                                            fill
+                                            style={{objectFit: "contain"}}
+                                            className="rounded-md"
+                                        />
+                                    </div>
                                 </div>
                             )}
                              <div className="flex justify-between p-2 rounded-md bg-muted">
@@ -317,7 +355,7 @@ export function FilteredPaymentRequestsList() {
                         </div>
                         <DialogFooter>
                             <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
-                            {selectedRequest.request_status === 'pending' && (
+                             {selectedRequest.request_status === 'pending' && (
                                 <Button onClick={handleProceed}>
                                     <CheckCircle className="mr-2 h-4 w-4" />
                                     Proceed to Payment
