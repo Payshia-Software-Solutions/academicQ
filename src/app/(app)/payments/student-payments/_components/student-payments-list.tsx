@@ -31,6 +31,7 @@ interface Course {
 interface Bucket {
   id: string;
   bucket_name: string;
+  name?: string;
   course_id: string;
 }
 interface Student {
@@ -56,13 +57,11 @@ export function StudentPaymentsList() {
     useEffect(() => {
         async function fetchFilters() {
             try {
-                const [coursesRes, bucketsRes, studentsRes] = await Promise.all([
+                const [coursesRes, studentsRes] = await Promise.all([
                     api.get('/courses'),
-                    api.get('/course_buckets'),
                     api.get('/users?status=student')
                 ]);
                 setCourses(coursesRes.data.data || []);
-                setBuckets(bucketsRes.data.data || []);
                 setStudents(studentsRes.data.data || []);
             } catch(e) {
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not load filter options.' });
@@ -70,6 +69,31 @@ export function StudentPaymentsList() {
         };
         fetchFilters();
     }, [toast]);
+    
+    useEffect(() => {
+        if (selectedCourse === 'all') {
+            setBuckets([]);
+            setSelectedBucket('all');
+            return;
+        }
+
+        async function fetchBucketsForCourse() {
+             try {
+                const response = await api.get(`/courses/full/details/?id=${selectedCourse}`);
+                if (response.data.status === 'success' && response.data.data.buckets) {
+                    setBuckets(response.data.data.buckets.map((b: any) => ({ ...b, bucket_name: b.name })));
+                } else {
+                    setBuckets([]);
+                }
+            } catch(err) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not load buckets for the selected course.'});
+                setBuckets([]);
+            } finally {
+                setSelectedBucket('all');
+            }
+        }
+        fetchBucketsForCourse();
+    }, [selectedCourse, toast]);
     
     useEffect(() => {
         async function fetchPayments() {
@@ -100,10 +124,6 @@ export function StudentPaymentsList() {
         };
         fetchPayments();
     }, [toast, selectedCourse, selectedBucket, selectedStudent]);
-
-    const filteredBuckets = selectedCourse === 'all' 
-        ? buckets 
-        : buckets.filter(b => b.course_id.toString() === selectedCourse.toString());
 
     return (
         <Card>
@@ -139,14 +159,14 @@ export function StudentPaymentsList() {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={filteredBuckets.length === 0}>
+                    <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0 || selectedCourse === 'all'}>
                         <SelectTrigger>
                             <Inbox className="mr-2 h-4 w-4" />
                             <SelectValue placeholder="Filter by bucket..." />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Buckets</SelectItem>
-                            {filteredBuckets.map(bucket => (
+                            {buckets.map(bucket => (
                                 <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
                             ))}
                         </SelectContent>
