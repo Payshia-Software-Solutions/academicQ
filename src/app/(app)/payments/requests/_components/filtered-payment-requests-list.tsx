@@ -40,6 +40,7 @@ interface Course {
 interface Bucket {
   id: string;
   bucket_name: string;
+  name?: string;
   course_id: string;
 }
 
@@ -75,11 +76,9 @@ export function FilteredPaymentRequestsList() {
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
-        // If slipUrl is already a full URL, don't prepend the base URL.
         if (/^https?:\/\//.test(slipUrl)) {
             return slipUrl;
         }
-        // Special handling for malformed URLs from the API
         if (slipUrl.includes('student-lms-ftp.payshia.com')) {
             return `https://${slipUrl.substring(slipUrl.indexOf('student-lms-ftp.payshia.com'))}`;
         }
@@ -88,18 +87,41 @@ export function FilteredPaymentRequestsList() {
 
     const fetchFilters = async () => {
         try {
-            const [coursesRes, bucketsRes, studentsRes] = await Promise.all([
+            const [coursesRes, studentsRes] = await Promise.all([
                 api.get('/courses'),
-                api.get('/course_buckets'),
                 api.get('/users?status=student')
             ]);
             setCourses(coursesRes.data.data || []);
-            setBuckets(bucketsRes.data.data || []);
             setStudents(studentsRes.data.data || []);
         } catch(e) {
             toast({ variant: 'destructive', title: 'Error', description: 'Could not load filter options.' });
         }
     };
+    
+    useEffect(() => {
+        if (selectedCourse === 'all') {
+            setBuckets([]);
+            setSelectedBucket('all');
+            return;
+        }
+
+        async function fetchBucketsForCourse() {
+            try {
+                const response = await api.get(`/courses/full/details/?id=${selectedCourse}`);
+                if (response.data.status === 'success' && response.data.data.buckets) {
+                    setBuckets(response.data.data.buckets.map((b: any) => ({ ...b, bucket_name: b.name })));
+                } else {
+                    setBuckets([]);
+                }
+            } catch(err) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not load buckets for the selected course.'});
+                setBuckets([]);
+            } finally {
+                setSelectedBucket('all');
+            }
+        }
+        fetchBucketsForCourse();
+    }, [selectedCourse, toast]);
     
     const fetchPaymentRequests = async () => {
         setIsLoading(true);
@@ -141,10 +163,6 @@ export function FilteredPaymentRequestsList() {
     const handleApplyFilters = () => {
         setFilterTrigger(prev => prev + 1);
     };
-
-    const filteredBuckets = selectedCourse === 'all' 
-        ? buckets 
-        : buckets.filter(b => b.course_id.toString() === selectedCourse.toString());
 
     const handleViewDetails = (req: PaymentRequest) => {
         setSelectedRequest(req);
@@ -213,14 +231,14 @@ export function FilteredPaymentRequestsList() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={filteredBuckets.length === 0}>
+                        <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0}>
                             <SelectTrigger>
                                 <Inbox className="mr-2 h-4 w-4" />
                                 <SelectValue placeholder="Filter by bucket..." />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Buckets</SelectItem>
-                                {filteredBuckets.map(bucket => (
+                                {buckets.map(bucket => (
                                     <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
                                 ))}
                             </SelectContent>
