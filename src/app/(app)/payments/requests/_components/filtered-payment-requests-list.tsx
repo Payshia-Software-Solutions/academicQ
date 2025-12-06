@@ -63,13 +63,11 @@ export function FilteredPaymentRequestsList() {
 
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
-        // Sanitize URL by removing potential user info part
-        const sanitizedUrl = slipUrl.replace(/.*?@/, '');
-        if (sanitizedUrl.startsWith('http')) {
-            return sanitizedUrl;
+        if (slipUrl.startsWith('http')) {
+            return slipUrl;
         }
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
-        return `${baseUrl}${sanitizedUrl}`;
+        return `${baseUrl}${slipUrl}`;
     }
 
     useEffect(() => {
