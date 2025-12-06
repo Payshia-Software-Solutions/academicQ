@@ -62,6 +62,10 @@ export function FilteredPaymentRequestsList() {
     const [filterTrigger, setFilterTrigger] = useState(0);
 
     const getFullImageUrl = (slipUrl: string) => {
+        if (!slipUrl) return '';
+        if (slipUrl.startsWith('http')) {
+            return slipUrl;
+        }
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
         return `${baseUrl}${slipUrl}`;
     }
