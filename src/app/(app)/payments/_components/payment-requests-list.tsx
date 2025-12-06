@@ -10,6 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import Image from 'next/image';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Eye, Building, GitBranch, Info, Calendar } from 'lucide-react';
 
 interface PaymentRequest {
     id: string;
@@ -59,13 +62,9 @@ export function PaymentRequestsList() {
     
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
-        // If it's already a full URL, return it as is.
-        if (slipUrl.startsWith('http')) {
-            return slipUrl;
-        }
-        // Otherwise, prepend the base URL.
-        const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
-        return `${baseUrl}${slipUrl}`;
+        if (slipUrl.startsWith('http')) return slipUrl;
+        const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
+        return `${baseUrl}${slipUrl.replace(/^http:\/\/[^/]+/, '')}`;
     };
 
     return (
@@ -83,20 +82,18 @@ export function PaymentRequestsList() {
                             <TableRow>
                                 <TableHead>Request ID</TableHead>
                                 <TableHead>Student No.</TableHead>
-                                <TableHead>Course / Bucket</TableHead>
-                                <TableHead>Slip</TableHead>
+                                <TableHead>Course</TableHead>
+                                <TableHead>Bucket</TableHead>
                                 <TableHead>Amount</TableHead>
-                                <TableHead>Bank / Branch</TableHead>
-                                <TableHead>Reference</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Date</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <TableRow key={i}>
-                                        <TableCell colSpan={9}>
+                                        <TableCell colSpan={7}>
                                             <Skeleton className="h-8 w-full" />
                                         </TableCell>
                                     </TableRow>
@@ -106,38 +103,58 @@ export function PaymentRequestsList() {
                                     <TableRow key={req.id}>
                                         <TableCell className="font-mono text-xs">#{req.id}</TableCell>
                                         <TableCell>{req.student_number}</TableCell>
-                                        <TableCell>
-                                            <div className="font-medium">{req.course_name || 'N/A'}</div>
-                                            <div className="text-xs text-muted-foreground">{req.course_bucket_name || 'N/A'}</div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {req.slip_url && (
-                                                <div className="relative h-10 w-10">
-                                                    <Image 
-                                                        src={getFullImageUrl(req.slip_url)} 
-                                                        alt={`Slip for ${req.student_number}`}
-                                                        fill
-                                                        style={{ objectFit: 'cover' }}
-                                                        className="rounded-md"
-                                                    />
-                                                </div>
-                                            )}
-                                        </TableCell>
+                                        <TableCell>{req.course_name || 'N/A'}</TableCell>
+                                        <TableCell>{req.course_bucket_name || 'N/A'}</TableCell>
                                         <TableCell>${parseFloat(req.payment_amount).toFixed(2)}</TableCell>
-                                        <TableCell>
-                                            <div className="font-medium">{req.bank}</div>
-                                            <div className="text-xs text-muted-foreground">{req.branch}</div>
-                                        </TableCell>
-                                        <TableCell>{req.ref}</TableCell>
                                         <TableCell>
                                             <Badge variant={req.request_status === 'approved' ? 'secondary' : 'destructive'} className="capitalize">{req.request_status}</Badge>
                                         </TableCell>
-                                        <TableCell className="text-xs">{format(new Date(req.created_at), 'PP p')}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button variant="ghost" size="sm"><Eye className="mr-2 h-4 w-4" />View</Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-md">
+                                                    <DialogHeader>
+                                                        <DialogTitle>Request Details (#{req.id})</DialogTitle>
+                                                        <DialogDescription>
+                                                            Full details for the payment request.
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <div className="space-y-4 py-4 text-sm">
+                                                        {req.slip_url && (
+                                                            <div className="flex justify-center">
+                                                                <Image 
+                                                                    src={getFullImageUrl(req.slip_url)} 
+                                                                    alt={`Slip for ${req.student_number}`}
+                                                                    width={300}
+                                                                    height={400}
+                                                                    className="rounded-md object-contain"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                         <div className="flex justify-between p-2 rounded-md bg-muted">
+                                                            <span className="text-muted-foreground">Student:</span>
+                                                            <span className="font-semibold">{req.student_number}</span>
+                                                        </div>
+                                                         <div className="flex justify-between p-2 rounded-md bg-muted">
+                                                            <span className="text-muted-foreground">Amount:</span>
+                                                            <span className="font-semibold">${parseFloat(req.payment_amount).toFixed(2)}</span>
+                                                        </div>
+                                                        <div className="p-2 rounded-md border space-y-2">
+                                                            <div className="flex items-center gap-2"><Building className="h-4 w-4 text-muted-foreground" /> <span>{req.bank} - {req.branch}</span></div>
+                                                            <div className="flex items-center gap-2"><Info className="h-4 w-4 text-muted-foreground" /> <span>{req.ref}</span></div>
+                                                            <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /> <span>{format(new Date(req.created_at), 'PP p')}</span></div>
+                                                        </div>
+                                                    </div>
+                                                </DialogContent>
+                                            </Dialog>
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="text-center h-24 text-muted-foreground">
+                                    <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
                                     No payment requests found.
                                     </TableCell>
                                 </TableRow>
