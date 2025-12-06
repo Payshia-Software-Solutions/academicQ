@@ -219,21 +219,21 @@ export function FilteredPaymentRequestsList() {
                                                 <DialogTrigger asChild>
                                                     <Button variant="ghost" size="sm"><Eye className="mr-2 h-4 w-4" />View</Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="sm:max-w-lg">
+                                                <DialogContent className="sm:max-w-md">
                                                     <DialogHeader>
                                                         <DialogTitle>Request Details (#{req.id})</DialogTitle>
                                                         <DialogDescription>
                                                             Full details for the payment request.
                                                         </DialogDescription>
                                                     </DialogHeader>
-                                                    <div className="space-y-4 py-4 text-sm">
+                                                    <div className="space-y-2 py-4 text-sm">
                                                         {req.slip_url && (
-                                                            <div className="flex justify-center">
+                                                            <div className="flex justify-center mb-4">
                                                                 <Image 
                                                                     src={getFullImageUrl(req.slip_url)} 
                                                                     alt={`Slip for ${req.student_number}`}
-                                                                    width={250}
-                                                                    height={350}
+                                                                    width={200}
+                                                                    height={280}
                                                                     className="rounded-md object-contain"
                                                                 />
                                                             </div>
@@ -246,7 +246,15 @@ export function FilteredPaymentRequestsList() {
                                                             <span className="text-muted-foreground">Amount:</span>
                                                             <span className="font-semibold">${parseFloat(req.payment_amount).toFixed(2)}</span>
                                                         </div>
-                                                        <div className="p-2 rounded-md border space-y-2">
+                                                        <div className="flex justify-between p-2 rounded-md bg-muted">
+                                                            <span className="text-muted-foreground">Course:</span>
+                                                            <span className="font-semibold text-right">{req.course_name || 'N/A'}</span>
+                                                        </div>
+                                                        <div className="flex justify-between p-2 rounded-md bg-muted">
+                                                            <span className="text-muted-foreground">Bucket:</span>
+                                                            <span className="font-semibold text-right">{req.course_bucket_name || 'N/A'}</span>
+                                                        </div>
+                                                        <div className="p-3 rounded-md border space-y-2">
                                                             <div className="flex items-center gap-2"><Building className="h-4 w-4 text-muted-foreground" /> <span>{req.bank} - {req.branch}</span></div>
                                                             <div className="flex items-center gap-2"><Info className="h-4 w-4 text-muted-foreground" /> <span>{req.ref}</span></div>
                                                             <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-muted-foreground" /> <span>{format(new Date(req.created_at), 'PP p')}</span></div>
