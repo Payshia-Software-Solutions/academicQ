@@ -22,17 +22,17 @@ export function ProfileCheckHandler({ studentNumber }: ProfileCheckHandlerProps)
 
     async function checkProfile() {
       try {
-        // We expect this call to either succeed or fail with a specific "User not found" message.
-        await api.get(`/user-full-details/get/student/?student_number=${studentNumber}`);
-        // If it succeeds, the user has details, so we do nothing.
-      } catch (error: any) {
-        // Check if the error response from the API indicates the user was not found.
-        if (error.response && error.response.data && error.response.data.message === "User not found.") {
+        const response = await api.get(`/user-full-details/get/student/?student_number=${studentNumber}`);
+        
+        // The API returns a 200 OK status even for "User not found", so we check the response body.
+        if (response.data && response.data.message === "User not found.") {
           router.push('/complete-profile');
-        } else {
-            // For any other unexpected errors, we log it but don't redirect.
-            console.error('Failed to check user details:', error);
         }
+        // If the user is found (no "User not found." message), we do nothing.
+        
+      } catch (error: any) {
+        // This will now only catch network errors or non-200 responses.
+        console.error('Failed to check user details:', error);
       } finally {
         setIsLoading(false);
         sessionStorage.setItem('profileCheckComplete', 'true');
