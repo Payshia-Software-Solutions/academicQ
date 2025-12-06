@@ -73,7 +73,7 @@ export default function PaymentsPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
                 <DropdownMenuItem asChild>
-                    <Link href="/payments/course-payment">Student Payment</Link>
+                    <Link href="/payments/student-payments">Student Payments</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                     <Link href="/payments/request">Payment Request</Link>
@@ -236,3 +236,5 @@ export default function PaymentsPage() {
     </div>
   );
 }
+
+    

@@ -263,8 +263,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                         </SidebarSubMenuButton>
                       <SidebarSubMenuContent>
                         <SidebarMenuItem>
-                          <SidebarMenuButton asChild isActive={isActive('/payments/course-payment')}>
-                            <Link href="/payments/course-payment">> Student Payment</Link>
+                          <SidebarMenuButton asChild isActive={isActive('/payments/student-payments')}>
+                            <Link href="/payments/student-payments">> Student Payments</Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                          <SidebarMenuItem>
@@ -366,3 +366,5 @@ export default function AppLayout({
     </SidebarProvider>
   );
 }
+
+    
