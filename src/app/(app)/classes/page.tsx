@@ -39,7 +39,8 @@ function ClassCard({ cls, enrollmentStatus }: { cls: Class, enrollmentStatus?: s
     const [imageError, setImageError] = useState(false);
 
     const getFullFileUrl = (filePath: string) => {
-        if (!filePath || filePath.startsWith('http')) return filePath;
+        if (!filePath) return 'https://placehold.co/600x400';
+        if (filePath.startsWith('http')) return filePath;
         const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
         return `${baseUrl}${filePath}`;
     };

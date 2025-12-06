@@ -88,7 +88,8 @@ export default function StudentDashboardPage() {
   }, [user, toast]);
   
   const getFullFileUrl = (filePath?: string) => {
-    if (!filePath || filePath.startsWith('http')) return filePath || 'https://placehold.co/600x400';
+    if (!filePath) return 'https://placehold.co/600x400';
+    if (filePath.startsWith('http')) return filePath;
     const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
     return `${baseUrl}${filePath}`;
   };
