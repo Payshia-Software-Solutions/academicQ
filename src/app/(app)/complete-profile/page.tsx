@@ -8,8 +8,8 @@ function CompleteProfilePageContent() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">Complete Your Profile</h1>
-        <p className="text-muted-foreground mt-1">Please provide your full details. This is required to continue.</p>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">Edit Your Profile</h1>
+        <p className="text-muted-foreground mt-1">Please provide or update your full details.</p>
       </header>
 
       <CompleteProfileForm />

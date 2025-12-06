@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 
 const profileSchema = z.object({
   full_name: z.string().min(1, 'Full name is required.'),
@@ -46,13 +47,8 @@ export function CompleteProfileForm() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const { toast } = useToast();
   const router = useRouter();
-  
-  useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if(userStr) {
-        setCurrentUser(JSON.parse(userStr));
-    }
-  }, []);
+  const [hasFullDetails, setHasFullDetails] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -70,6 +66,43 @@ export function CompleteProfileForm() {
         birth_day: '',
     },
   });
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const parsedUser = JSON.parse(userStr);
+      setCurrentUser(parsedUser);
+
+      if (parsedUser.student_number) {
+        fetchUserDetails(parsedUser.student_number);
+      } else {
+        setIsLoading(false);
+      }
+    } else {
+        setIsLoading(false);
+    }
+  }, []);
+
+  const fetchUserDetails = async (studentNumber: string) => {
+    try {
+        const response = await api.get(`/user-full-details/get/student/?student_number=${studentNumber}`);
+        if (response.data && response.data.message !== "User not found.") {
+            const details = response.data.data;
+            const formattedBirthday = details.birth_day ? format(new Date(details.birth_day), 'yyyy-MM-dd') : '';
+            
+            form.reset({
+                ...details,
+                birth_day: formattedBirthday
+            });
+            setHasFullDetails(true);
+        }
+    } catch (error) {
+        console.error("Could not fetch user details", error);
+    } finally {
+        setIsLoading(false);
+    }
+  }
+
 
   const handleSkip = () => {
     sessionStorage.setItem('profileSkipped', 'true');
@@ -89,27 +122,54 @@ export function CompleteProfileForm() {
     }
 
     setIsSubmitting(true);
+    
     try {
+      let response;
+      if (hasFullDetails) {
+        // UPDATE (PUT)
+        const dirtyFields = form.formState.dirtyFields;
+        const changedData: Partial<ProfileFormValues> = {};
+        for (const key in dirtyFields) {
+          if (Object.prototype.hasOwnProperty.call(dirtyFields, key)) {
+            changedData[key as keyof ProfileFormValues] = data[key as keyof ProfileFormValues];
+          }
+        }
+        
+        if (Object.keys(changedData).length === 0) {
+            toast({ title: 'No Changes', description: 'You have not made any changes to your profile.' });
+            setIsSubmitting(false);
+            return;
+        }
+
+        response = await api.put(`/users/full-details/${currentUser.student_number}`, changedData);
+        if (response.data.message !== "Record updated successfully.") {
+             throw new Error(response.data.message || "An unknown error occurred during update.");
+        }
+
+      } else {
+        // CREATE (POST)
         const postData = {
             ...data,
             student_number: currentUser.student_number,
             e_mail: currentUser.email,
             nic: currentUser.nic,
         };
-
-        const response = await api.post('/user-full-details', postData);
-
-        if (response.data.message === "Record created successfully.") {
-            toast({
-                title: 'Profile Updated',
-                description: 'Your details have been saved successfully. Redirecting...',
-            });
-            sessionStorage.removeItem('profileSkipped');
-            const homePath = currentUser?.user_status === 'admin' ? '/dashboard' : '/student-dashboard';
-            router.push(homePath);
-        } else {
-             throw new Error(response.data.message || "An unknown error occurred.");
+        response = await api.post('/user-full-details', postData);
+        if (response.data.message !== "Record created successfully.") {
+             throw new Error(response.data.message || "An unknown error occurred during creation.");
         }
+      }
+
+      toast({
+          title: 'Profile Updated',
+          description: 'Your details have been saved successfully. Redirecting...',
+      });
+      sessionStorage.removeItem('profileSkipped');
+      sessionStorage.setItem('profileCheckComplete', 'true'); // Ensure check is marked complete
+      const homePath = currentUser?.user_status === 'admin' ? '/dashboard' : '/student-dashboard';
+      router.push(homePath);
+      router.refresh();
+
     } catch (error: any) {
         toast({
             variant: 'destructive',
@@ -120,6 +180,18 @@ export function CompleteProfileForm() {
         setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+      return (
+        <Card>
+            <CardContent className="pt-6">
+                <div className="flex items-center justify-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            </CardContent>
+        </Card>
+      )
+  }
 
   return (
     <Card>
@@ -199,7 +271,7 @@ export function CompleteProfileForm() {
                     <FormField control={form.control} name="gender" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Gender</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a gender" />
@@ -216,7 +288,7 @@ export function CompleteProfileForm() {
                     <FormField control={form.control} name="civil_status" render={({ field }) => (
                         <FormItem>
                             <FormLabel>Civil Status</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a status" />
@@ -233,7 +305,9 @@ export function CompleteProfileForm() {
                 </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button type="button" variant="ghost" onClick={handleSkip}>Skip for now</Button>
+              {!hasFullDetails ? (
+                <Button type="button" variant="ghost" onClick={handleSkip}>Skip for now</Button>
+              ) : <div />}
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
