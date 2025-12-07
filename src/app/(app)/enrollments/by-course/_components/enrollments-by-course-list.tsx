@@ -41,17 +41,18 @@ export function EnrollmentsByCourseList() {
             setIsFetchingCourses(true);
             try {
                 const response = await api.get('/courses');
-                if (response.data.status === 'success') {
+                if (response.data.status === 'success' && Array.isArray(response.data.data)) {
                     setCourses(response.data.data || []);
                 } else {
                     setCourses([]);
                 }
             } catch (error: any) {
-                toast({
+                 toast({
                     variant: 'destructive',
                     title: 'API Error',
                     description: 'Could not fetch courses.',
                 });
+                setCourses([]);
             } finally {
                 setIsFetchingCourses(false);
             }
