@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -286,7 +287,6 @@ export function SubmissionsList() {
                             <SelectValue placeholder="Select a course..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Select a course</SelectItem>
                             {courses.map(course => (
                                 <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
                             ))}
@@ -298,7 +298,6 @@ export function SubmissionsList() {
                             <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Select a bucket</SelectItem>
                             {courseBuckets.map(bucket => (
                                 <SelectItem key={bucket.id} value={bucket.id}>{bucket.name}</SelectItem>
                             ))}
