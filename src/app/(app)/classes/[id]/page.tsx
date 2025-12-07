@@ -55,7 +55,8 @@ interface CurrentUser {
 interface StudentPayment {
     id: string;
     course_bucket_id: string;
-    status: string;
+    status?: string; // from payment request
+    payment_amount?: string; // from payment record
 }
 
 
@@ -81,9 +82,9 @@ async function getCourseBuckets(id: string): Promise<Bucket[]> {
     }
 }
 
-async function getStudentPayments(studentNumber: string): Promise<StudentPayment[]> {
+async function getStudentPayments(studentNumber: string, courseId: string, bucketId: string): Promise<StudentPayment[]> {
     try {
-        const response = await api.get(`/student_payment_courses/student/${studentNumber}`);
+        const response = await api.get(`/student-payment-courses/filter/?student_number=${studentNumber}&course_id=${courseId}&course_bucket_id=${bucketId}`);
         if (response.data.status === 'success') {
             return response.data.data || [];
         }
@@ -103,7 +104,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     const [isEnrolling, setIsEnrolling] = useState(false);
     const [enrollmentStatus, setEnrollmentStatus] = useState<string | null>(null);
     const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true);
-    const [studentPayments, setStudentPayments] = useState<StudentPayment[]>([]);
+    const [studentPayments, setStudentPayments] = useState<Map<string, boolean>>(new Map());
     const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
 
     const { toast } = useToast();
@@ -130,34 +131,45 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     }, [params.id]);
 
     useEffect(() => {
-        if (user?.user_status === 'student' && user.student_number && course?.id) {
+        if (user?.user_status === 'student' && user.student_number && course?.id && buckets.length > 0) {
             const checkEnrollmentAndPayments = async () => {
                 setIsCheckingEnrollment(true);
                 try {
-                    const [enrollmentRes, paymentsRes] = await Promise.all([
-                        api.get(`/enrollments/?student_id=${user.student_number}&course_id=${course.id}`),
-                        getStudentPayments(user.student_number as string)
-                    ]);
+                    const enrollmentRes = await api.get(`/enrollments/?student_id=${user.student_number}&course_id=${course.id}`);
 
                     if (enrollmentRes.data && enrollmentRes.data.length > 0) {
                         setEnrollmentStatus(enrollmentRes.data[0].status);
                     } else {
                         setEnrollmentStatus(null);
                     }
-                    setStudentPayments(paymentsRes);
+
+                    if (enrollmentRes.data?.[0]?.status === 'approved') {
+                        const paymentStatusMap = new Map<string, boolean>();
+                        for (const bucket of buckets) {
+                            const payments = await getStudentPayments(user.student_number!, course.id, bucket.id);
+                            if (payments.length > 0) {
+                                // Assuming any payment record means it's "paid" for the context of this page
+                                paymentStatusMap.set(bucket.id, true);
+                            } else {
+                                paymentStatusMap.set(bucket.id, false);
+                            }
+                        }
+                        setStudentPayments(paymentStatusMap);
+                    }
+
                 } catch (error) {
                     setEnrollmentStatus(null);
-                    setStudentPayments([]);
+                    setStudentPayments(new Map());
                     console.error("Failed to check enrollment status or payments:", error);
                 } finally {
                     setIsCheckingEnrollment(false);
                 }
             };
             checkEnrollmentAndPayments();
-        } else {
+        } else if (user) {
              setIsCheckingEnrollment(false);
         }
-    }, [user, course]);
+    }, [user, course, buckets]);
 
 
     const handleEnroll = async () => {
@@ -331,7 +343,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                             const totalContent = bucket.contents?.length || 0;
                             const totalAssignments = bucket.assignments?.length || 0;
                             
-                            const isPaid = !isAdmin && studentPayments.some(p => p.course_bucket_id === bucket.id && p.status === 'approved');
+                            const isPaid = !isAdmin && (studentPayments.get(bucket.id) ?? false);
 
                             return (
                                 <Link href={`/classes/${course.id}/buckets/${bucket.id}`} key={bucket.id} className="block group">
@@ -421,5 +433,3 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
-
-    
