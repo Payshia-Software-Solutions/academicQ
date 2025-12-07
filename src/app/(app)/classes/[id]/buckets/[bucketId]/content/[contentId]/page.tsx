@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, FileText, Image as ImageIcon, Video, Download, Plus } from 'lucide-react';
+import { ArrowLeft, FileText, Image as ImageIcon, Video, Download, Plus, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { format } from 'date-fns';
 
 interface Assignment {
     id: string;
@@ -19,6 +20,7 @@ interface Assignment {
     content_type: string;
     file_url: string;
     course_bucket_id: string;
+    deadline_date?: string;
 }
 
 interface ContentDetails {
@@ -230,7 +232,15 @@ export default function ContentDetailsPage() {
                                               <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/assignments/${assignment.id}`} className="font-semibold hover:underline truncate block">
                                                 {assignment.content_title}
                                               </Link>
-                                              <Badge variant="outline" className="capitalize mt-1">{assignment.content_type}</Badge>
+                                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                <Badge variant="outline" className="capitalize">{assignment.content_type}</Badge>
+                                                {assignment.deadline_date && (
+                                                    <Badge variant="destructive" className="flex items-center gap-1 text-xs">
+                                                        <Calendar className="h-3 w-3" />
+                                                        {format(new Date(assignment.deadline_date), 'PP')}
+                                                    </Badge>
+                                                )}
+                                              </div>
                                             </div>
                                         </div>
                                     </div>

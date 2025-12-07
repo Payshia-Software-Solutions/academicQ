@@ -16,18 +16,23 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, FileText, UploadCloud, FileVideo } from 'lucide-react';
+import { Loader2, ArrowLeft, FileText, UploadCloud, FileVideo, CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const addAssignmentSchema = z.object({
   content_type: z.string().min(1, { message: 'Content type is required.' }),
   content_title: z.string().min(1, { message: 'Assignment title is required.' }),
   content: z.string().min(1, { message: 'Assignment content is required.' }),
+  deadline_date: z.date({ required_error: 'Deadline date is required.' }),
   file: z.any().optional(),
 }).superRefine((data, ctx) => {
     const fileBasedTypes = ['video', 'image', 'pdf'];
@@ -76,6 +81,7 @@ export function AddAssignmentForm() {
         content_type: data.content_type,
         content_title: data.content_title,
         content: data.content,
+        deadline_date: format(data.deadline_date, 'yyyy-MM-dd'),
         created_by: userId,
         updated_by: userId,
       }
@@ -131,81 +137,121 @@ export function AddAssignmentForm() {
             </CardHeader>
             <CardContent className="space-y-6">
             
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                  control={form.control}
+                  name="content_title"
+                  render={({ field }) => (
+                  <FormItem>
+                      <FormLabel>Assignment Title</FormLabel>
+                      <div className="relative">
+                      <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <FormControl>
+                          <Input placeholder="e.g. Mid-term paper on PHP basics" {...field} className="pl-8" />
+                      </FormControl>
+                      </div>
+                      <FormMessage />
+                  </FormItem>
+                  )}
+              />
+               <FormField
+                  control={form.control}
+                  name="deadline_date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Deadline</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
+            
             <FormField
                 control={form.control}
-                name="content_title"
+                name="content"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Assignment Title</FormLabel>
-                    <div className="relative">
-                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <FormControl>
-                        <Input placeholder="e.g. Mid-term paper on PHP basics" {...field} className="pl-8" />
+                    <FormLabel>Content / Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter assignment description or content..."
+                          className="resize-none"
+                          rows={4}
+                          {...field}
+                        />
                     </FormControl>
-                    </div>
                     <FormMessage />
                 </FormItem>
                 )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                    control={form.control}
-                    name="content_type"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Content Type</FormLabel>
-                        <div className="relative">
-                        <FileVideo className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                        <Select onValueChange={(value) => {
-                            field.onChange(value);
-                            form.setValue('file', null);
-                            form.clearErrors(['file']);
-                        }} defaultValue={field.value}>
-                            <FormControl>
-                            <SelectTrigger className="pl-8">
-                                <SelectValue placeholder="Select a content type" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            <SelectItem value="pdf">PDF</SelectItem>
-                            <SelectItem value="video">Video</SelectItem>
-                            <SelectItem value="image">Image</SelectItem>
-                            <SelectItem value="link">Link</SelectItem>
-                            <SelectItem value="text">Text</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        </div>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Content / Description</FormLabel>
-                         <FormControl>
-                            <Textarea
-                              placeholder="Enter assignment description or content..."
-                              className="resize-none"
-                              rows={4}
-                              {...field}
-                            />
+            <FormField
+                control={form.control}
+                name="content_type"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Supporting Material Type (Optional)</FormLabel>
+                    <div className="relative">
+                    <FileVideo className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                    <Select onValueChange={(value) => {
+                        field.onChange(value);
+                        form.setValue('file', null);
+                        form.clearErrors(['file']);
+                    }} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger className="pl-8">
+                            <SelectValue placeholder="Select a content type" />
+                        </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-            </div>
+                        <SelectContent>
+                        <SelectItem value="text">No File</SelectItem>
+                        <SelectItem value="pdf">PDF</SelectItem>
+                        <SelectItem value="video">Video</SelectItem>
+                        <SelectItem value="image">Image</SelectItem>
+                        <SelectItem value="link">Link</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    </div>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            
             {isFileBased && (
                  <FormField
                   control={form.control}
                   name="file"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Upload File</FormLabel>
+                      <FormLabel>Upload Supporting File</FormLabel>
                       <FormControl>
                         <div className="relative">
                            <UploadCloud className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

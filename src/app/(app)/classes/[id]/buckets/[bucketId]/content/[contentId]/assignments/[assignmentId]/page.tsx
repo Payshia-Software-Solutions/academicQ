@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, Download, FileText, Paperclip, Upload, Loader2 } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Paperclip, Upload, Loader2, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { format } from 'date-fns';
 
 interface AssignmentDetails {
     id: string;
@@ -27,6 +28,7 @@ interface AssignmentDetails {
     file_url: string;
     created_at: string;
     course_bucket_id: string;
+    deadline_date?: string;
 }
 
 interface CurrentUser {
@@ -226,6 +228,7 @@ export default function AssignmentDetailsPage() {
     
     const backUrl = `/classes/${courseId}/buckets/${bucketId}/content/${contentId}`;
     const isAdmin = user?.user_status === 'admin';
+    const isDeadlinePassed = assignment.deadline_date ? new Date(assignment.deadline_date) < new Date() : false;
 
     return (
         <div className="space-y-6">
@@ -237,7 +240,15 @@ export default function AssignmentDetailsPage() {
                     </Link>
                 </Button>
                 <h1 className="text-2xl sm:text-3xl font-headline font-bold text-foreground">{assignment.content_title}</h1>
-                <Badge variant="secondary" className="capitalize mt-2">{assignment.content_type} Assignment</Badge>
+                <div className="flex items-center gap-4 mt-2 flex-wrap">
+                    <Badge variant="secondary" className="capitalize">{assignment.content_type} Assignment</Badge>
+                     {assignment.deadline_date && (
+                        <Badge variant={isDeadlinePassed ? 'destructive' : 'outline'} className="flex items-center gap-2">
+                           <Calendar className="h-3 w-3"/>
+                           Deadline: {format(new Date(assignment.deadline_date), 'PP')}
+                        </Badge>
+                     )}
+                </div>
             </header>
 
             <Card>
