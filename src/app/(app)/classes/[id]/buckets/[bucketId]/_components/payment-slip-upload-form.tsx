@@ -156,7 +156,7 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId }: Paym
                     <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <FormControl>
-                        <Input type="number" step="0.01" {...field} className="pl-8" readOnly disabled />
+                        <Input type="number" step="0.01" {...field} className="pl-8" />
                         </FormControl>
                     </div>
                     <FormMessage />
