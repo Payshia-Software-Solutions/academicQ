@@ -156,7 +156,7 @@ export function EnrollmentsByCourseList() {
                                          <TableCell>
                                             <StatusBadge status={req.status} />
                                         </TableCell>
-                                        <TableCell className="text-xs">{format(new Date(req.created_at), 'PP p')}</TableCell>
+                                        <TableCell className="text-xs">{req.created_at ? format(new Date(req.created_at), 'PP p') : 'N/A'}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
