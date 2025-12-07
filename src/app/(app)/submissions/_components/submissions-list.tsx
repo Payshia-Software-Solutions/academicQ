@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Users, Download, ChevronDown, Loader2, Edit } from 'lucide-react';
+import { BookOpen, Inbox, Users, Download, ChevronDown, Loader2, Edit, CheckSquare } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -66,6 +66,7 @@ export function SubmissionsList() {
     const [selectedCourse, setSelectedCourse] = useState('all-courses');
     const [selectedBucket, setSelectedBucket] = useState('all-buckets');
     const [selectedStudent, setSelectedStudent] = useState('all-students');
+    const [selectedStatus, setSelectedStatus] = useState<Submission['sub_status'] | 'all'>('all');
     const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
     const [currentGrade, setCurrentGrade] = useState('');
     const [updatingGrade, setUpdatingGrade] = useState<string | null>(null);
@@ -143,6 +144,7 @@ export function SubmissionsList() {
                 if (selectedCourse && selectedCourse !== 'all-courses') params.append('course_id', selectedCourse);
                 if (selectedBucket && selectedBucket !== 'all-buckets') params.append('course_bucket_id', selectedBucket);
                 if (selectedStudent && selectedStudent !== 'all-students') params.append('student_number', selectedStudent);
+                if (selectedStatus && selectedStatus !== 'all') params.append('sub_status', selectedStatus);
 
                 const response = await api.get(`/assignment-submissions/filter?${params.toString()}`);
                 
@@ -163,7 +165,7 @@ export function SubmissionsList() {
             }
         }
         fetchSubmissions();
-    }, [toast, selectedCourse, selectedBucket, selectedStudent]);
+    }, [toast, selectedCourse, selectedBucket, selectedStudent, selectedStatus]);
 
     const handleStatusChange = async (submissionId: string, newStatus: Submission['sub_status']) => {
         if (!newStatus) return;
@@ -273,7 +275,7 @@ export function SubmissionsList() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                      <Select value={selectedCourse} onValueChange={setSelectedCourse}>
                         <SelectTrigger>
                             <BookOpen className="mr-2 h-4 w-4" />
@@ -307,6 +309,18 @@ export function SubmissionsList() {
                              <SelectItem value="all-students">All Students</SelectItem>
                             {students.map(student => (
                                 <SelectItem key={student.id} value={student.student_number}>{student.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as any)}>
+                        <SelectTrigger>
+                            <CheckSquare className="mr-2 h-4 w-4" />
+                            <SelectValue placeholder="Filter by status..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            {statusOptions.map(status => (
+                                <SelectItem key={status} value={status} className="capitalize">{status}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
