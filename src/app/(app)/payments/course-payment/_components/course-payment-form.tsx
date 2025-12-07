@@ -164,7 +164,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
     }
 
     try {
-      const response = await api.post('/student_payment_courses', postData);
+      const response = await api.post('/student-payment-courses', postData);
       if (response.status === 201 || response.status === 200) {
         toast({
           title: 'Payment Recorded',
