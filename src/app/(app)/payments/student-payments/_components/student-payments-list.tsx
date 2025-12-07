@@ -157,7 +157,6 @@ export function StudentPaymentsList() {
                             <SelectValue placeholder="Select a course..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Select a course</SelectItem>
                             {courses.map(course => (
                                 <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
                             ))}
@@ -169,7 +168,6 @@ export function StudentPaymentsList() {
                             <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">Select a bucket</SelectItem>
                             {buckets.map(bucket => (
                                 <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
                             ))}
@@ -224,5 +222,3 @@ export function StudentPaymentsList() {
         </Card>
     );
 }
-
-    
