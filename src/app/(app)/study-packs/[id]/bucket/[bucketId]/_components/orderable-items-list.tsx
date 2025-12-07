@@ -22,7 +22,18 @@ interface OrderableItem {
 }
 
 const getFullFileUrl = (filePath?: string) => {
-    if (!filePath || filePath.startsWith('http')) return filePath || 'https://placehold.co/600x400';
+    if (!filePath) return 'https://placehold.co/600x400';
+    if (filePath.startsWith('http')) {
+        // Handle cases where the URL might be duplicated like "https://https://..."
+        try {
+            const url = new URL(filePath);
+            return url.href;
+        } catch (e) {
+            // If URL parsing fails, it might be a malformed URL with double protocol.
+            const saneUrl = filePath.replace(/^(https?:\/\/)+/, 'https://');
+            return saneUrl;
+        }
+    }
     const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
     return `${baseUrl}${filePath}`;
 };
