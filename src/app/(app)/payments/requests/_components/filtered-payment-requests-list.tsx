@@ -55,15 +55,15 @@ const statusOptions: PaymentRequest['request_status'][] = ['pending', 'approved'
 
 export function FilteredPaymentRequestsList() {
     const [requests, setRequests] = useState<PaymentRequest[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
     const [courses, setCourses] = useState<Course[]>([]);
     const [buckets, setBuckets] = useState<Bucket[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
 
-    const [selectedCourse, setSelectedCourse] = useState('all');
-    const [selectedBucket, setSelectedBucket] = useState('all');
+    const [selectedCourse, setSelectedCourse] = useState('');
+    const [selectedBucket, setSelectedBucket] = useState('');
     const [selectedStudent, setSelectedStudent] = useState('all');
     const [selectedStatus, setSelectedStatus] = useState<PaymentRequest['request_status'] | 'all'>('all');
     const [filterTrigger, setFilterTrigger] = useState(0);
@@ -99,9 +99,9 @@ export function FilteredPaymentRequestsList() {
     };
     
     useEffect(() => {
-        if (selectedCourse === 'all') {
+        if (!selectedCourse) {
             setBuckets([]);
-            setSelectedBucket('all');
+            setSelectedBucket('');
             return;
         }
 
@@ -117,19 +117,24 @@ export function FilteredPaymentRequestsList() {
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not load buckets for the selected course.'});
                 setBuckets([]);
             } finally {
-                setSelectedBucket('all');
+                setSelectedBucket('');
             }
         }
         fetchBucketsForCourse();
     }, [selectedCourse, toast]);
     
     const fetchPaymentRequests = async () => {
+        if (!selectedCourse || !selectedBucket) {
+            setRequests([]);
+            setIsLoading(false);
+            return;
+        }
         setIsLoading(true);
         try {
             const params = new URLSearchParams();
             if (selectedStudent !== 'all') params.append('student_number', selectedStudent);
-            if (selectedCourse !== 'all') params.append('course_id', selectedCourse);
-            if (selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
+            if (selectedCourse) params.append('course_id', selectedCourse);
+            if (selectedBucket) params.append('course_bucket_id', selectedBucket);
             if (selectedStatus !== 'all') params.append('request_status', selectedStatus);
             
             const response = await api.get(`/payment_requests/filter/?${params.toString()}`);
@@ -156,11 +161,21 @@ export function FilteredPaymentRequestsList() {
     }, [toast]);
     
     useEffect(() => {
-        fetchPaymentRequests();
+        if (filterTrigger > 0) {
+            fetchPaymentRequests();
+        }
     }, [toast, filterTrigger]);
 
 
     const handleApplyFilters = () => {
+        if (!selectedCourse || !selectedBucket) {
+            toast({
+                variant: 'destructive',
+                title: 'Filter Requirement',
+                description: 'Please select both a course and a bucket to apply filters.',
+            });
+            return;
+        }
         setFilterTrigger(prev => prev + 1);
     };
 
@@ -195,6 +210,8 @@ export function FilteredPaymentRequestsList() {
         }
         setSelectedRequest(null);
     }
+    
+    const hasAppliedFilters = filterTrigger > 0;
 
     return (
         <>
@@ -222,22 +239,20 @@ export function FilteredPaymentRequestsList() {
                         <Select value={selectedCourse} onValueChange={setSelectedCourse}>
                             <SelectTrigger>
                                 <BookOpen className="mr-2 h-4 w-4" />
-                                <SelectValue placeholder="Filter by course..." />
+                                <SelectValue placeholder="Select a course..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Courses</SelectItem>
                                 {courses.map(course => (
                                     <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0}>
+                        <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0 || !selectedCourse}>
                             <SelectTrigger>
                                 <Inbox className="mr-2 h-4 w-4" />
-                                <SelectValue placeholder="Filter by bucket..." />
+                                <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Buckets</SelectItem>
                                 {buckets.map(bucket => (
                                     <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
                                 ))}
@@ -276,7 +291,7 @@ export function FilteredPaymentRequestsList() {
                                                 <p className="font-semibold">{req.student_number}</p>
                                                 <p className="text-xs text-muted-foreground">{req.course_name}</p>
                                             </div>
-                                            <Badge variant={req.request_status === 'approved' ? 'secondary' : 'destructive'} className="capitalize">{req.request_status}</Badge>
+                                            <Badge variant={req.request_status === 'approved' ? 'secondary' : req.request_status === 'rejected' ? 'destructive' : 'outline'} className="capitalize">{req.request_status}</Badge>
                                         </div>
                                         <div className="flex justify-between items-end mt-4">
                                             <div className="text-sm">
@@ -291,7 +306,9 @@ export function FilteredPaymentRequestsList() {
                                 </Card>
                             ))
                          ) : (
-                             <p className="text-center text-muted-foreground py-10">No requests found for filters.</p>
+                             <p className="text-center text-muted-foreground py-10">
+                                {hasAppliedFilters ? 'No requests found for the selected filters.' : 'Please select a course and bucket, then click "Apply Filters".'}
+                             </p>
                          )}
                     </div>
                     
@@ -327,7 +344,7 @@ export function FilteredPaymentRequestsList() {
                                             <TableCell>{req.course_bucket_name || 'N/A'}</TableCell>
                                             <TableCell>${parseFloat(req.payment_amount).toFixed(2)}</TableCell>
                                             <TableCell>
-                                                <Badge variant={req.request_status === 'approved' ? 'secondary' : 'destructive'} className="capitalize">{req.request_status}</Badge>
+                                                <Badge variant={req.request_status === 'approved' ? 'secondary' : req.request_status === 'rejected' ? 'destructive' : 'outline'} className="capitalize">{req.request_status}</Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="sm" onClick={() => handleViewDetails(req)}><Eye className="mr-2 h-4 w-4" />View</Button>
@@ -337,7 +354,7 @@ export function FilteredPaymentRequestsList() {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
-                                        No payment requests found for the selected filters.
+                                        {hasAppliedFilters ? 'No payment requests found for the selected filters.' : 'Please select a course and bucket to view requests.'}
                                         </TableCell>
                                     </TableRow>
                                 )}

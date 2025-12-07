@@ -54,7 +54,7 @@ const statusOptions: Submission['sub_status'][] = ['submitted', 'graded', 'rejec
 
 export function SubmissionsList() {
     const [submissions, setSubmissions] = useState<Submission[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
     const [courses, setCourses] = useState<Course[]>([]);
@@ -63,8 +63,8 @@ export function SubmissionsList() {
     const [assignments, setAssignments] = useState<Assignment[]>([]);
 
 
-    const [selectedCourse, setSelectedCourse] = useState('all-courses');
-    const [selectedBucket, setSelectedBucket] = useState('all-buckets');
+    const [selectedCourse, setSelectedCourse] = useState('');
+    const [selectedBucket, setSelectedBucket] = useState('');
     const [selectedStudent, setSelectedStudent] = useState('all-students');
     const [selectedStatus, setSelectedStatus] = useState<Submission['sub_status'] | 'all'>('all');
     const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
@@ -105,9 +105,9 @@ export function SubmissionsList() {
     
 
     useEffect(() => {
-        if (!selectedCourse || selectedCourse === 'all-courses') {
+        if (!selectedCourse) {
             setCourseBuckets([]);
-            setSelectedBucket('all-buckets');
+            setSelectedBucket('');
             return;
         }
 
@@ -127,7 +127,7 @@ export function SubmissionsList() {
                     description: 'Could not fetch buckets for the selected course.',
                 });
             } finally {
-                setSelectedBucket('all-buckets');
+                setSelectedBucket('');
             }
         }
 
@@ -138,11 +138,15 @@ export function SubmissionsList() {
 
     useEffect(() => {
         async function fetchSubmissions() {
+            if (!selectedCourse || !selectedBucket) {
+                setSubmissions([]);
+                return;
+            }
             setIsLoading(true);
             try {
                 const params = new URLSearchParams();
-                if (selectedCourse && selectedCourse !== 'all-courses') params.append('course_id', selectedCourse);
-                if (selectedBucket && selectedBucket !== 'all-buckets') params.append('course_bucket_id', selectedBucket);
+                if (selectedCourse) params.append('course_id', selectedCourse);
+                if (selectedBucket) params.append('course_bucket_id', selectedBucket);
                 if (selectedStudent && selectedStudent !== 'all-students') params.append('student_number', selectedStudent);
                 if (selectedStatus && selectedStatus !== 'all') params.append('sub_status', selectedStatus);
 
@@ -279,22 +283,22 @@ export function SubmissionsList() {
                      <Select value={selectedCourse} onValueChange={setSelectedCourse}>
                         <SelectTrigger>
                             <BookOpen className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Filter by course..." />
+                            <SelectValue placeholder="Select a course..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all-courses">All Courses</SelectItem>
+                            <SelectItem value="">Select a course</SelectItem>
                             {courses.map(course => (
                                 <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-                     <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={!selectedCourse || selectedCourse === 'all-courses' || courseBuckets.length === 0}>
+                     <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={!selectedCourse || courseBuckets.length === 0}>
                         <SelectTrigger>
                             <Inbox className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Filter by bucket..." />
+                            <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all-buckets">All Buckets</SelectItem>
+                            <SelectItem value="">Select a bucket</SelectItem>
                             {courseBuckets.map(bucket => (
                                 <SelectItem key={bucket.id} value={bucket.id}>{bucket.name}</SelectItem>
                             ))}
@@ -441,7 +445,7 @@ export function SubmissionsList() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center h-24 text-muted-foreground">
-                                    No submissions found for the selected filters.
+                                    {selectedCourse && selectedBucket ? 'No submissions found for the selected filters.' : 'Please select a course and bucket to view submissions.'}
                                     </TableCell>
                                 </TableRow>
                             )}

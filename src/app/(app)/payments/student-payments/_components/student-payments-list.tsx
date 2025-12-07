@@ -43,15 +43,15 @@ interface Student {
 
 export function StudentPaymentsList() {
     const [payments, setPayments] = useState<StudentPayment[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
     const [courses, setCourses] = useState<Course[]>([]);
     const [buckets, setBuckets] = useState<Bucket[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
 
-    const [selectedCourse, setSelectedCourse] = useState('all');
-    const [selectedBucket, setSelectedBucket] = useState('all');
+    const [selectedCourse, setSelectedCourse] = useState('');
+    const [selectedBucket, setSelectedBucket] = useState('');
     const [selectedStudent, setSelectedStudent] = useState('all');
 
     useEffect(() => {
@@ -71,9 +71,9 @@ export function StudentPaymentsList() {
     }, [toast]);
     
     useEffect(() => {
-        if (selectedCourse === 'all') {
+        if (!selectedCourse) {
             setBuckets([]);
-            setSelectedBucket('all');
+            setSelectedBucket('');
             return;
         }
 
@@ -89,7 +89,7 @@ export function StudentPaymentsList() {
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not load buckets for the selected course.'});
                 setBuckets([]);
             } finally {
-                setSelectedBucket('all');
+                setSelectedBucket('');
             }
         }
         fetchBucketsForCourse();
@@ -97,12 +97,16 @@ export function StudentPaymentsList() {
     
     useEffect(() => {
         async function fetchPayments() {
+            if (!selectedCourse || !selectedBucket) {
+                setPayments([]);
+                return;
+            }
             setIsLoading(true);
             try {
                 const params = new URLSearchParams();
                 if (selectedStudent !== 'all') params.append('student_number', selectedStudent);
-                if (selectedCourse !== 'all') params.append('course_id', selectedCourse);
-                if (selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
+                if (selectedCourse) params.append('course_id', selectedCourse);
+                if (selectedBucket) params.append('course_bucket_id', selectedBucket);
                 
                 const response = await api.get(`/student-payment-courses/filter/?${params.toString()}`);
                 
@@ -150,22 +154,22 @@ export function StudentPaymentsList() {
                     <Select value={selectedCourse} onValueChange={setSelectedCourse}>
                         <SelectTrigger>
                             <BookOpen className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Filter by course..." />
+                            <SelectValue placeholder="Select a course..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Courses</SelectItem>
+                            <SelectItem value="">Select a course</SelectItem>
                             {courses.map(course => (
                                 <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-                    <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0 || selectedCourse === 'all'}>
+                    <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0 || !selectedCourse}>
                         <SelectTrigger>
                             <Inbox className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Filter by bucket..." />
+                            <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Buckets</SelectItem>
+                             <SelectItem value="">Select a bucket</SelectItem>
                             {buckets.map(bucket => (
                                 <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
                             ))}
@@ -209,7 +213,7 @@ export function StudentPaymentsList() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
-                                    No payments found for the selected filters.
+                                    {selectedCourse && selectedBucket ? 'No payments found for the selected filters.' : 'Please select a course and bucket to view payments.'}
                                     </TableCell>
                                 </TableRow>
                             )}
