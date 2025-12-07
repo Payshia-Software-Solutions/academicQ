@@ -43,7 +43,9 @@ interface Bucket {
 interface Student {
   id: string;
   student_number: string;
-  name: string;
+  f_name: string;
+  l_name: string;
+  name?: string;
 }
 interface Assignment {
     id: string;
@@ -76,22 +78,15 @@ export function SubmissionsList() {
     useEffect(() => {
         async function fetchInitialData() {
             try {
-                const [coursesRes, usersRes, assignmentsRes, approvedEnrollmentsRes] = await Promise.all([
+                const [coursesRes, usersRes, assignmentsRes] = await Promise.all([
                     api.get('/courses'),
-                    api.get('/users'),
+                    api.get('/users?status=student'),
                     api.get('/assignments'),
-                    api.get('/enrollments/?enroll_status=approved')
                 ]);
                 
                 setCourses(coursesRes.data.data || []);
                 setAssignments(assignmentsRes.data.data || []);
-                
-                const allUsers = usersRes.data.records || [];
-                const approvedEnrollments = approvedEnrollmentsRes.data || [];
-                const approvedStudentNumbers = new Set(approvedEnrollments.map((e: any) => e.student_id));
-                
-                const approvedStudents = allUsers.filter((u: any) => u.user_status === 'student' && u.student_number && approvedStudentNumbers.has(u.student_number));
-                setStudents(approvedStudents);
+                setStudents(usersRes.data.data || []);
 
             } catch (error) {
                 toast({
@@ -246,7 +241,8 @@ export function SubmissionsList() {
     }
 
     const getStudentName = (studentNumber: string) => {
-        return students.find(s => s.student_number === studentNumber)?.name || studentNumber;
+        const student = students.find(s => s.student_number === studentNumber);
+        return student ? `${student.f_name} ${student.l_name}` : studentNumber;
     };
     const getCourseName = (courseId: string) => {
         return courses.find(c => c.id.toString() === courseId.toString())?.course_name || `Course #${courseId}`;
@@ -311,7 +307,7 @@ export function SubmissionsList() {
                         <SelectContent>
                              <SelectItem value="all-students">All Students</SelectItem>
                             {students.map(student => (
-                                <SelectItem key={student.id} value={student.student_number}>{student.name}</SelectItem>
+                                <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
