@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Plus, Folder, List, FileText, Package } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
@@ -59,7 +59,9 @@ async function getCourseBuckets(id: string): Promise<Bucket[]> {
     }
 }
 
-export default function StudyPackDetailsPage({ params }: { params: { id: string } }) {
+export default function StudyPackDetailsPage() {
+    const params = useParams();
+    const courseId = params.id as string;
     const [course, setCourse] = useState<Course | null>(null);
     const [buckets, setBuckets] = useState<Bucket[]>([]);
     const [loading, setLoading] = useState(true);
@@ -74,15 +76,17 @@ export default function StudyPackDetailsPage({ params }: { params: { id: string 
         async function loadData() {
             setLoading(true);
             const [courseData, bucketsData] = await Promise.all([
-                getCourseDetails(params.id),
-                getCourseBuckets(params.id),
+                getCourseDetails(courseId),
+                getCourseBuckets(courseId),
             ]);
             setCourse(courseData);
             setBuckets(bucketsData);
             setLoading(false);
         }
-        loadData();
-    }, [params.id]);
+        if (courseId) {
+            loadData();
+        }
+    }, [courseId]);
 
     const isAdmin = user?.user_status === 'admin';
 
