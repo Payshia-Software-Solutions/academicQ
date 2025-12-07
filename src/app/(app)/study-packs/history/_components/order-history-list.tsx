@@ -9,15 +9,20 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Package } from 'lucide-react';
+
+type OrderStatus = 'pending' | 'packed' | 'handed over' | 'delivered' | 'returned' | 'cancelled';
 
 interface Order {
     id: string;
     student_number: string;
     orderable_item_id: string;
-    order_status: 'pending' | 'shipped' | 'delivered' | 'cancelled';
+    order_status: OrderStatus;
     address_line_1: string;
     city: string;
     created_at: string;
+    orderable_item_name?: string;
 }
 
 interface CurrentUser {
@@ -25,10 +30,12 @@ interface CurrentUser {
     [key: string]: any;
 }
 
+const statusOptions: OrderStatus[] = ['pending', 'packed', 'handed over', 'delivered'];
 
 export function OrderHistoryList() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
     const { toast } = useToast();
 
     useEffect(() => {
@@ -40,14 +47,23 @@ export function OrderHistoryList() {
         }
         const user: CurrentUser = JSON.parse(userString);
 
+        if (!user.student_number) {
+            setIsLoading(false);
+            return;
+        }
+
         async function fetchOrders() {
             setIsLoading(true);
             try {
-                const response = await api.get('/student-orders');
+                const params = new URLSearchParams();
+                params.append('student_number', user.student_number!);
+                if (statusFilter !== 'all') {
+                    params.append('order_status', statusFilter);
+                }
+
+                const response = await api.get(`/student-orders/records/filter/?${params.toString()}`);
                 if (Array.isArray(response.data)) {
-                    // Filter orders for the current student
-                    const studentOrders = response.data.filter((order: Order) => order.student_number === user.student_number);
-                    setOrders(studentOrders);
+                    setOrders(response.data);
                 } else {
                     setOrders([]);
                 }
@@ -65,14 +81,14 @@ export function OrderHistoryList() {
         
         fetchOrders();
 
-    }, [toast]);
+    }, [toast, statusFilter]);
     
     const getStatusVariant = (status: string) => {
-        switch (status) {
+        switch (status.toLowerCase()) {
             case 'delivered': return 'secondary';
-            case 'shipped': return 'default';
-            case 'cancelled': return 'destructive';
-            case 'pending':
+            case 'shipped': case 'handed over': return 'default';
+            case 'cancelled': case 'returned': return 'destructive';
+            case 'pending': case 'packed':
             default: return 'outline';
         }
     }
@@ -87,12 +103,26 @@ export function OrderHistoryList() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
+                <div className="mb-6 max-w-xs">
+                     <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as any)}>
+                        <SelectTrigger>
+                            <Package className="mr-2 h-4 w-4" />
+                            <SelectValue placeholder="Filter by status..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            {statusOptions.map(status => (
+                                <SelectItem key={status} value={status} className="capitalize">{status}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Order ID</TableHead>
-                                <TableHead>Item ID</TableHead>
+                                <TableHead>Item</TableHead>
                                 <TableHead>Address</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Date</TableHead>
@@ -111,7 +141,7 @@ export function OrderHistoryList() {
                                 orders.map((order) => (
                                     <TableRow key={order.id}>
                                         <TableCell className="font-mono text-xs">#{order.id}</TableCell>
-                                        <TableCell>Item #{order.orderable_item_id}</TableCell>
+                                        <TableCell>{order.orderable_item_name || `Item #${order.orderable_item_id}`}</TableCell>
                                         <TableCell>
                                             {order.address_line_1}, {order.city}
                                         </TableCell>
@@ -124,7 +154,7 @@ export function OrderHistoryList() {
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                                        You have not placed any orders yet.
+                                        No orders found with the selected status.
                                     </TableCell>
                                 </TableRow>
                             )}

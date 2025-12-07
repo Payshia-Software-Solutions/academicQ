@@ -115,7 +115,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
   };
   
   const getStatusVariant = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
         case 'delivered': return 'secondary';
         case 'shipped': case 'handed over': return 'default';
         case 'cancelled': case 'returned': return 'destructive';

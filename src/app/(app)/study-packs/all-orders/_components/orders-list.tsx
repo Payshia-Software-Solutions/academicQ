@@ -11,9 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Package, ChevronDown, Loader2, Eye } from 'lucide-react';
+import { BookOpen, Inbox, Package, ChevronDown, Loader2, Eye, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { OrderDetailsDialog } from './order-details-dialog';
 
 type OrderStatus = 'pending' | 'packed' | 'handed over' | 'delivered' | 'returned' | 'cancelled';
@@ -46,32 +45,27 @@ interface Order {
     bucket_name?: string;
 }
 
+interface Student {
+  id: string;
+  student_number: string;
+  f_name: string;
+  l_name: string;
+}
 
-interface Course {
-  id: string;
-  course_name: string;
-}
-interface Bucket {
-  id: string;
-  bucket_name: string;
-}
 
 const statusOptions: OrderStatus[] = ['pending', 'packed', 'handed over', 'delivered', 'returned', 'cancelled'];
 
 
 export function OrdersList() {
     const [orders, setOrders] = useState<Order[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [buckets, setBuckets] = useState<Bucket[]>([]);
+    const [students, setStudents] = useState<Student[]>([]);
     
-    const [selectedCourse, setSelectedCourse] = useState('all');
-    const [selectedBucket, setSelectedBucket] = useState('all');
-    const [selectedStatus, setSelectedStatus] = useState<OrderStatus | 'all'>('pending');
+    const [selectedStudent, setSelectedStudent] = useState('all');
+    const [selectedStatus, setSelectedStatus] = useState<OrderStatus | 'all'>('all');
     
-    const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
     const [filterTrigger, setFilterTrigger] = useState(0);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -80,16 +74,9 @@ export function OrdersList() {
     useEffect(() => {
         async function fetchFilterData() {
             try {
-                const [coursesRes, bucketsRes] = await Promise.all([
-                    api.get('/courses'),
-                    api.get('/course_buckets') 
-                ]);
-
-                if (coursesRes.data.status === 'success') {
-                    setCourses(coursesRes.data.data || []);
-                }
-                 if (bucketsRes.data.status === 'success') {
-                    setBuckets(bucketsRes.data.data || []);
+                const studentsRes = await api.get('/users?status=student');
+                if (studentsRes.data.status === 'success') {
+                    setStudents(studentsRes.data.data || []);
                 }
 
             } catch (error: any) {
@@ -108,11 +95,10 @@ export function OrdersList() {
             setIsLoading(true);
             try {
                 const params = new URLSearchParams();
-                if (selectedCourse !== 'all') params.append('course_id', selectedCourse);
-                if (selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
-                if (selectedStatus !== 'all') params.append('status', selectedStatus);
+                if (selectedStudent !== 'all') params.append('student_number', selectedStudent);
+                if (selectedStatus !== 'all') params.append('order_status', selectedStatus);
 
-                const response = await api.get(`/student-orders/filter?${params.toString()}`);
+                const response = await api.get(`/student-orders/records/filter/?${params.toString()}`);
                 if (Array.isArray(response.data)) {
                     setOrders(response.data);
                 } else {
@@ -129,8 +115,10 @@ export function OrdersList() {
                 setIsLoading(false);
             }
         }
-        fetchOrders();
-    }, [toast, filterTrigger, selectedCourse, selectedBucket, selectedStatus]);
+        if (filterTrigger > 0) {
+            fetchOrders();
+        }
+    }, [toast, filterTrigger, selectedStudent, selectedStatus]);
 
 
     const handleApplyFilters = () => {
@@ -143,12 +131,11 @@ export function OrdersList() {
     };
 
     const handleOrderUpdate = (updatedOrder: Order) => {
-        // Refetch the orders to get the latest list based on current filters
         handleApplyFilters();
     };
 
     const getStatusVariant = (status: string) => {
-        switch (status) {
+        switch (status.toLowerCase()) {
             case 'delivered': return 'secondary';
             case 'shipped': case 'handed over': return 'default';
             case 'cancelled': case 'returned': return 'destructive';
@@ -171,31 +158,20 @@ export function OrdersList() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Select value={selectedStudent} onValueChange={setSelectedStudent}>
                             <SelectTrigger>
-                                <BookOpen className="mr-2 h-4 w-4" />
-                                <SelectValue placeholder="Filter by course..." />
+                                <Users className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Filter by student..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Courses</SelectItem>
-                                {courses.map(course => (
-                                    <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
+                                <SelectItem value="all">All Students</SelectItem>
+                                {students.map(student => (
+                                    <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Select value={selectedBucket} onValueChange={setSelectedBucket}>
-                            <SelectTrigger>
-                                <Inbox className="mr-2 h-4 w-4" />
-                                <SelectValue placeholder="Filter by bucket..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Buckets</SelectItem>
-                                {buckets.map(bucket => (
-                                    <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                       
                         <Select value={selectedStatus} onValueChange={(val) => setSelectedStatus(val as any)}>
                             <SelectTrigger>
                                 <Package className="mr-2 h-4 w-4" />
@@ -217,7 +193,7 @@ export function OrdersList() {
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle>Pending Orders List</CardTitle>
+                    <CardTitle>Orders List</CardTitle>
                     <CardDescription>
                         Displaying {orders.length} order(s).
                     </CardDescription>
@@ -271,7 +247,7 @@ export function OrdersList() {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
-                                            No orders found for the selected filters.
+                                            {filterTrigger > 0 ? 'No orders found for the selected filters.' : 'Please apply filters to see orders.'}
                                         </TableCell>
                                     </TableRow>
                                 )}
