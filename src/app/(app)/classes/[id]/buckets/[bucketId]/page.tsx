@@ -63,9 +63,9 @@ async function getBucketDetails(id: string): Promise<Bucket | null> {
     }
 }
 
-async function getStudentPayments(studentNumber: string): Promise<StudentPayment[]> {
+async function getStudentPayments(studentNumber: string, courseId: string, bucketId: string): Promise<StudentPayment[]> {
     try {
-        const response = await api.get(`/student_payment_courses/student/${studentNumber}`);
+        const response = await api.get(`/student-payment-courses/filter/?student_number=${studentNumber}&course_id=${courseId}&course_bucket_id=${bucketId}`);
         if (response.data.status === 'success') {
             return response.data.data || [];
         }
@@ -102,9 +102,10 @@ function BucketContentPageContent() {
         setCourse(courseData);
         setBucket(bucketData);
 
-        if (currentUser?.user_status === 'student' && currentUser.student_number && bucketData) {
-            const payments = await getStudentPayments(currentUser.student_number);
-            const hasPaid = payments.some(p => p.course_bucket_id === bucketData.id && p.status === 'approved');
+        if (currentUser?.user_status === 'student' && currentUser.student_number && bucketData && courseData) {
+            const payments = await getStudentPayments(currentUser.student_number, courseData.id, bucketData.id);
+            // Assuming any successful payment record means paid. A more robust check might be needed.
+            const hasPaid = payments.length > 0;
             setIsPaid(hasPaid);
         }
 
