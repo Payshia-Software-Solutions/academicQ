@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video } from "lucide-react";
 import { useEffect, useState, useMemo, useRef } from "react";
@@ -112,7 +112,9 @@ function getYouTubeId(url: string): string | null {
 }
 
 
-export default function ClassDetailsPage({ params }: { params: { id: string } }) {
+export default function ClassDetailsPage() {
+    const params = useParams();
+    const courseId = params.id as string;
     const [course, setCourse] = useState<Course | null>(null);
     const [buckets, setBuckets] = useState<Bucket[]>([]);
     const [loading, setLoading] = useState(true);
@@ -137,15 +139,15 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         async function loadData() {
             setLoading(true);
             const [courseData, bucketsData] = await Promise.all([
-                getCourseDetails(params.id),
-                getCourseBuckets(params.id),
+                getCourseDetails(courseId),
+                getCourseBuckets(courseId),
             ]);
             setCourse(courseData);
             setBuckets(bucketsData);
             setLoading(false);
         }
         loadData();
-    }, [params.id]);
+    }, [courseId]);
 
     useEffect(() => {
         if (user?.user_status === 'student' && user.student_number && course?.id) {
@@ -355,7 +357,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
             </div>
             {isAdmin ? (
                 <Button asChild>
-                    <Link href={`/classes/${params.id}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
+                    <Link href={`/classes/${courseId}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
                         <Plus className="mr-2 h-4 w-4" />
                         Create Bucket
                     </Link>
@@ -450,7 +452,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                         <p className="text-muted-foreground">No payment buckets found for this course.</p>
                         {isAdmin && (
                             <Button variant="outline" className="mt-4" asChild>
-                                <Link href={`/classes/${params.id}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
+                                <Link href={`/classes/${courseId}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
                                     Create the First Bucket
                                 </Link>
                             </Button>
@@ -497,5 +499,3 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
-
-    
