@@ -100,6 +100,17 @@ async function getStudentPayments(studentNumber: string, courseId: string, bucke
     }
 }
 
+function getYouTubeId(url: string): string | null {
+    if (!url) return null;
+    let videoId = null;
+    const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(regex);
+    if (match) {
+        videoId = match[1];
+    }
+    return videoId;
+}
+
 
 export default function ClassDetailsPage({ params }: { params: { id: string } }) {
     const [course, setCourse] = useState<Course | null>(null);
@@ -327,6 +338,8 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
       },
     };
 
+    const videoId = useMemo(() => getYouTubeId(course.intro_url || ''), [course.intro_url]);
+
   return (
     <div className="space-y-8">
        <header>
@@ -353,7 +366,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
         </div>
       </header>
 
-      {showIntroVideo && (
+      {showIntroVideo && videoId && (
         <section>
           <Card>
             <CardHeader>
@@ -371,7 +384,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                       type: 'video',
                       sources: [
                         {
-                          src: course.intro_url!,
+                          src: videoId,
                           provider: 'youtube',
                         },
                       ],
