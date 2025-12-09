@@ -157,7 +157,7 @@ export default function ContentDetailsPage() {
                      <div className="w-full aspect-video bg-background rounded-lg flex items-center justify-center border overflow-hidden relative">
                         {isClient ? (
                             <>
-                            {!showVideo ? (
+                            {!showVideo && youtubeVideoId ? (
                                 <div className="text-center">
                                 <Button variant="ghost" size="lg" onClick={handlePlay}>
                                     <PlayCircle className="h-16 w-16 text-primary" />
