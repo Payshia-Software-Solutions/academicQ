@@ -146,7 +146,7 @@ export default function ClassesPage() {
             setAllCourses(fetchedCourses);
 
             if (user?.user_status === 'student' && user.student_number) {
-                 const enrollmentsRes = await api.get(`/enrollments/?student_id=${user.student_number}`);
+                 const enrollmentsRes = await api.get(`/enrollments/?student_id=${user.student_number}&enroll_status=pending`);
                  setEnrollments(enrollmentsRes.data || []);
             }
         } catch(error) {
