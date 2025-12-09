@@ -1,18 +1,22 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import type { Plyr as PlyrInstance } from 'plyr';
+import dynamic from 'next/dynamic';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, FileText, Image as ImageIcon, Video, Download, Plus, Calendar } from 'lucide-react';
+import { ArrowLeft, FileText, Image as ImageIcon, Video, Download, Plus, Calendar, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { format } from 'date-fns';
+
+const Plyr = dynamic(() => import('plyr-react'), { ssr: false });
 
 interface Assignment {
     id: string;
@@ -47,7 +51,13 @@ export default function ContentDetailsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState<CurrentUser | null>(null);
 
+    const [isClient, setIsClient] = useState(false);
+    const [showVideo, setShowVideo] = useState(false);
+    const playerRef = useRef<PlyrInstance | null>(null);
+
+
     useEffect(() => {
+        setIsClient(true);
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             setUser(JSON.parse(storedUser));
@@ -106,13 +116,34 @@ export default function ContentDetailsPage() {
         if (match) {
             videoId = match[1];
         }
-        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+        return videoId;
     }
+
+    const handlePlay = () => {
+        setShowVideo(true);
+    };
+
+    useEffect(() => {
+        if (showVideo && playerRef.current) {
+            playerRef.current.play();
+        }
+    }, [showVideo]);
+    
+    const plyrOptions = {
+        youtube: {
+          noCookie: true,
+          rel: 0,
+          showinfo: 0,
+          modestbranding: 1,
+          controls: 0,
+        },
+    };
 
     const renderContent = () => {
         if (!content) return null;
         
         const fileUrl = getFullFileUrl(content.content);
+        const youtubeVideoId = getYouTubeId(content.content);
 
         switch (content.content_type.toLowerCase()) {
             case 'video':
@@ -129,21 +160,46 @@ export default function ContentDetailsPage() {
                     </div>
                 );
              case 'youtube_video':
-                const youtubeUrl = getYouTubeId(content.content);
-                if (!youtubeUrl) {
+                if (!youtubeVideoId) {
                     return <p className="text-red-500">Invalid YouTube URL</p>;
                 }
                 return (
-                    <div className="aspect-video w-full">
-                        <iframe
-                            src={youtubeUrl}
-                            title={content.content_title}
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="w-full h-full rounded-lg"
-                        ></iframe>
-                    </div>
+                     <div className="w-full aspect-video bg-background rounded-lg flex items-center justify-center border overflow-hidden relative">
+                        {isClient ? (
+                            <>
+                            {!showVideo ? (
+                                <div className="text-center">
+                                <Button variant="ghost" size="lg" onClick={handlePlay}>
+                                    <PlayCircle className="h-16 w-16 text-primary" />
+                                </Button>
+                                <p className="text-muted-foreground mt-2">Click to play video</p>
+                                </div>
+                            ) : (
+                                <div onContextMenu={(e) => e.preventDefault()} className="w-full h-full">
+                                    <Plyr 
+                                        ref={(player) => {
+                                            if (player?.plyr) {
+                                            playerRef.current = player.plyr;
+                                            }
+                                        }}
+                                        source={{
+                                            type: 'video',
+                                            sources: [
+                                            {
+                                                src: youtubeVideoId,
+                                                provider: 'youtube',
+                                            },
+                                            ],
+                                        }}
+                                        options={plyrOptions}
+                                    />
+                                </div>
+                            )}
+                            </>
+                        ) : (
+                            <Skeleton className="w-full h-full" />
+                        )}
+                        </div>
                 );
             case 'image':
                 return (
@@ -191,7 +247,6 @@ export default function ContentDetailsPage() {
             <div className="space-y-6">
                  <Skeleton className="h-10 w-48" />
                  <Skeleton className="h-96 w-full" />
-                 <Skeleton className="h-48 w-full" />
             </div>
         )
     }
