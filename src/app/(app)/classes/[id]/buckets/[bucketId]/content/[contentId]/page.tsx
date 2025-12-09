@@ -112,21 +112,21 @@ export default function ContentDetailsPage() {
         setShowVideo(true);
     };
 
-    useEffect(() => {
-        if (showVideo && playerRef.current) {
-            playerRef.current.play();
-        }
-    }, [showVideo]);
-    
     const plyrOptions = {
         youtube: {
           noCookie: true,
           rel: 0,
           showinfo: 0,
           modestbranding: 1,
-          controls: 0,
+          controls: 1, // This is crucial for the player to work
         },
     };
+
+    useEffect(() => {
+        if (showVideo && playerRef.current) {
+            playerRef.current.play();
+        }
+    }, [showVideo]);
 
     const renderContent = () => {
         if (!content) return null;
@@ -156,7 +156,7 @@ export default function ContentDetailsPage() {
                      <div className="w-full aspect-video bg-background rounded-lg flex items-center justify-center border overflow-hidden relative">
                         {isClient ? (
                             <>
-                            {!showVideo && youtubeVideoId ? (
+                            {!showVideo ? (
                                 <div className="text-center">
                                 <Button variant="ghost" size="lg" onClick={handlePlay}>
                                     <PlayCircle className="h-16 w-16 text-primary" />
