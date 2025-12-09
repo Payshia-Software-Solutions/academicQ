@@ -131,8 +131,8 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     }, [params.id]);
 
     useEffect(() => {
-        if (user?.user_status === 'student' && user.student_number && course?.id && buckets.length > 0) {
-            const checkEnrollmentAndPayments = async () => {
+        if (user?.user_status === 'student' && user.student_number && course?.id) {
+            const checkEnrollment = async () => {
                 setIsCheckingEnrollment(true);
                 try {
                     const enrollmentRes = await api.get(`/enrollments/?student_id=${user.student_number}&course_id=${course.id}`);
@@ -142,34 +142,38 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
                     } else {
                         setEnrollmentStatus(null);
                     }
-
-                    if (enrollmentRes.data?.[0]?.status === 'approved') {
-                        const paymentStatusMap = new Map<string, boolean>();
-                        for (const bucket of buckets) {
-                            const payments = await getStudentPayments(user.student_number!, course.id, bucket.id);
-                            if (payments.length > 0) {
-                                // Assuming any payment record means it's "paid" for the context of this page
-                                paymentStatusMap.set(bucket.id, true);
-                            } else {
-                                paymentStatusMap.set(bucket.id, false);
-                            }
-                        }
-                        setStudentPayments(paymentStatusMap);
-                    }
-
                 } catch (error) {
                     setEnrollmentStatus(null);
-                    setStudentPayments(new Map());
-                    console.error("Failed to check enrollment status or payments:", error);
+                    console.error("Failed to check enrollment status:", error);
                 } finally {
                     setIsCheckingEnrollment(false);
                 }
             };
-            checkEnrollmentAndPayments();
+            checkEnrollment();
         } else if (user) {
              setIsCheckingEnrollment(false);
         }
-    }, [user, course, buckets]);
+    }, [user, course]);
+
+
+    useEffect(() => {
+        if (enrollmentStatus === 'approved' && user?.student_number && course?.id && buckets.length > 0) {
+            const fetchPayments = async () => {
+                 const paymentStatusMap = new Map<string, boolean>();
+                for (const bucket of buckets) {
+                    const payments = await getStudentPayments(user.student_number!, course.id, bucket.id);
+                    if (payments.length > 0) {
+                        // Assuming any payment record means it's "paid" for the context of this page
+                        paymentStatusMap.set(bucket.id, true);
+                    } else {
+                        paymentStatusMap.set(bucket.id, false);
+                    }
+                }
+                setStudentPayments(paymentStatusMap);
+            };
+            fetchPayments();
+        }
+    }, [enrollmentStatus, user, course, buckets]);
 
 
     const handleEnroll = async () => {
@@ -433,3 +437,5 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     </div>
   );
 }
+
+    
