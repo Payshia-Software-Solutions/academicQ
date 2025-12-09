@@ -184,7 +184,7 @@ export function EnrollmentsList() {
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
-                                        <TableCell className="text-xs">{format(new Date(req.created_at), 'PP p')}</TableCell>
+                                        <TableCell className="text-xs">{req.created_at ? format(new Date(req.created_at), 'PP p') : 'N/A'}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
