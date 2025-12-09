@@ -70,7 +70,7 @@ export default function LoginPage() {
         });
 
         if (user.user_status === 'student') {
-            router.push('/classes');
+            router.push('/student-dashboard');
         } else {
             router.push('/dashboard');
         }
