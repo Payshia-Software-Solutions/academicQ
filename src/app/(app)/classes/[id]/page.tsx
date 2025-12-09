@@ -126,12 +126,12 @@ export default function ClassDetailsPage() {
     const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
     const playerRef = useRef<PlyrInstance | null>(null);
     const { toast } = useToast();
+    
+    const videoId = useMemo(() => getYouTubeId(course?.intro_url || ''), [course?.intro_url]);
 
     const allAssignments = useMemo(() => {
         return buckets.flatMap(bucket => bucket.assignments || []);
     }, [buckets]);
-    
-    const videoId = useMemo(() => getYouTubeId(course?.intro_url || ''), [course?.intro_url]);
 
 
     useEffect(() => {
@@ -163,6 +163,7 @@ export default function ClassDetailsPage() {
                     const enrollmentRes = await api.get(`/enrollments/?student_id=${user.student_number}&course_id=${course.id}`);
 
                     if (enrollmentRes.data && enrollmentRes.data.length > 0) {
+                        // Assuming the most recent enrollment is the one we care about
                         setEnrollmentStatus(enrollmentRes.data[0].status);
                     } else {
                         setEnrollmentStatus(null);
@@ -369,7 +370,7 @@ export default function ClassDetailsPage() {
         </div>
       </header>
 
-      {showIntroVideo && videoId && (
+      {showIntroVideo && (
         <section>
           <Card>
             <CardHeader>
@@ -377,23 +378,27 @@ export default function ClassDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="w-full aspect-video bg-background rounded-lg flex items-center justify-center border overflow-hidden relative">
-                  <Plyr 
-                    ref={(player) => {
-                      if (player?.plyr) {
-                        playerRef.current = player.plyr;
-                      }
-                    }}
-                    source={{
-                      type: 'video',
-                      sources: [
-                        {
-                          src: videoId,
-                          provider: 'youtube',
-                        },
-                      ],
-                    }}
-                    options={plyrOptions}
-                  />
+                  {videoId ? (
+                    <Plyr 
+                        ref={(player) => {
+                            if (player?.plyr) {
+                            playerRef.current = player.plyr;
+                            }
+                        }}
+                        source={{
+                            type: 'video',
+                            sources: [
+                                {
+                                src: videoId,
+                                provider: 'youtube',
+                                },
+                            ],
+                        }}
+                        options={plyrOptions}
+                    />
+                  ) : (
+                    <Skeleton className="w-full h-full" />
+                  )}
               </div>
             </CardContent>
           </Card>
@@ -500,5 +505,3 @@ export default function ClassDetailsPage() {
     </div>
   );
 }
-
-    
