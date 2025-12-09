@@ -28,6 +28,11 @@ export interface Class {
   schedule: string;
   studentIds: string[];
   imageUrl: string;
+  courseCode: string;
+  credits: string;
+  courseFee: string;
+  registrationFee: string;
+  paymentStatus: string;
 }
 
 export interface Lesson {
@@ -45,3 +50,5 @@ export interface Institute {
   name: string;
   adminEmail: string;
 }
+
+    

@@ -31,8 +31,8 @@ const addClassSchema = z.object({
   course_code: z.string().min(1, { message: 'Course code is required.' }),
   description: z.string().min(1, { message: 'Description is required.' }),
   credits: z.coerce.number().positive({ message: 'Credits must be a positive number.' }),
-  course_fee: z.coerce.number().positive({ message: 'Course fee must be a positive number.' }),
-  registration_fee: z.coerce.number().positive({ message: 'Registration fee must be a positive number.' }),
+  course_fee: z.coerce.number().nonnegative({ message: 'Course fee must be a positive number.' }),
+  registration_fee: z.coerce.number().nonnegative({ message: 'Registration fee must be a positive number.' }),
   img_url: z
     .any()
     .refine((files) => files?.length == 1, "Course image is required.")
@@ -51,6 +51,8 @@ export function AddClassForm() {
     resolver: zodResolver(addClassSchema),
     defaultValues: {
       payment_status: 'monthly',
+      course_fee: 0,
+      registration_fee: 0,
     },
   });
   
@@ -179,7 +181,7 @@ export function AddClassForm() {
                            <div className="relative">
                              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                              <FormControl>
-                                <Input type="number" step="0.01" placeholder="e.g. 299.99" {...field} className="pl-8" />
+                                <Input type="number" step="0.01" placeholder="e.g. 299.99" {...field} />
                              </FormControl>
                            </div>
                           <FormMessage />
@@ -195,7 +197,7 @@ export function AddClassForm() {
                            <div className="relative">
                              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                              <FormControl>
-                                <Input type="number" step="0.01" placeholder="e.g. 25.00" {...field} className="pl-8" />
+                                <Input type="number" step="0.01" placeholder="e.g. 25.00" {...field} />
                              </FormControl>
                            </div>
                           <FormMessage />
@@ -292,3 +294,5 @@ export function AddClassForm() {
     </Form>
   );
 }
+
+    

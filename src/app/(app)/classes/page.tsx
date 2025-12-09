@@ -24,6 +24,11 @@ interface ApiCourse {
     id: string;
     course_name: string;
     description: string;
+    course_code: string;
+    credits: string;
+    course_fee: string;
+    registration_fee: string;
+    payment_status: string;
     img_url?: string;
     [key: string]: any;
 }
@@ -141,7 +146,12 @@ export default function ClassesPage() {
                 teacher: 'N/A', 
                 schedule: 'N/A', 
                 studentIds: [], 
-                imageUrl: record.img_url || 'https://placehold.co/600x400.png'
+                imageUrl: record.img_url || 'https://placehold.co/600x400.png',
+                courseCode: record.course_code,
+                credits: record.credits,
+                courseFee: record.course_fee,
+                registrationFee: record.registration_fee,
+                paymentStatus: record.payment_status
             }));
             setAllCourses(fetchedCourses);
 
@@ -243,3 +253,5 @@ export default function ClassesPage() {
     </div>
   );
 }
+
+    
