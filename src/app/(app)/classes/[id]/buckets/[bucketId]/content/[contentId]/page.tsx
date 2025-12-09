@@ -118,21 +118,18 @@ export default function ContentDetailsPage() {
           rel: 0,
           showinfo: 0,
           modestbranding: 1,
-          controls: 1, // This is crucial for the player to work
+          controls: 1,
         },
+        autoplay: true,
     };
-
-    useEffect(() => {
-        if (showVideo && playerRef.current) {
-            playerRef.current.play();
-        }
-    }, [showVideo]);
 
     const renderContent = () => {
         if (!content) return null;
         
         const fileUrl = getFullFileUrl(content.content);
-        const youtubeVideoId = getYouTubeId(content.content);
+        
+        // Using a hardcoded ID for testing purposes as requested
+        const hardcodedYoutubeId = 'bTqVqk7FSmY';
 
         switch (content.content_type.toLowerCase()) {
             case 'video':
@@ -149,9 +146,6 @@ export default function ContentDetailsPage() {
                     </div>
                 );
              case 'youtube_video':
-                if (!youtubeVideoId) {
-                    return <p className="text-red-500">Invalid YouTube URL</p>;
-                }
                 return (
                      <div className="w-full aspect-video bg-background rounded-lg flex items-center justify-center border overflow-hidden relative">
                         {isClient ? (
@@ -166,16 +160,11 @@ export default function ContentDetailsPage() {
                             ) : (
                                 <div onContextMenu={(e) => e.preventDefault()} className="w-full h-full">
                                     <Plyr 
-                                        ref={(player) => {
-                                            if (player?.plyr) {
-                                                playerRef.current = player.plyr;
-                                            }
-                                        }}
                                         source={{
                                             type: 'video',
                                             sources: [
                                             {
-                                                src: youtubeVideoId,
+                                                src: hardcodedYoutubeId,
                                                 provider: 'youtube',
                                             },
                                             ],
