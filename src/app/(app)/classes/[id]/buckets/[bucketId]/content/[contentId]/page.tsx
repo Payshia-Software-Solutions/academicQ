@@ -43,6 +43,7 @@ export default function ContentDetailsPage() {
 
     const [isClient, setIsClient] = useState(false);
     const [showVideo, setShowVideo] = useState(false);
+    const playerRef = useRef<PlyrInstance | null>(null);
 
     useEffect(() => {
         setIsClient(true);
@@ -110,9 +111,14 @@ export default function ContentDetailsPage() {
     const handlePlay = () => {
         setShowVideo(true);
     };
+
+    useEffect(() => {
+        if (showVideo && playerRef.current) {
+            playerRef.current.play();
+        }
+    }, [showVideo]);
     
     const plyrOptions = {
-        autoplay: true,
         youtube: {
           noCookie: true,
           rel: 0,
@@ -160,6 +166,11 @@ export default function ContentDetailsPage() {
                             ) : (
                                 <div onContextMenu={(e) => e.preventDefault()} className="w-full h-full">
                                     <Plyr 
+                                        ref={(player) => {
+                                            if (player?.plyr) {
+                                                playerRef.current = player.plyr;
+                                            }
+                                        }}
                                         source={{
                                             type: 'video',
                                             sources: [
