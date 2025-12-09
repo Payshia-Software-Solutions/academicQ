@@ -15,7 +15,7 @@ import { DollarSign, Receipt, AlertCircle, Search, ArrowRight, ChevronDown, Filt
 import { format } from 'date-fns';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PaymentRequestsList } from '../_components/payment-requests-list';
+import { PaymentRequestsList } from './_components/payment-requests-list';
 
 type PaymentStatus = "All" | "Paid" | "Pending";
 

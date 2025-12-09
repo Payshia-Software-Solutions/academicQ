@@ -66,7 +66,7 @@ export function PaymentRequestsList() {
 
     useEffect(() => {
         fetchPaymentRequests();
-    }, [toast]);
+    }, []);
     
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
