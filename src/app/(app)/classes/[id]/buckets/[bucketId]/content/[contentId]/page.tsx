@@ -168,8 +168,8 @@ export default function ContentDetailsPage() {
                                 <div onContextMenu={(e) => e.preventDefault()} className="w-full h-full">
                                     <Plyr 
                                         ref={(player) => {
-                                            if (player?.plyr) {
-                                            playerRef.current = player.plyr;
+                                            if (player) {
+                                                playerRef.current = (player as any).plyr;
                                             }
                                         }}
                                         source={{
@@ -299,5 +299,3 @@ export default function ContentDetailsPage() {
     )
 
 }
-
-    
