@@ -43,7 +43,6 @@ export default function ContentDetailsPage() {
 
     const [isClient, setIsClient] = useState(false);
     const [showVideo, setShowVideo] = useState(false);
-    const playerRef = useRef<PlyrInstance | null>(null);
 
     useEffect(() => {
         setIsClient(true);
@@ -128,8 +127,7 @@ export default function ContentDetailsPage() {
         
         const fileUrl = getFullFileUrl(content.content);
         
-        // Using a hardcoded ID for testing purposes as requested
-        const hardcodedYoutubeId = 'bTqVqk7FSmY';
+        const youtubeId = getYouTubeId(content.content);
 
         switch (content.content_type.toLowerCase()) {
             case 'video':
@@ -159,18 +157,20 @@ export default function ContentDetailsPage() {
                                 </div>
                             ) : (
                                 <div onContextMenu={(e) => e.preventDefault()} className="w-full h-full">
-                                    <Plyr 
-                                        source={{
-                                            type: 'video',
-                                            sources: [
-                                            {
-                                                src: hardcodedYoutubeId,
-                                                provider: 'youtube',
-                                            },
-                                            ],
-                                        }}
-                                        options={plyrOptions}
-                                    />
+                                    {youtubeId && (
+                                        <Plyr 
+                                            source={{
+                                                type: 'video',
+                                                sources: [
+                                                {
+                                                    src: youtubeId,
+                                                    provider: 'youtube',
+                                                },
+                                                ],
+                                            }}
+                                            options={plyrOptions}
+                                        />
+                                    )}
                                 </div>
                             )}
                             </>
