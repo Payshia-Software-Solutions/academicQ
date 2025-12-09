@@ -334,7 +334,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <div className="md:hidden">
                 <SidebarMenuButton asChild variant="ghost" size="icon" className="h-10 w-10">
                     <Link href={homePath}>
-                        <Logo className="text-foreground h-6 w-auto" />
+                        <Logo className="text-foreground h-8 w-auto" />
                     </Link>
                 </SidebarMenuButton>
               </div>
