@@ -235,10 +235,10 @@ export function AddContentForm() {
                     name="content"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Content / Link</FormLabel>
+                        <FormLabel>{contentType === 'YOUTUBE_VIDEO' ? 'YouTube Video URL' : 'Content / Link'}</FormLabel>
                          <FormControl>
                             <Textarea
-                              placeholder="Enter content or URL..."
+                              placeholder={contentType === 'YOUTUBE_VIDEO' ? 'e.g. https://www.youtube.com/watch?v=...' : 'Enter content or URL...'}
                               className="resize-none"
                               rows={4}
                               {...field}
@@ -297,5 +297,3 @@ export function AddContentForm() {
     </Form>
   );
 }
-
-    
