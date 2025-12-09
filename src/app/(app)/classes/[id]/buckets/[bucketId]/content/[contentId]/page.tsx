@@ -229,66 +229,6 @@ export default function ContentDetailsPage() {
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Associated Assignments</CardTitle>
-                        <CardDescription>
-                            {content.assignments?.length || 0} assignment(s) linked to this content.
-                        </CardDescription>
-                    </div>
-                    {isAdmin && (
-                        <Button asChild size="sm">
-                            <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/add-assignment`}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Create Assignment
-                            </Link>
-                        </Button>
-                    )}
-                </CardHeader>
-                <CardContent>
-                    {content.assignments && content.assignments.length > 0 ? (
-                         <ul className="space-y-3">
-                            {content.assignments.map(assignment => (
-                                <li key={assignment.id}>
-                                    <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
-                                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                                            <div className="p-2 bg-accent/10 rounded-lg">
-                                                <FileText className="h-5 w-5 text-accent" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                              <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/assignments/${assignment.id}`} className="font-semibold hover:underline truncate block">
-                                                {assignment.content_title}
-                                              </Link>
-                                              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                                <Badge variant="outline" className="capitalize">{assignment.content_type}</Badge>
-                                                {assignment.deadline_date && (
-                                                    <Badge variant="destructive" className="flex items-center gap-1 text-xs">
-                                                        <Calendar className="h-3 w-3" />
-                                                        {format(new Date(assignment.deadline_date), 'PP')}
-                                                    </Badge>
-                                                )}
-                                              </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                            <p className="text-muted-foreground">No assignments are associated with this content.</p>
-                             {isAdmin && (
-                                <Button variant="outline" className="mt-4" asChild>
-                                    <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/add-assignment`}>
-                                        Create the First Assignment
-                                    </Link>
-                                </Button>
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
         </div>
     )
 
