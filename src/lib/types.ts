@@ -33,6 +33,7 @@ export interface Class {
   courseFee: string;
   registrationFee: string;
   paymentStatus: string;
+  intro_url?: string | null;
 }
 
 export interface Lesson {

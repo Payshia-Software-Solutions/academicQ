@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, BookOpen, Hash, FileText, Star, Tag, DollarSign, UploadCloud } from 'lucide-react';
+import { Loader2, ArrowLeft, BookOpen, Hash, FileText, Star, Tag, DollarSign, UploadCloud, Video } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -38,6 +38,7 @@ const addClassSchema = z.object({
     .refine((files) => files?.length == 1, "Course image is required.")
     .refine((files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type), ".jpg, .jpeg, .png and .webp files are accepted."),
   payment_status: z.string().min(1, { message: 'Payment status is required.' }),
+  intro_url: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
 });
 
 type AddClassFormValues = z.infer<typeof addClassSchema>;
@@ -69,6 +70,10 @@ export function AddClassForm() {
     formData.append('course_fee', data.course_fee.toString());
     formData.append('registration_fee', data.registration_fee.toString());
     formData.append('payment_status', data.payment_status);
+    
+    if (data.intro_url) {
+      formData.append('intro_url', data.intro_url);
+    }
 
     if (data.img_url && data.img_url[0]) {
       formData.append('img_url', data.img_url[0]);
@@ -165,6 +170,22 @@ export function AddClassForm() {
                               className="resize-none pl-8"
                               {...field}
                             />
+                          </FormControl>
+                       </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="intro_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Intro Video URL (Optional)</FormLabel>
+                       <div className="relative">
+                         <Video className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <FormControl>
+                             <Input placeholder="e.g., https://www.youtube.com/watch?v=..." {...field} className="pl-8" />
                           </FormControl>
                        </div>
                       <FormMessage />

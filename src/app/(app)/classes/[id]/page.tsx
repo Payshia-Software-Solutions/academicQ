@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2 } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
+import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video } from "lucide-react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import type { Plyr as PlyrInstance } from 'plyr';
+import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -15,10 +17,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 
 
+const Plyr = dynamic(() => import('plyr-react'), { ssr: false });
+
 interface Course {
   id: string;
   course_name: string;
   description: string;
+  intro_url?: string | null;
 }
 
 interface Content {
@@ -106,6 +111,7 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
     const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true);
     const [studentPayments, setStudentPayments] = useState<Map<string, boolean>>(new Map());
     const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
+    const playerRef = useRef<PlyrInstance | null>(null);
 
     const { toast } = useToast();
 
@@ -310,6 +316,16 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
   };
   
     const canViewContent = isAdmin || enrollmentStatus === 'approved';
+    const showIntroVideo = !isAdmin && enrollmentStatus !== 'approved' && course.intro_url;
+
+    const plyrOptions = {
+      youtube: {
+        noCookie: true,
+        rel: 0,
+        showinfo: 0,
+        modestbranding: 1,
+      },
+    };
 
   return (
     <div className="space-y-8">
@@ -336,6 +352,37 @@ export default function ClassDetailsPage({ params }: { params: { id: string } })
             )}
         </div>
       </header>
+
+      {showIntroVideo && (
+        <section>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Video /> Course Introduction</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="w-full aspect-video bg-background rounded-lg flex items-center justify-center border overflow-hidden relative">
+                  <Plyr 
+                    ref={(player) => {
+                      if (player?.plyr) {
+                        playerRef.current = player.plyr;
+                      }
+                    }}
+                    source={{
+                      type: 'video',
+                      sources: [
+                        {
+                          src: course.intro_url!,
+                          provider: 'youtube',
+                        },
+                      ],
+                    }}
+                    options={plyrOptions}
+                  />
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {canViewContent && (
         <>

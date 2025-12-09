@@ -30,6 +30,7 @@ interface ApiCourse {
     registration_fee: string;
     payment_status: string;
     img_url?: string;
+    intro_url?: string | null;
     [key: string]: any;
 }
 
@@ -151,7 +152,8 @@ export default function ClassesPage() {
                 credits: record.credits,
                 courseFee: record.course_fee,
                 registrationFee: record.registration_fee,
-                paymentStatus: record.payment_status
+                paymentStatus: record.payment_status,
+                intro_url: record.intro_url,
             }));
             setAllCourses(fetchedCourses);
 
