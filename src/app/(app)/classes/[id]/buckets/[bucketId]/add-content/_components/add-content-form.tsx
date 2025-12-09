@@ -36,7 +36,7 @@ const addContentSchema = z.object({
   is_active: z.boolean().default(true),
 }).superRefine((data, ctx) => {
   const fileBasedTypes = ['VIDEO', 'IMAGE', 'PDF'];
-  const textBasedTypes = ['LINK', 'TEXT'];
+  const textBasedTypes = ['LINK', 'TEXT', 'YOUTUBE_VIDEO'];
 
   if (fileBasedTypes.includes(data.content_type) && (!data.file || data.file.length === 0)) {
     ctx.addIssue({
@@ -195,6 +195,7 @@ export function AddContentForm() {
                         </FormControl>
                         <SelectContent>
                         <SelectItem value="VIDEO">Video</SelectItem>
+                        <SelectItem value="YOUTUBE_VIDEO">Youtube Video</SelectItem>
                         <SelectItem value="IMAGE">Image</SelectItem>
                         <SelectItem value="PDF">PDF</SelectItem>
                         <SelectItem value="LINK">Link</SelectItem>
@@ -296,3 +297,5 @@ export function AddContentForm() {
     </Form>
   );
 }
+
+    

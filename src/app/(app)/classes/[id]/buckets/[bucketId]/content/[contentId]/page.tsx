@@ -98,6 +98,17 @@ export default function ContentDetailsPage() {
         return `${baseUrl}${filePath}`;
     };
     
+    function getYouTubeId(url: string): string | null {
+        if (!url) return null;
+        let videoId = null;
+        const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        const match = url.match(regex);
+        if (match) {
+            videoId = match[1];
+        }
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    }
+
     const renderContent = () => {
         if (!content) return null;
         
@@ -109,6 +120,23 @@ export default function ContentDetailsPage() {
                     <div className="aspect-video w-full">
                         <iframe
                             src={fileUrl}
+                            title={content.content_title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="w-full h-full rounded-lg"
+                        ></iframe>
+                    </div>
+                );
+             case 'youtube_video':
+                const youtubeUrl = getYouTubeId(content.content);
+                if (!youtubeUrl) {
+                    return <p className="text-red-500">Invalid YouTube URL</p>;
+                }
+                return (
+                    <div className="aspect-video w-full">
+                        <iframe
+                            src={youtubeUrl}
                             title={content.content_title}
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -189,7 +217,7 @@ export default function ContentDetailsPage() {
                     Back to Bucket
                 </Button>
                 <h1 className="text-2xl sm:text-3xl font-headline font-bold text-foreground">{content.content_title}</h1>
-                <Badge variant="outline" className="capitalize mt-2">{content.content_type}</Badge>
+                <Badge variant="outline" className="capitalize mt-2">{content.content_type.replace(/_/g, ' ')}</Badge>
             </header>
 
             <Card>
@@ -265,3 +293,5 @@ export default function ContentDetailsPage() {
     )
 
 }
+
+    

@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock, DollarSign } from 'lucide-react';
+import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock, DollarSign, Youtube } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,7 @@ interface BucketContentListProps {
 const getIconForType = (type: string) => {
     switch (type.toLowerCase()) {
         case 'video': return <FileVideo className="h-5 w-5 text-accent" />;
+        case 'youtube_video': return <Youtube className="h-5 w-5 text-red-500" />;
         case 'image': return <Image className="h-5 w-5 text-accent" />;
         case 'link': return <LinkIcon className="h-5 w-5 text-accent" />;
         case 'pdf': return <FileText className="h-5 w-5 text-accent" />;
@@ -154,7 +155,7 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                              <div>
                                                 <p className="font-semibold">{item.content_title}</p>
                                                 <div className="flex items-center gap-2">
-                                                    <Badge variant="outline" className="capitalize">{item.content_type.toLowerCase()}</Badge>
+                                                    <Badge variant="outline" className="capitalize">{item.content_type.toLowerCase().replace(/_/g, ' ')}</Badge>
                                                     <Badge variant={item.is_active === '1' ? 'secondary' : 'destructive'}>
                                                         {item.is_active === '1' ? 'Active' : 'Inactive'}
                                                     </Badge>
@@ -190,3 +191,5 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
         </Card>
     );
 }
+
+    
