@@ -3,8 +3,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import type { Plyr as PlyrInstance } from 'plyr';
-import dynamic from 'next/dynamic';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,8 +13,6 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { format } from 'date-fns';
-
-const Plyr = dynamic(() => import('plyr-react'), { ssr: false });
 
 interface ContentDetails {
     id: string;
@@ -111,17 +107,6 @@ export default function ContentDetailsPage() {
         setShowVideo(true);
     };
 
-    const plyrOptions = {
-        youtube: {
-          noCookie: true,
-          rel: 0,
-          showinfo: 0,
-          modestbranding: 1,
-          controls: 1,
-        },
-        autoplay: true,
-    };
-
     const renderContent = () => {
         if (!content) return null;
         
@@ -144,6 +129,7 @@ export default function ContentDetailsPage() {
                     </div>
                 );
              case 'youtube_video':
+                const embedUrl = youtubeId ? `https://www.youtube.com/embed/${youtubeId}?autoplay=1&controls=1&modestbranding=1&rel=0` : '';
                 return (
                      <div className="w-full aspect-video bg-background rounded-lg flex items-center justify-center border overflow-hidden relative">
                         {isClient ? (
@@ -158,18 +144,14 @@ export default function ContentDetailsPage() {
                             ) : (
                                 <div onContextMenu={(e) => e.preventDefault()} className="w-full h-full">
                                     {youtubeId && (
-                                        <Plyr 
-                                            source={{
-                                                type: 'video',
-                                                sources: [
-                                                {
-                                                    src: youtubeId,
-                                                    provider: 'youtube',
-                                                },
-                                                ],
-                                            }}
-                                            options={plyrOptions}
-                                        />
+                                        <iframe
+                                            src={embedUrl}
+                                            title={content.content_title}
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            className="w-full h-full"
+                                        ></iframe>
                                     )}
                                 </div>
                             )}
