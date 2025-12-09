@@ -18,21 +18,11 @@ import { format } from 'date-fns';
 
 const Plyr = dynamic(() => import('plyr-react'), { ssr: false });
 
-interface Assignment {
-    id: string;
-    content_title: string;
-    content_type: string;
-    file_url: string;
-    course_bucket_id: string;
-    deadline_date?: string;
-}
-
 interface ContentDetails {
     id: string;
     content_type: string;
     content_title: string;
     content: string;
-    assignments: Assignment[];
 }
 
 interface CurrentUser {
@@ -284,6 +274,27 @@ export default function ContentDetailsPage() {
                 </CardContent>
             </Card>
 
+             {isAdmin && (
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <CardTitle>Manage Assignments</CardTitle>
+                             <Button asChild>
+                                <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/add-assignment`}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Assignment
+                                </Link>
+                            </Button>
+                        </div>
+                        <CardDescription>
+                            Create and manage assignments for this content.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground text-center">No assignments yet.</p>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     )
 
