@@ -125,8 +125,14 @@ export default function ClassDetailsPage() {
     const [studentPayments, setStudentPayments] = useState<Map<string, boolean>>(new Map());
     const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
     const playerRef = useRef<PlyrInstance | null>(null);
-
     const { toast } = useToast();
+
+    const allAssignments = useMemo(() => {
+        return buckets.flatMap(bucket => bucket.assignments || []);
+    }, [buckets]);
+    
+    const videoId = useMemo(() => getYouTubeId(course?.intro_url || ''), [course?.intro_url]);
+
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -245,9 +251,6 @@ export default function ClassDetailsPage() {
 
     const isAdmin = user?.user_status === 'admin';
 
-    const allAssignments = useMemo(() => {
-        return buckets.flatMap(bucket => bucket.assignments || []);
-    }, [buckets]);
 
     if (loading) {
         return (
@@ -339,8 +342,6 @@ export default function ClassDetailsPage() {
         modestbranding: 1,
       },
     };
-
-    const videoId = useMemo(() => getYouTubeId(course.intro_url || ''), [course.intro_url]);
 
   return (
     <div className="space-y-8">
@@ -499,3 +500,5 @@ export default function ClassDetailsPage() {
     </div>
   );
 }
+
+    
