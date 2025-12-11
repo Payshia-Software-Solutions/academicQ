@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
-import { ArrowLeft, Loader2, Home, Building, MapPin, Mailbox, Phone } from 'lucide-react';
+import { ArrowLeft, Loader2, Home, Building, MapPin, Mailbox, Phone, DollarSign, Package } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+
 
 interface OrderableItem {
     id: string;
@@ -35,6 +38,15 @@ interface CurrentUser {
   student_number?: string;
   [key: string]: any;
 }
+
+const getFullFileUrl = (filePath?: string) => {
+    if (!filePath) return 'https://placehold.co/600x400';
+    if (filePath.startsWith('http')) {
+        return filePath.replace(/^(https?:\/\/)+/, 'https://').replace(/https:\/\//, 'https://');
+    }
+    const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
+    return `${baseUrl}${filePath}`;
+};
 
 
 export function ItemOrderForm() {
@@ -140,20 +152,20 @@ export function ItemOrderForm() {
     
     if (isLoading) {
         return (
-            <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                     <Skeleton className="h-10 w-full" />
-                     <Skeleton className="h-10 w-full" />
-                     <Skeleton className="h-10 w-full" />
-                </CardContent>
-                <CardFooter>
-                    <Skeleton className="h-10 w-24" />
-                </CardFooter>
-            </Card>
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card>
+                    <CardHeader><Skeleton className="h-8 w-3/4" /></CardHeader>
+                    <CardContent><Skeleton className="h-64 w-full" /></CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader><Skeleton className="h-8 w-3/4" /></CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
         )
     }
     
@@ -179,85 +191,116 @@ export function ItemOrderForm() {
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Confirm Your Order</CardTitle>
-                <CardDescription>
-                    You are ordering: <span className="font-semibold">{item.name}</span>. Please provide your delivery details below.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="grid gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="address_line_1">Address Line 1</Label>
-                        <div className="relative">
-                            <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input id="address_line_1" placeholder="e.g., No. 42, Main Street" value={deliveryDetails.address_line_1} onChange={handleInputChange} className="pl-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            {/* Left Column: Item Details */}
+            <Card>
+                 <CardHeader>
+                    <CardTitle>Order Summary</CardTitle>
+                     <CardDescription>You are ordering the following item.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                         <div className="relative h-64 w-full bg-muted rounded-lg overflow-hidden">
+                            <Image
+                                src={getFullFileUrl(item.img_url)}
+                                alt={item.name}
+                                fill
+                                style={{ objectFit: 'cover' }}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                             <h3 className="text-xl font-bold flex items-center gap-2"><Package className="h-6 w-6"/>{item.name}</h3>
+                             <p className="text-muted-foreground">{item.description}</p>
+                            <Badge variant="secondary" className="text-lg">
+                                <DollarSign className="mr-1 h-5 w-5" />
+                                {parseFloat(item.price).toFixed(2)}
+                            </Badge>
                         </div>
                     </div>
+                </CardContent>
+            </Card>
+
+            {/* Right Column: Delivery Form */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Delivery Details</CardTitle>
+                    <CardDescription>
+                        Please provide your delivery information below.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="grid gap-4">
                         <div className="grid gap-2">
-                        <Label htmlFor="address_line_2">Address Line 2 (Optional)</Label>
-                        <div className="relative">
-                            <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input id="address_line_2" placeholder="e.g., Apt. 3B" value={deliveryDetails.address_line_2} onChange={handleInputChange} className="pl-8" />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="city">City</Label>
-                                <div className="relative">
-                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input id="city" placeholder="e.g., Colombo" value={deliveryDetails.city} onChange={handleInputChange} className="pl-8" />
+                            <Label htmlFor="address_line_1">Address Line 1</Label>
+                            <div className="relative">
+                                <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input id="address_line_1" placeholder="e.g., No. 42, Main Street" value={deliveryDetails.address_line_1} onChange={handleInputChange} className="pl-8" />
                             </div>
                         </div>
                             <div className="grid gap-2">
-                            <Label htmlFor="district">District</Label>
-                            <Input id="district" placeholder="e.g., Colombo" value={deliveryDetails.district} onChange={handleInputChange} />
+                            <Label htmlFor="address_line_2">Address Line 2 (Optional)</Label>
+                            <div className="relative">
+                                <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input id="address_line_2" placeholder="e.g., Apt. 3B" value={deliveryDetails.address_line_2} onChange={handleInputChange} className="pl-8" />
+                            </div>
                         </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="postal_code">Postal Code</Label>
-                                <div className="relative">
-                                    <Mailbox className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input id="postal_code" placeholder="e.g., 10100" value={deliveryDetails.postal_code} onChange={handleInputChange} className="pl-8" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="city">City</Label>
+                                    <div className="relative">
+                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input id="city" placeholder="e.g., Colombo" value={deliveryDetails.city} onChange={handleInputChange} className="pl-8" />
                                 </div>
+                            </div>
+                                <div className="grid gap-2">
+                                <Label htmlFor="district">District</Label>
+                                <Input id="district" placeholder="e.g., Colombo" value={deliveryDetails.district} onChange={handleInputChange} />
+                            </div>
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="phone_number_1">Phone Number 1</Label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="postal_code">Postal Code</Label>
+                                    <div className="relative">
+                                        <Mailbox className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input id="postal_code" placeholder="e.g., 10100" value={deliveryDetails.postal_code} onChange={handleInputChange} className="pl-8" />
+                                    </div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="phone_number_1">Phone Number 1</Label>
+                                <div className="relative">
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input id="phone_number_1" type="tel" placeholder="e.g., 0771234567" value={deliveryDetails.phone_number_1} onChange={handleInputChange} className="pl-8" />
+                                </div>
+                            </div>
+                        </div>
+                            <div className="grid gap-2">
+                            <Label htmlFor="phone_number_2">Phone Number 2 (Optional)</Label>
                             <div className="relative">
                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input id="phone_number_1" type="tel" placeholder="e.g., 0771234567" value={deliveryDetails.phone_number_1} onChange={handleInputChange} className="pl-8" />
+                                <Input id="phone_number_2" type="tel" placeholder="e.g., 0719876543" value={deliveryDetails.phone_number_2} onChange={handleInputChange} className="pl-8" />
                             </div>
                         </div>
                     </div>
-                        <div className="grid gap-2">
-                        <Label htmlFor="phone_number_2">Phone Number 2 (Optional)</Label>
-                        <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input id="phone_number_2" type="tel" placeholder="e.g., 0719876543" value={deliveryDetails.phone_number_2} onChange={handleInputChange} className="pl-8" />
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-                <Button variant="outline" asChild>
-                    <Link href={`/study-packs/${courseId}/bucket/${bucketId}`}>
-                        <ArrowLeft className="mr-2 h-4 w-4"/>
-                        Cancel
-                    </Link>
-                </Button>
-                <Button type="button" onClick={handleOrderSubmit} disabled={isSubmitting}>
-                        {isSubmitting ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Placing Order...
-                        </>
-                        ) : (
-                        'Confirm Order'
-                        )}
-                </Button>
-            </CardFooter>
-        </Card>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="outline" asChild>
+                        <Link href={`/study-packs/${courseId}/bucket/${bucketId}`}>
+                            <ArrowLeft className="mr-2 h-4 w-4"/>
+                            Cancel
+                        </Link>
+                    </Button>
+                    <Button type="button" onClick={handleOrderSubmit} disabled={isSubmitting}>
+                            {isSubmitting ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Placing Order...
+                            </>
+                            ) : (
+                            'Confirm Order'
+                            )}
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
     );
 }
