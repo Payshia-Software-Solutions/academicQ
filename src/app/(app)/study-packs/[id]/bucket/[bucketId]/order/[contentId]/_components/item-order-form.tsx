@@ -123,17 +123,27 @@ export function ItemOrderForm() {
 
         setIsSubmitting(true);
         
-        const postData = {
-            student_number: user.student_number,
-            orderable_item_id: parseInt(contentId as string),
-            order_status: "pending",
-            ...deliveryDetails
+        const formData = new FormData();
+        const orderData = {
+            student_order_data: {
+                student_number: user.student_number,
+                orderable_item_id: parseInt(contentId as string),
+                order_status: "pending",
+                ...deliveryDetails
+            }
         };
 
+        formData.append('data', JSON.stringify(orderData));
+
         try {
-            const response = await api.post('/student-orders', postData);
+            const response = await api.post('/student-orders', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
             if (response.status === 201 || response.status === 200) {
-                const itemPrice = parseFloat(item.price);
+                 const itemPrice = parseFloat(item.price);
                 if (itemPrice > 0) {
                      toast({
                         title: "Order Placed",

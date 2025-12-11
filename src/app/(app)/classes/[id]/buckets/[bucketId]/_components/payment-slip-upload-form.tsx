@@ -94,7 +94,7 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
 
     const formData = new FormData();
     
-    const paymentData = {
+    const requestData = {
         student_number: user.student_number,
         course_id: courseId,
         course_bucket_id: bucketId,
@@ -103,11 +103,11 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
         branch: data.branch,
         ref: data.ref,
         request_status: 'pending',
-        payment_status: paymentType, // New field
-        ref_id: '' // New field
+        payment_status: paymentType,
+        ref_id: ''
     };
 
-    formData.append('data', JSON.stringify(paymentData));
+    formData.append('data', JSON.stringify({ payment_request_data: requestData }));
 
     if (data.payment_slip && data.payment_slip.length > 0) {
         formData.append('payment_slip', data.payment_slip[0]);
