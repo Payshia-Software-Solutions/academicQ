@@ -62,9 +62,12 @@ export function OrderHistoryList() {
                 }
 
                 const response = await api.get(`/student-orders/records/filter/?${params.toString()}`);
-                if (Array.isArray(response.data)) {
+                if (response.data.status === 'success' && Array.isArray(response.data.data)) {
+                    setOrders(response.data.data);
+                } else if (Array.isArray(response.data)) { // Fallback for previous incorrect assumption
                     setOrders(response.data);
-                } else {
+                }
+                 else {
                     setOrders([]);
                 }
             } catch (error: any) {
