@@ -25,7 +25,7 @@ interface OrderableItem {
     img_url: string;
 }
 
-interface DeliveryDetails {
+export interface DeliveryDetails {
     address_line_1: string;
     address_line_2: string;
     city: string;
@@ -58,7 +58,6 @@ export function ItemOrderForm() {
     const [item, setItem] = useState<OrderableItem | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
-    const [isSubmitting, setIsSubmitting] = useState(false);
     
     const initialDeliveryDetails: DeliveryDetails = {
         address_line_1: '',
@@ -104,13 +103,12 @@ export function ItemOrderForm() {
         fetchContentItem();
     }, [contentId, toast]);
 
-    const handleOrderSubmit = async () => {
+    const handleConfirmOrder = () => {
         const userString = localStorage.getItem('user');
         if (!userString) {
             toast({ variant: 'destructive', title: "Not logged in", description: "You must be logged in to place an order."});
             return;
         }
-        const user: CurrentUser = JSON.parse(userString);
         
         if (!item || !deliveryDetails.address_line_1 || !deliveryDetails.city || !deliveryDetails.postal_code || !deliveryDetails.phone_number_1) {
             toast({
@@ -121,7 +119,19 @@ export function ItemOrderForm() {
             return;
         }
 
-        setIsSubmitting(true);
+        const itemPrice = parseFloat(item.price);
+        if (itemPrice > 0) {
+            setIsPaymentDialogOpen(true);
+        } else {
+            // Handle free item order directly
+            placeFreeOrder();
+        }
+    }
+
+    const placeFreeOrder = async () => {
+         const userString = localStorage.getItem('user');
+        if (!userString || !item) return;
+        const user: CurrentUser = JSON.parse(userString);
         
         const formData = new FormData();
         const orderData = {
@@ -135,30 +145,19 @@ export function ItemOrderForm() {
 
         formData.append('data', JSON.stringify(orderData));
 
-        try {
+         try {
             const response = await api.post('/student-orders', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+                headers: { 'Content-Type': 'multipart/form-data' },
             });
 
             if (response.status === 201 || response.status === 200) {
-                 const itemPrice = parseFloat(item.price);
-                if (itemPrice > 0) {
-                     toast({
-                        title: "Order Placed",
-                        description: `Your order for "${item.name}" has been placed. Please upload your payment slip.`,
-                    });
-                    setIsPaymentDialogOpen(true);
-                } else {
-                    toast({
-                        title: "Order for Free Item Placed",
-                        description: `Your order for "${item.name}" has been successfully placed.`,
-                    });
-                    router.push('/study-packs/history');
-                }
+                 toast({
+                    title: "Order for Free Item Placed",
+                    description: `Your order for "${item.name}" has been successfully placed.`,
+                });
+                router.push('/study-packs/history');
             } else {
-                throw new Error(response.data.message || 'An unknown error occurred.');
+                 throw new Error(response.data.message || 'An unknown error occurred.');
             }
         } catch (error: any) {
              toast({
@@ -166,8 +165,6 @@ export function ItemOrderForm() {
                 title: 'Order Failed',
                 description: error.response?.data?.message || error.message || 'Could not place your order.',
             });
-        } finally {
-            setIsSubmitting(false);
         }
     }
     
@@ -311,15 +308,8 @@ export function ItemOrderForm() {
                                 Cancel
                             </Link>
                         </Button>
-                        <Button type="button" onClick={handleOrderSubmit} disabled={isSubmitting}>
-                                {isSubmitting ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Placing Order...
-                                </>
-                                ) : (
-                                'Confirm Order'
-                                )}
+                        <Button type="button" onClick={handleConfirmOrder}>
+                            Confirm Order
                         </Button>
                     </CardFooter>
                 </Card>
@@ -329,7 +319,7 @@ export function ItemOrderForm() {
                     <DialogHeader>
                         <DialogTitle>Upload Payment Slip</DialogTitle>
                         <DialogDescription>
-                            Your order has been placed. Please upload your proof of payment for the ordered item.
+                            Your order for "{item.name}" requires payment. Please upload your proof of payment.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
@@ -342,6 +332,8 @@ export function ItemOrderForm() {
                                 router.push('/study-packs/history');
                             }}
                             paymentType="study_pack"
+                            deliveryDetails={deliveryDetails}
+                            orderableItemId={item.id}
                         />
                     </div>
                 </DialogContent>

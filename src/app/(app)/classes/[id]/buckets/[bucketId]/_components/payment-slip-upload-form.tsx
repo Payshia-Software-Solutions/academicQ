@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, DollarSign, Info, Paperclip, Building, GitBranch } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import type { DeliveryDetails } from '@/app/(app)/study-packs/[id]/bucket/[bucketId]/order/[contentId]/_components/item-order-form';
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
@@ -48,9 +49,11 @@ interface PaymentSlipUploadFormProps {
     bucketId: string;
     onSuccess?: () => void;
     paymentType?: 'course_fee' | 'study_pack';
+    deliveryDetails?: DeliveryDetails;
+    orderableItemId?: string;
 }
 
-export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSuccess, paymentType = 'course_fee' }: PaymentSlipUploadFormProps) {
+export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSuccess, paymentType = 'course_fee', deliveryDetails, orderableItemId }: PaymentSlipUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const { toast } = useToast();
@@ -94,7 +97,11 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
 
     const formData = new FormData();
     
-    const requestData = {
+    // This object will contain all data to be stringified
+    let combinedData: any = {};
+
+    // Common payment request data
+    const payment_request_data = {
         student_number: user.student_number,
         course_id: courseId,
         course_bucket_id: bucketId,
@@ -107,14 +114,33 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
         ref_id: ''
     };
 
-    formData.append('data', JSON.stringify({ payment_request_data: requestData }));
+    if (paymentType === 'study_pack' && deliveryDetails && orderableItemId) {
+        // If it's a study pack, we are creating an order and a payment request together
+        const student_order_data = {
+            student_number: user.student_number,
+            orderable_item_id: parseInt(orderableItemId),
+            order_status: "pending",
+            ...deliveryDetails
+        };
+        combinedData.student_order_data = student_order_data;
+        combinedData.payment_request_data = payment_request_data;
+
+    } else {
+        // If it's just a course fee, only include payment request data
+        combinedData.payment_request_data = payment_request_data;
+    }
+    
+    formData.append('data', JSON.stringify(combinedData));
 
     if (data.payment_slip && data.payment_slip.length > 0) {
         formData.append('payment_slip', data.payment_slip[0]);
     }
+    
+    // Determine the correct endpoint
+    const endpoint = paymentType === 'study_pack' ? '/student-orders' : '/payment_requests';
 
     try {
-        const response = await api.post('/payment_requests', formData, {
+        const response = await api.post(endpoint, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             }
@@ -122,8 +148,8 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
 
         if (response.status === 201 || response.status === 200) {
             toast({
-                title: 'Payment Request Sent',
-                description: `Your request for $${data.payment_amount} has been sent for review. You will be notified once it is approved.`,
+                title: 'Request Sent Successfully',
+                description: `Your request has been sent for review. You will be notified once it is approved.`,
             });
             form.reset();
             if (onSuccess) {
