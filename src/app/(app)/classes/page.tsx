@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight, Plus, Edit } from "lucide-react";
 import type { Class } from "@/lib/types";
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
@@ -41,7 +42,7 @@ interface Enrollment {
 }
 
 
-function ClassCard({ cls, enrollmentStatus }: { cls: Class, enrollmentStatus?: string }) {
+function ClassCard({ cls, enrollmentStatus, isAdmin }: { cls: Class, enrollmentStatus?: string, isAdmin?: boolean }) {
     const [imageError, setImageError] = useState(false);
 
     const getFullFileUrl = (filePath: string) => {
@@ -94,18 +95,28 @@ function ClassCard({ cls, enrollmentStatus }: { cls: Class, enrollmentStatus?: s
                 <p className="text-sm font-medium text-foreground">{cls.teacher}</p>
                 <p className="text-xs text-muted-foreground">{cls.schedule}</p>
             </div>
-            <Button asChild size="sm" className="w-full sm:w-auto">
-                <Link href={`/classes/${cls.id}`}>
-                    {enrollmentStatus ? 'View Details' : 'Enroll Now'}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-            </Button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+                {isAdmin && (
+                    <Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+                        <Link href={`/classes/${cls.id}/edit`}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                        </Link>
+                    </Button>
+                )}
+                <Button asChild size="sm" className="w-full sm:w-auto">
+                    <Link href={`/classes/${cls.id}`}>
+                        {enrollmentStatus ? 'View Details' : 'Enroll Now'}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                </Button>
+            </div>
             </CardFooter>
         </Card>
     )
 }
 
-function CourseListSection({ title, courses, enrollmentStatusMap }: { title: string, courses: Class[], enrollmentStatusMap?: Map<string, string> }) {
+function CourseListSection({ title, courses, enrollmentStatusMap, isAdmin }: { title: string, courses: Class[], enrollmentStatusMap?: Map<string, string>, isAdmin?: boolean }) {
     if (courses.length === 0) return null;
 
     return (
@@ -113,7 +124,7 @@ function CourseListSection({ title, courses, enrollmentStatusMap }: { title: str
             <h2 className="text-xl font-bold">{title}</h2>
              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {courses.map((cls) => (
-                    <ClassCard key={cls.id} cls={cls} enrollmentStatus={enrollmentStatusMap?.get(cls.id)} />
+                    <ClassCard key={cls.id} cls={cls} enrollmentStatus={enrollmentStatusMap?.get(cls.id)} isAdmin={isAdmin} />
                 ))}
             </div>
         </section>
@@ -240,7 +251,7 @@ export default function ClassesPage() {
       {loading ? (
         renderLoadingSkeletons()
       ) : isAdmin ? (
-        <CourseListSection title="All Classes" courses={allCourses} />
+        <CourseListSection title="All Classes" courses={allCourses} isAdmin={isAdmin} />
       ) : (
         <div className="space-y-8">
             <CourseListSection title="Approved Classes" courses={approvedCourses} enrollmentStatusMap={enrollmentStatusMap} />
@@ -255,5 +266,3 @@ export default function ClassesPage() {
     </div>
   );
 }
-
-    
