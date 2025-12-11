@@ -133,11 +133,20 @@ export function ItemOrderForm() {
         try {
             const response = await api.post('/student-orders', postData);
             if (response.status === 201 || response.status === 200) {
-                toast({
-                    title: "Order Placed",
-                    description: `Your order for "${item.name}" has been placed. Please upload your payment slip.`,
-                });
-                setIsPaymentDialogOpen(true);
+                const itemPrice = parseFloat(item.price);
+                if (itemPrice > 0) {
+                     toast({
+                        title: "Order Placed",
+                        description: `Your order for "${item.name}" has been placed. Please upload your payment slip.`,
+                    });
+                    setIsPaymentDialogOpen(true);
+                } else {
+                    toast({
+                        title: "Order for Free Item Placed",
+                        description: `Your order for "${item.name}" has been successfully placed.`,
+                    });
+                    router.push('/study-packs/history');
+                }
             } else {
                 throw new Error(response.data.message || 'An unknown error occurred.');
             }
