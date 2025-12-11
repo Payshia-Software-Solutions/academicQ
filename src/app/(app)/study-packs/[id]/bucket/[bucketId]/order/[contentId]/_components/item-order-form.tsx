@@ -132,7 +132,7 @@ export function ItemOrderForm() {
 
         try {
             const response = await api.post('/student-orders', postData);
-            if (response.data.message === 'Record created successfully.') {
+            if (response.status === 201 || response.status === 200) {
                 toast({
                     title: "Order Placed",
                     description: `Your order for "${item.name}" has been placed. Please upload your payment slip.`,
@@ -145,7 +145,7 @@ export function ItemOrderForm() {
              toast({
                 variant: 'destructive',
                 title: 'Order Failed',
-                description: error.message || 'Could not place your order.',
+                description: error.response?.data?.message || error.message || 'Could not place your order.',
             });
         } finally {
             setIsSubmitting(false);
