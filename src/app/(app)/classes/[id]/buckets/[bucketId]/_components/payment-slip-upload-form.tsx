@@ -46,9 +46,10 @@ interface PaymentSlipUploadFormProps {
     bucketAmount: string;
     courseId: string;
     bucketId: string;
+    onSuccess?: () => void;
 }
 
-export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId }: PaymentSlipUploadFormProps) {
+export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSuccess }: PaymentSlipUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const { toast } = useToast();
@@ -122,8 +123,11 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId }: Paym
                 description: `Your request for $${data.payment_amount} has been sent for review. You will be notified once it is approved.`,
             });
             form.reset();
-             // Maybe refresh the page or redirect
-            router.refresh();
+            if (onSuccess) {
+                onSuccess();
+            } else {
+                router.refresh();
+            }
         } else {
              toast({
                 variant: 'destructive',
