@@ -322,6 +322,7 @@ export function ItemOrderForm() {
                                 setIsPaymentDialogOpen(false);
                                 router.push('/study-packs/history');
                             }}
+                            paymentType="study_pack"
                         />
                     </div>
                 </DialogContent>

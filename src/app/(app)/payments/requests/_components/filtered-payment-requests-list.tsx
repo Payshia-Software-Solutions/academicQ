@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw, Package } from 'lucide-react';
+import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw, Package, CreditCard, Hash } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { CoursePaymentForm } from '../../course-payment/_components/course-payment-form';
 
@@ -30,6 +30,8 @@ interface PaymentRequest {
     course_bucket_id: string;
     course_name?: string;
     course_bucket_name?: string;
+    payment_status: 'course_fee' | 'study_pack';
+    ref_id: string;
 }
 
 interface Course {
@@ -293,6 +295,9 @@ export function FilteredPaymentRequestsList() {
                                             </div>
                                             <Badge variant={req.request_status === 'approved' ? 'secondary' : req.request_status === 'rejected' ? 'destructive' : 'outline'} className="capitalize">{req.request_status}</Badge>
                                         </div>
+                                         <div className="mt-2 text-xs text-muted-foreground">
+                                            <Badge variant="outline" className="capitalize">{req.payment_status?.replace('_', ' ')}</Badge>
+                                        </div>
                                         <div className="flex justify-between items-end mt-4">
                                             <div className="text-sm">
                                                 <p className="font-bold text-lg">${parseFloat(req.payment_amount).toFixed(2)}</p>
@@ -322,7 +327,9 @@ export function FilteredPaymentRequestsList() {
                                     <TableHead>Course</TableHead>
                                     <TableHead>Bucket</TableHead>
                                     <TableHead>Amount</TableHead>
-                                    <TableHead>Status</TableHead>
+                                    <TableHead>Req Status</TableHead>
+                                    <TableHead>Payment For</TableHead>
+                                    <TableHead>Ref ID</TableHead>
                                     <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -330,7 +337,7 @@ export function FilteredPaymentRequestsList() {
                                 {isLoading ? (
                                     Array.from({ length: 5 }).map((_, i) => (
                                         <TableRow key={i}>
-                                            <TableCell colSpan={7}>
+                                            <TableCell colSpan={9}>
                                                 <Skeleton className="h-8 w-full" />
                                             </TableCell>
                                         </TableRow>
@@ -346,6 +353,10 @@ export function FilteredPaymentRequestsList() {
                                             <TableCell>
                                                 <Badge variant={req.request_status === 'approved' ? 'secondary' : req.request_status === 'rejected' ? 'destructive' : 'outline'} className="capitalize">{req.request_status}</Badge>
                                             </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="capitalize">{req.payment_status?.replace('_', ' ')}</Badge>
+                                            </TableCell>
+                                            <TableCell>{req.ref_id || 'N/A'}</TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="sm" onClick={() => handleViewDetails(req)}><Eye className="mr-2 h-4 w-4" />View</Button>
                                             </TableCell>
@@ -353,7 +364,7 @@ export function FilteredPaymentRequestsList() {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                                        <TableCell colSpan={9} className="text-center h-24 text-muted-foreground">
                                         {hasAppliedFilters ? 'No payment requests found for the selected filters.' : 'Please select a course and bucket to view requests.'}
                                         </TableCell>
                                     </TableRow>
@@ -415,6 +426,14 @@ export function FilteredPaymentRequestsList() {
                                 <div className="flex justify-between p-2 rounded-md bg-muted">
                                     <span className="text-muted-foreground">Bucket:</span>
                                     <span className="font-semibold text-right">{selectedRequest.course_bucket_name || 'N/A'}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-2 rounded-md bg-muted">
+                                    <span className="text-muted-foreground">Payment For:</span>
+                                    <Badge variant="outline" className="capitalize">{selectedRequest.payment_status?.replace('_', ' ')}</Badge>
+                                </div>
+                                 <div className="flex justify-between items-center p-2 rounded-md bg-muted">
+                                    <span className="text-muted-foreground">Ref ID:</span>
+                                    <span className="font-semibold">{selectedRequest.ref_id || 'N/A'}</span>
                                 </div>
                                 <div className="p-3 rounded-md border space-y-2">
                                      <h4 className="font-medium text-base border-b pb-1 mb-2">Bank Details</h4>

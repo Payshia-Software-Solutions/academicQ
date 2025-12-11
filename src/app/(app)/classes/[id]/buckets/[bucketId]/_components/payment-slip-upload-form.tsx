@@ -47,9 +47,10 @@ interface PaymentSlipUploadFormProps {
     courseId: string;
     bucketId: string;
     onSuccess?: () => void;
+    paymentType?: 'course_fee' | 'study_pack';
 }
 
-export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSuccess }: PaymentSlipUploadFormProps) {
+export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSuccess, paymentType = 'course_fee' }: PaymentSlipUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const { toast } = useToast();
@@ -101,7 +102,9 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
         bank: data.bank,
         branch: data.branch,
         ref: data.ref,
-        request_status: 'pending'
+        request_status: 'pending',
+        payment_status: paymentType, // New field
+        ref_id: '' // New field
     };
 
     formData.append('data', JSON.stringify(paymentData));
