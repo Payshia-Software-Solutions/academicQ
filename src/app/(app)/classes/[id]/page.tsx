@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video } from "lucide-react";
+import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video, Edit } from "lucide-react";
 import { useEffect, useState, useMemo, useRef } from "react";
 import type { Plyr as PlyrInstance } from 'plyr';
 import dynamic from 'next/dynamic';
@@ -418,38 +418,50 @@ export default function ClassDetailsPage() {
                             const isPaid = !isAdmin && (studentPayments.get(bucket.id) ?? false);
 
                             return (
-                                <Link href={`/classes/${course.id}/buckets/${bucket.id}`} key={bucket.id} className="block group">
-                                    <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
-                                        <CardHeader>
-                                            <div className="flex items-start justify-between">
-                                                <Folder className="h-10 w-10 text-primary" />
-                                                {isAdmin ? (
-                                                    <Badge variant={bucket.is_active === "1" ? 'secondary' : 'destructive'}>
-                                                        {bucket.is_active === "1" ? "Active" : "Inactive"}
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge variant={isPaid ? 'secondary' : 'destructive'}>
-                                                        {isPaid ? "Paid" : "Not Paid"}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <h3 className="font-semibold text-lg truncate group-hover:text-primary">{bucket.bucket_name}</h3>
-                                            <p className="text-sm text-muted-foreground line-clamp-2">{bucket.description}</p>
-                                        </CardContent>
-                                        <CardFooter className="flex-col items-start text-xs text-muted-foreground">
-                                            <div className="flex items-center gap-2">
-                                                <List className="h-3 w-3" />
-                                                <span>{totalContent} content item(s)</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <FileText className="h-3 w-3" />
-                                                <span>{totalAssignments} assignment(s)</span>
-                                            </div>
-                                        </CardFooter>
-                                    </Card>
-                                </Link>
+                                <Card key={bucket.id} className="flex flex-col group h-full">
+                                    <CardHeader>
+                                        <div className="flex items-start justify-between">
+                                            <Folder className="h-10 w-10 text-primary" />
+                                            {isAdmin ? (
+                                                <Badge variant={bucket.is_active === "1" ? 'secondary' : 'destructive'}>
+                                                    {bucket.is_active === "1" ? "Active" : "Inactive"}
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant={isPaid ? 'secondary' : 'destructive'}>
+                                                    {isPaid ? "Paid" : "Not Paid"}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="flex-grow">
+                                        <h3 className="font-semibold text-lg truncate group-hover:text-primary">{bucket.bucket_name}</h3>
+                                        <p className="text-sm text-muted-foreground line-clamp-2">{bucket.description}</p>
+                                    </CardContent>
+                                    <CardFooter className="flex-col items-start text-xs text-muted-foreground">
+                                        <div className="flex items-center gap-2">
+                                            <List className="h-3 w-3" />
+                                            <span>{totalContent} content item(s)</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <FileText className="h-3 w-3" />
+                                            <span>{totalAssignments} assignment(s)</span>
+                                        </div>
+                                        <div className="flex items-center gap-4 mt-4 w-full">
+                                            <Button asChild variant="outline" size="sm" className="flex-1">
+                                                <Link href={`/classes/${course.id}/buckets/${bucket.id}`}>
+                                                    View
+                                                </Link>
+                                            </Button>
+                                            {isAdmin && (
+                                                <Button asChild variant="secondary" size="sm" className="flex-1">
+                                                     <Link href={`/classes/${course.id}/buckets/${bucket.id}/edit`}>
+                                                        <Edit className="mr-2 h-3 w-3" /> Edit
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </CardFooter>
+                                </Card>
                             )
                             })}
                         </div>
