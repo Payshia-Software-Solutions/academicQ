@@ -3,17 +3,18 @@
 
 import { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { List, BookOpen, User, Mail, Smartphone, Hash, FileText, Check, X, Clock, Download } from 'lucide-react';
-import Link from 'next/link';
+import { List, User, Mail, Smartphone, Hash } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 
 interface Submission {
     id: string;
@@ -79,7 +80,7 @@ function StatusBadge({ status }: { status: string | null }) {
     );
 }
 
-export default function StudentProfilePage() {
+function StudentProfilePageContent() {
     const params = useParams();
     const studentId = params.id as string;
     const { toast } = useToast();
@@ -141,7 +142,7 @@ export default function StudentProfilePage() {
     }
 
     if (!studentData) {
-        notFound();
+        return <p>Student not found.</p>;
     }
     
     const fullName = `${studentData.f_name} ${studentData.l_name}`;
@@ -271,4 +272,8 @@ export default function StudentProfilePage() {
             </div>
         </div>
     );
+}
+
+export default function StudentProfilePage() {
+    return <StudentProfilePageContent />;
 }
