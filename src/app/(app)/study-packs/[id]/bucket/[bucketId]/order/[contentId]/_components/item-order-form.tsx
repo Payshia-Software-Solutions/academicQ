@@ -47,6 +47,13 @@ interface District {
     name_en: string;
 }
 
+interface City {
+    id: string;
+    district_id: string;
+    name_en: string;
+}
+
+
 const getFullFileUrl = (filePath?: string) => {
     if (!filePath) return 'https://placehold.co/600x400';
     if (filePath.startsWith('http')) {
@@ -77,7 +84,10 @@ export function ItemOrderForm() {
     };
     const [deliveryDetails, setDeliveryDetails] = useState<DeliveryDetails>(initialDeliveryDetails);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+    
     const [districts, setDistricts] = useState<District[]>([]);
+    const [allCities, setAllCities] = useState<City[]>([]);
+    const [filteredCities, setFilteredCities] = useState<City[]>([]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
@@ -85,27 +95,46 @@ export function ItemOrderForm() {
     };
 
     const handleDistrictChange = (value: string) => {
-        setDeliveryDetails(prev => ({ ...prev, district: value }));
+        setDeliveryDetails(prev => ({ ...prev, district: value, city: '' })); // Reset city when district changes
+        const selectedDistrict = districts.find(d => d.name_en === value);
+        if (selectedDistrict) {
+            const citiesForDistrict = allCities.filter(c => c.district_id === selectedDistrict.id);
+            setFilteredCities(citiesForDistrict);
+        } else {
+            setFilteredCities([]);
+        }
+    };
+    
+    const handleCityChange = (value: string) => {
+        setDeliveryDetails(prev => ({ ...prev, city: value }));
     };
 
 
     useEffect(() => {
-        async function fetchDistricts() {
+        async function fetchLocationData() {
             try {
-                const response = await api.get('/districts');
-                if (response.data.status === 'success' && Array.isArray(response.data.data)) {
-                    setDistricts(response.data.data);
+                const [districtsRes, citiesRes] = await Promise.all([
+                    api.get('/districts'),
+                    api.get('/cities')
+                ]);
+
+                if (districtsRes.data.status === 'success' && Array.isArray(districtsRes.data.data)) {
+                    setDistricts(districtsRes.data.data);
                 }
+                 if (citiesRes.data.status === 'success' && Array.isArray(citiesRes.data.data)) {
+                    setAllCities(citiesRes.data.data);
+                }
+
             } catch (error) {
-                console.error("Failed to fetch districts", error);
+                console.error("Failed to fetch location data", error);
                 toast({
                     variant: 'destructive',
                     title: 'Error',
-                    description: 'Could not load districts for the dropdown.',
+                    description: 'Could not load districts or cities for the dropdowns.',
                 });
             }
         }
-        fetchDistricts();
+        fetchLocationData();
     }, [toast]);
 
     useEffect(() => {
@@ -146,7 +175,7 @@ export function ItemOrderForm() {
             toast({
                 variant: 'destructive',
                 title: "Validation Error",
-                description: "Please fill in all required fields: Address Line 1, City, District, Postal Code, and Phone Number 1.",
+                description: "Please fill in all required fields: Address Line 1, District, City, Postal Code, and Phone Number 1.",
             });
             return;
         }
@@ -296,26 +325,34 @@ export function ItemOrderForm() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="city">City</Label>
-                                        <div className="relative">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input id="city" placeholder="e.g., Colombo" value={deliveryDetails.city} onChange={handleInputChange} className="pl-8" />
-                                    </div>
+                                    <Label htmlFor="district">District</Label>
+                                    <Select value={deliveryDetails.district} onValueChange={handleDistrictChange}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a district..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {districts.map((district) => (
+                                                <SelectItem key={district.id} value={district.name_en}>
+                                                    {district.name_en}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="district">District</Label>
-                                        <Select value={deliveryDetails.district} onValueChange={handleDistrictChange}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a district..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {districts.map((district) => (
-                                                    <SelectItem key={district.id} value={district.name_en}>
-                                                        {district.name_en}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                 <div className="grid gap-2">
+                                    <Label htmlFor="city">City</Label>
+                                     <Select value={deliveryDetails.city} onValueChange={handleCityChange} disabled={!deliveryDetails.district || filteredCities.length === 0}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a city..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {filteredCities.map((city) => (
+                                                <SelectItem key={city.id} value={city.name_en}>
+                                                    {city.name_en}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
