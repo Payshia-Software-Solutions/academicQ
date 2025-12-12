@@ -1,107 +1,274 @@
 
-import { users, classes as allClasses } from '@/lib/data';
-import { notFound } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { notFound, useParams } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { List, BookOpen } from 'lucide-react';
+import { List, BookOpen, User, Mail, Smartphone, Hash, FileText, Check, X, Clock, Download } from 'lucide-react';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
+import api from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-export default function StudentProfilePage({ params }: { params: { id: string } }) {
-  const student = users.find((s) => s.id === params.id);
+interface Submission {
+    id: string;
+    grade: string | null;
+    sub_status: 'graded' | 'submitted' | 'rejected' | 'late_submit' | string;
+    file_path: string;
+    created_at: string;
+}
 
-  if (!student) {
-    notFound();
-  }
+interface Assignment {
+    id: string;
+    content_title: string;
+    deadline_date: string | null;
+    submition_count: string;
+    submissions: Submission[];
+}
 
-  const enrolledClasses = student.classIds.map(classId => 
-    allClasses.find(c => c.id === classId)
-  ).filter(Boolean);
+interface Course {
+    id: string;
+    course_name: string;
+    course_description: string;
+    assignments: Assignment[];
+}
 
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`student_id:${student.id}`)}`;
+interface StudentData {
+    id: string;
+    f_name: string;
+    l_name: string;
+    email: string;
+    nic: string;
+    phone_number: string;
+    user_status: string;
+    student_number: string;
+    is_active: string;
+    courses: Course[];
+}
 
-  return (
-    <div className="space-y-8">
-       <header>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{student.name}</h1>
-        <p className="text-muted-foreground">Student Profile & Records</p>
-      </header>
+function getStatusVariant(status: string | null) {
+    switch (status) {
+        case 'graded':
+        case 'delivered':
+            return 'secondary';
+        case 'submitted':
+        case 'handed over':
+            return 'default';
+        case 'rejected':
+        case 'cancelled':
+        case 'returned':
+            return 'destructive';
+        case 'pending':
+        case 'late_submit':
+        default:
+            return 'outline';
+    }
+}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Student QR Code</CardTitle>
-              <CardDescription>For quick identification and check-in.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center items-center p-6">
-              <Image 
-                src={qrCodeUrl} 
-                alt={`QR code for ${student.name}`} 
-                width={150} 
-                height={150}
-                className="rounded-lg shadow-md"
-              />
-            </CardContent>
-          </Card>
-        </div>
+function StatusBadge({ status }: { status: string | null }) {
+    if (!status) return null;
+    return (
+        <Badge variant={getStatusVariant(status)} className="capitalize">
+            {status.replace(/_/g, ' ')}
+        </Badge>
+    );
+}
 
-        <div className="lg:col-span-2 space-y-6">
-            <Card>
-                <CardHeader>
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                        <div className="flex items-center gap-4">
-                            <Avatar className="h-16 w-16">
-                                <AvatarImage src={student.avatarUrl} alt={student.name} />
-                                <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <CardTitle className="text-2xl">{student.name}</CardTitle>
-                                <CardDescription>{student.email}</CardDescription>
-                            </div>
-                        </div>
-                         <Badge variant={student.paymentStatus === 'Paid' ? 'secondary' : 'destructive'} className="text-sm self-start sm:self-center">
-                            {student.paymentStatus}
-                        </Badge>
+export default function StudentProfilePage() {
+    const params = useParams();
+    const studentId = params.id as string;
+    const { toast } = useToast();
+
+    const [studentData, setStudentData] = useState<StudentData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (!studentId) return;
+
+        async function fetchStudentData() {
+            setIsLoading(true);
+            try {
+                // First get student_number from user id
+                const userRes = await api.get(`/users/${studentId}`);
+                if (userRes.data.status !== 'success') {
+                    throw new Error('Student not found');
+                }
+                const studentNumber = userRes.data.data.student_number;
+                
+                if (!studentNumber) {
+                    throw new Error('Student number not found for this user.');
+                }
+
+                const response = await api.get(`/user-full-details/full/student/courses/?student_number=${studentNumber}`);
+                if (response.data.status === 'success') {
+                    setStudentData(response.data.data);
+                } else {
+                    toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch student details.' });
+                }
+            } catch (error: any) {
+                toast({ variant: 'destructive', title: 'API Error', description: error.message || 'Could not fetch student details.' });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        fetchStudentData();
+    }, [studentId, toast]);
+
+    if (isLoading) {
+        return (
+            <div className="space-y-8">
+                <header>
+                    <Skeleton className="h-10 w-1/2" />
+                    <Skeleton className="h-5 w-1/3 mt-2" />
+                </header>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div className="lg:col-span-1 space-y-6">
+                        <Skeleton className="h-48 w-full" />
+                        <Skeleton className="h-64 w-full" />
                     </div>
-                </CardHeader>
-            </Card>
+                    <div className="lg:col-span-2 space-y-6">
+                        <Skeleton className="h-96 w-full" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-            <Card>
-                <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <List className="h-5 w-5"/>
-                    Enrolled Classes
-                </CardTitle>
-                </CardHeader>
-                <CardContent>
-                {enrolledClasses.length > 0 ? (
-                    <div className="space-y-4">
-                    {enrolledClasses.map((c) => c && (
-                        <Link href={`/classes/${c.id}`} key={c.id} className="block group">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-2">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 bg-accent/10 rounded-lg">
-                                        <BookOpen className="h-6 w-6 text-accent"/>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold">{c.name}</p>
-                                        <p className="text-sm text-muted-foreground">Taught by {c.teacher}</p>
-                                    </div>
+    if (!studentData) {
+        notFound();
+    }
+    
+    const fullName = `${studentData.f_name} ${studentData.l_name}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`student_id:${studentData.student_number}`)}`;
+
+    const getFullFileUrl = (filePath: string) => {
+        if (!filePath) return '#';
+        const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
+        if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+            return filePath;
+        }
+        return `${baseUrl}${filePath}`;
+    };
+
+    return (
+        <div className="space-y-8">
+            <header>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{fullName}</h1>
+                <p className="text-muted-foreground">Student Profile & Academic Records</p>
+            </header>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-1 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center gap-4">
+                                <Avatar className="h-16 w-16">
+                                    <AvatarImage src={`https://placehold.co/100x100.png`} alt={fullName} />
+                                    <AvatarFallback>{studentData.f_name.charAt(0)}{studentData.l_name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <CardTitle className="text-xl">{fullName}</CardTitle>
+                                    <Badge variant={studentData.is_active === '1' ? 'secondary' : 'destructive'} className="mt-1">
+                                        {studentData.is_active === '1' ? 'Active' : 'Inactive'}
+                                    </Badge>
                                 </div>
-                                <p className="text-sm text-muted-foreground group-hover:text-accent transition-colors self-end sm:self-center">{c.schedule}</p>
                             </div>
-                        </Link>
-                    ))}
-                    </div>
-                ) : (
-                    <p className="text-muted-foreground text-center">Not enrolled in any classes.</p>
-                )}
-                </CardContent>
-            </Card>
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-sm">
+                            <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><span className="break-all">{studentData.email}</span></div>
+                            <div className="flex items-center gap-3"><Smartphone className="h-4 w-4 text-muted-foreground" /><span>{studentData.phone_number}</span></div>
+                            <div className="flex items-center gap-3"><User className="h-4 w-4 text-muted-foreground" /><span>{studentData.nic}</span></div>
+                            <div className="flex items-center gap-3"><Hash className="h-4 w-4 text-muted-foreground" /><span className="font-mono">{studentData.student_number}</span></div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Student QR Code</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex justify-center items-center p-6">
+                            <Image
+                                src={qrCodeUrl}
+                                alt={`QR code for ${fullName}`}
+                                width={150}
+                                height={150}
+                                className="rounded-lg shadow-md"
+                            />
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="lg:col-span-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <List className="h-5 w-5" />
+                                Academic History
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {studentData.courses && studentData.courses.length > 0 ? (
+                                <Accordion type="multiple" className="w-full">
+                                    {studentData.courses.map(course => (
+                                        <AccordionItem value={`course-${course.id}`} key={course.id}>
+                                            <AccordionTrigger className="font-semibold text-lg hover:no-underline">
+                                                {course.course_name}
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <div className="pl-4 space-y-4">
+                                                    <h4 className="font-semibold mt-2">Assignments</h4>
+                                                    {course.assignments && course.assignments.length > 0 ? (
+                                                        <ul className="space-y-3">
+                                                            {course.assignments.map(assignment => (
+                                                                <li key={assignment.id} className="border-l-2 pl-3">
+                                                                    <p className="font-medium">{assignment.content_title}</p>
+                                                                    {assignment.deadline_date && <p className="text-xs text-muted-foreground">Deadline: {format(new Date(assignment.deadline_date), 'PP p')}</p>}
+                                                                    
+                                                                    <div className="mt-2 space-y-2">
+                                                                        {assignment.submissions.map(sub => (
+                                                                             <div key={sub.id} className="flex items-center justify-between text-xs p-2 rounded-md bg-muted/50">
+                                                                                <div className="flex items-center gap-2">
+                                                                                     <Button asChild variant="ghost" size="icon" className="h-6 w-6">
+                                                                                        <a href={getFullFileUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
+                                                                                            <Download className="h-3 w-3" />
+                                                                                        </a>
+                                                                                    </Button>
+                                                                                    <span>Submission on {format(new Date(sub.created_at), 'PP')}</span>
+                                                                                </div>
+                                                                                <div className="flex items-center gap-2">
+                                                                                     <StatusBadge status={sub.sub_status} />
+                                                                                    {sub.grade && (
+                                                                                        <Badge variant="secondary" className="font-mono">{sub.grade}</Badge>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                         {assignment.submissions.length === 0 && <p className="text-xs text-muted-foreground">No submissions yet.</p>}
+                                                                    </div>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    ) : (
+                                                         <p className="text-sm text-muted-foreground text-center py-4">No assignments for this course.</p>
+                                                    )}
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                            ) : (
+                                <p className="text-muted-foreground text-center py-10">Not enrolled in any courses.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
