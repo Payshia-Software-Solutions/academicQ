@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video, Edit } from "lucide-react";
+import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video, Edit, Trash2 } from "lucide-react";
 import { useEffect, useState, useMemo, useRef } from "react";
 import type { Plyr as PlyrInstance } from 'plyr';
 import dynamic from 'next/dynamic';
@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
 const Plyr = dynamic(() => import('plyr-react'), { ssr: false });
@@ -252,6 +252,27 @@ export default function ClassDetailsPage() {
 
     const isAdmin = user?.user_status === 'admin';
 
+    const handleDeleteBucket = async (bucketId: string) => {
+        try {
+            const response = await api.delete(`/course_buckets/${bucketId}`);
+            if (response.status === 200 || response.status === 204) {
+                toast({
+                    title: 'Bucket Deleted',
+                    description: 'The course bucket has been successfully deleted.',
+                });
+                setBuckets(prev => prev.filter(b => b.id !== bucketId));
+            } else {
+                 throw new Error(response.data.message || "Failed to delete bucket");
+            }
+        } catch (error: any) {
+             toast({
+                variant: 'destructive',
+                title: 'Deletion Failed',
+                description: error.message || 'Could not delete the course bucket.',
+            });
+        }
+    }
+
 
     if (loading) {
         return (
@@ -300,23 +321,21 @@ export default function ClassDetailsPage() {
     }
 
     return (
-        <Dialog open={isEnrollmentDialogOpen} onOpenChange={setIsEnrollmentDialogOpen}>
-            <DialogTrigger asChild>
+        <AlertDialog open={isEnrollmentDialogOpen} onOpenChange={setIsEnrollmentDialogOpen}>
+            <AlertDialogTrigger asChild>
                 <Button>Enroll Now</Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Confirm Enrollment</DialogTitle>
-                    <DialogDescription>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Enrollment</AlertDialogTitle>
+                    <AlertDialogDescription>
                         Are you sure you want to send an enrollment request for {'"'}
                         <span className="font-semibold">{course?.course_name}</span>{'"'}?
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button onClick={handleEnroll} disabled={isEnrolling}>
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleEnroll} disabled={isEnrolling}>
                         {isEnrolling ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -325,10 +344,10 @@ export default function ClassDetailsPage() {
                         ) : (
                             'Confirm Enrollment'
                         )}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
   };
   
@@ -446,18 +465,41 @@ export default function ClassDetailsPage() {
                                             <FileText className="h-3 w-3" />
                                             <span>{totalAssignments} assignment(s)</span>
                                         </div>
-                                        <div className="flex items-center gap-4 mt-4 w-full">
+                                        <div className="flex items-center gap-2 mt-4 w-full">
                                             <Button asChild variant="outline" size="sm" className="flex-1">
                                                 <Link href={`/classes/${course.id}/buckets/${bucket.id}`}>
                                                     View
                                                 </Link>
                                             </Button>
                                             {isAdmin && (
-                                                <Button asChild variant="secondary" size="sm" className="flex-1">
+                                                <>
+                                                <Button asChild variant="secondary" size="icon" className="h-9 w-9">
                                                      <Link href={`/classes/${course.id}/buckets/${bucket.id}/edit`}>
-                                                        <Edit className="mr-2 h-3 w-3" /> Edit
+                                                        <Edit className="h-4 w-4" />
+                                                        <span className="sr-only">Edit Bucket</span>
                                                     </Link>
                                                 </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                         <Button variant="destructive" size="icon" className="h-9 w-9">
+                                                            <Trash2 className="h-4 w-4" />
+                                                            <span className="sr-only">Delete Bucket</span>
+                                                         </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will permanently delete the bucket "{bucket.bucket_name}".
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDeleteBucket(bucket.id)}>Delete</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                                </>
                                             )}
                                         </div>
                                     </CardFooter>

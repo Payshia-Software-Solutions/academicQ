@@ -7,12 +7,12 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock, DollarSign, Youtube, Edit } from 'lucide-react';
+import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock, DollarSign, Youtube, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PaymentSlipUploadForm } from './payment-slip-upload-form';
 
 interface BucketContent {
@@ -78,6 +78,27 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
         fetchContent();
     }, [courseId, bucketId, toast]);
 
+    const handleDeleteContent = async (contentId: string) => {
+         try {
+            const response = await api.delete(`/course-bucket-contents/${contentId}`);
+            if (response.status === 200 || response.status === 204) {
+                toast({
+                    title: 'Content Deleted',
+                    description: 'The content item has been successfully deleted.',
+                });
+                setContent(prev => prev.filter(c => c.id !== contentId));
+            } else {
+                 throw new Error(response.data.message || "Failed to delete content");
+            }
+        } catch (error: any) {
+             toast({
+                variant: 'destructive',
+                title: 'Deletion Failed',
+                description: error.message || 'Could not delete the content item.',
+            });
+        }
+    }
+
     if (isLoading) {
         return (
             <Card>
@@ -100,20 +121,20 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                     <Lock className="h-12 w-12 text-destructive" />
                     <h3 className="text-xl font-bold">Content Locked</h3>
                     <p className="text-muted-foreground">You must complete the payment for this bucket to view its content.</p>
-                    <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-                        <DialogTrigger asChild>
+                    <AlertDialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                        <AlertDialogTrigger asChild>
                             <Button>
                                 <DollarSign className="mr-2 h-4 w-4" />
                                 Add Payment
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                                <DialogTitle>Upload Payment Slip</DialogTitle>
-                                <DialogDescription>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="sm:max-w-[425px]">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Upload Payment Slip</AlertDialogTitle>
+                                <AlertDialogDescription>
                                     To access this content, please upload your proof of payment.
-                                </DialogDescription>
-                            </DialogHeader>
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
                             <div className="py-4">
                                 <PaymentSlipUploadForm 
                                     bucketAmount={bucketAmount || '0'}
@@ -121,8 +142,8 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                     bucketId={bucketId}
                                 />
                             </div>
-                        </DialogContent>
-                    </Dialog>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
              )}
             <CardHeader>
@@ -163,9 +184,30 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {isAdmin && (
-                                                <Button asChild variant="secondary" size="sm" disabled={isLocked}>
-                                                    <Link href={editHref}><Edit className="mr-2 h-3 w-3" />Edit</Link>
+                                                <>
+                                                <Button asChild variant="secondary" size="icon" className="h-9 w-9" disabled={isLocked}>
+                                                    <Link href={editHref}><Edit className="h-4 w-4" /></Link>
                                                 </Button>
+                                                 <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="destructive" size="icon" className="h-9 w-9" disabled={isLocked}>
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will permanently delete the content item "{item.content_title}".
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDeleteContent(item.id)}>Delete</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                                </>
                                             )}
                                             <Button asChild variant="ghost" size="sm" disabled={isLocked}>
                                                 <Link href={viewHref}>
