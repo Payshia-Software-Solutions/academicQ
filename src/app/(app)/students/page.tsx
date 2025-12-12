@@ -101,7 +101,7 @@ export default function StudentsPage() {
           </TableCell>
           <TableCell className="text-right">
             <Button asChild variant="ghost" size="icon">
-              <Link href={`/students/${student.id}`} aria-label={`View ${studentName}`}>
+              <Link href={`/students/${student.student_number}`} aria-label={`View ${studentName}`}>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -149,4 +149,3 @@ export default function StudentsPage() {
     </div>
   );
 }
-

@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { notFound, useParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
@@ -82,7 +82,7 @@ function StatusBadge({ status }: { status: string | null }) {
 
 function StudentProfilePageContent() {
     const params = useParams();
-    const studentId = params.id as string;
+    const studentId = params.id as string; // This is the student_number
     const { toast } = useToast();
 
     const [studentData, setStudentData] = useState<StudentData | null>(null);
@@ -94,18 +94,7 @@ function StudentProfilePageContent() {
         async function fetchStudentData() {
             setIsLoading(true);
             try {
-                // First get student_number from user id
-                const userRes = await api.get(`/users/${studentId}`);
-                if (userRes.data.status !== 'success') {
-                    throw new Error('Student not found');
-                }
-                const studentNumber = userRes.data.data.student_number;
-                
-                if (!studentNumber) {
-                    throw new Error('Student number not found for this user.');
-                }
-
-                const response = await api.get(`/user-full-details/full/student/courses/?student_number=${studentNumber}`);
+                const response = await api.get(`/user-full-details/full/student/courses/?student_number=${studentId}`);
                 if (response.data.status === 'success') {
                     setStudentData(response.data.data);
                 } else {
