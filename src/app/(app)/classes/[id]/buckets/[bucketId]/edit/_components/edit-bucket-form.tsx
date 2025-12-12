@@ -68,7 +68,7 @@ export function EditBucketForm({ bucketId }: EditBucketFormProps) {
               if (response.data.status === 'success') {
                   const bucketData = response.data.data;
                   form.reset({
-                      name: bucketData.bucket_name,
+                      name: bucketData.name,
                       description: bucketData.description,
                       payment_type: bucketData.payment_type,
                       payment_amount: parseFloat(bucketData.payment_amount),
