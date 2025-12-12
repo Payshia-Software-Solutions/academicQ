@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock, DollarSign, Youtube } from 'lucide-react';
+import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock, DollarSign, Youtube, Edit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -138,23 +138,22 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                 {content.length > 0 ? (
                     <ul className="space-y-3">
                         {content.map((item) => {
-                            const Wrapper = isLocked ? 'div' : Link;
-                            const props = isLocked ? {} : { href: `/classes/${courseId}/buckets/${bucketId}/content/${item.id}`};
+                           const viewHref = `/classes/${courseId}/buckets/${bucketId}/content/${item.id}`;
+                           const editHref = `/classes/${courseId}/buckets/${bucketId}/content/${item.id}/edit`;
                            
                            return (
                                <li key={item.id}>
-                                 <Wrapper {...props}>
                                      <div className={cn(
                                          "flex items-center justify-between p-4 rounded-lg border transition-colors gap-4",
-                                         isLocked ? "bg-muted/50 cursor-not-allowed" : "hover:bg-muted/50",
+                                         isLocked ? "bg-muted/50" : "hover:bg-muted/50",
                                      )}>
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-4 flex-1 min-w-0">
                                              <div className="p-2 bg-accent/10 rounded-lg">
                                                 {getIconForType(item.content_type)}
                                              </div>
-                                             <div>
-                                                <p className="font-semibold">{item.content_title}</p>
-                                                <div className="flex items-center gap-2">
+                                             <div className="flex-1 min-w-0">
+                                                <p className="font-semibold truncate">{item.content_title}</p>
+                                                <div className="flex items-center gap-2 mt-1">
                                                     <Badge variant="outline" className="capitalize">{item.content_type.toLowerCase().replace(/_/g, ' ')}</Badge>
                                                     <Badge variant={item.is_active === '1' ? 'secondary' : 'destructive'}>
                                                         {item.is_active === '1' ? 'Active' : 'Inactive'}
@@ -162,22 +161,28 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                                 </div>
                                              </div>
                                         </div>
-                                        <Button asChild variant="ghost" size="sm" disabled={isLocked}>
-                                            <div className="flex items-center">
-                                                {isLocked ? (
-                                                    <>
-                                                        <Lock className="mr-2 h-4 w-4" /> Locked
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        View Content
-                                                        <Eye className="ml-2 h-4 w-4" />
-                                                    </>
-                                                )}
-                                            </div>
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            {isAdmin && (
+                                                <Button asChild variant="secondary" size="sm" disabled={isLocked}>
+                                                    <Link href={editHref}><Edit className="mr-2 h-3 w-3" />Edit</Link>
+                                                </Button>
+                                            )}
+                                            <Button asChild variant="ghost" size="sm" disabled={isLocked}>
+                                                <Link href={viewHref}>
+                                                    {isLocked ? (
+                                                        <>
+                                                            <Lock className="mr-2 h-4 w-4" /> Locked
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            View
+                                                            <Eye className="ml-2 h-4 w-4" />
+                                                        </>
+                                                    )}
+                                                </Link>
+                                            </Button>
+                                        </div>
                                      </div>
-                                 </Wrapper>
                                </li>
                            )
                         })}
