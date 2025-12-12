@@ -51,10 +51,18 @@ export function EditBucketForm({ bucketId }: EditBucketFormProps) {
 
   const form = useForm<EditBucketFormValues>({
     resolver: zodResolver(editBucketSchema),
+    defaultValues: {
+        name: '',
+        description: '',
+        payment_amount: 0,
+        is_active: true
+    }
   });
   
   useEffect(() => {
       async function fetchBucketData() {
+          if (!bucketId) return;
+          setIsLoading(true);
           try {
               const response = await api.get(`/course_buckets/${bucketId}`);
               if (response.data.status === 'success') {
@@ -70,7 +78,7 @@ export function EditBucketForm({ bucketId }: EditBucketFormProps) {
                    toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch bucket data.' });
               }
           } catch (error) {
-               toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch bucket data.' });
+               toast({ variant: 'destructive', title: 'API Error', description: 'Could not fetch bucket data.' });
           } finally {
               setIsLoading(false);
           }
@@ -166,7 +174,7 @@ export function EditBucketForm({ bucketId }: EditBucketFormProps) {
                     <div className="relative">
                     <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <FormControl>
-                        <Input placeholder="e.g. Monthly Subscription" {...field} className="pl-8" />
+                        <Input placeholder="e.g. Monthly Subscription" {...field} />
                     </FormControl>
                     </div>
                     <FormMessage />
