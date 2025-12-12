@@ -16,6 +16,8 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { PaymentSlipUploadForm } from '@/app/(app)/classes/[id]/buckets/[bucketId]/_components/payment-slip-upload-form';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 interface OrderableItem {
     id: string;
@@ -38,6 +40,11 @@ export interface DeliveryDetails {
 interface CurrentUser {
   student_number?: string;
   [key: string]: any;
+}
+
+interface District {
+    id: string;
+    name_en: string;
 }
 
 const getFullFileUrl = (filePath?: string) => {
@@ -70,11 +77,36 @@ export function ItemOrderForm() {
     };
     const [deliveryDetails, setDeliveryDetails] = useState<DeliveryDetails>(initialDeliveryDetails);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+    const [districts, setDistricts] = useState<District[]>([]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setDeliveryDetails(prev => ({ ...prev, [id]: value }));
     };
+
+    const handleDistrictChange = (value: string) => {
+        setDeliveryDetails(prev => ({ ...prev, district: value }));
+    };
+
+
+    useEffect(() => {
+        async function fetchDistricts() {
+            try {
+                const response = await api.get('/districts');
+                if (response.data.status === 'success' && Array.isArray(response.data.data)) {
+                    setDistricts(response.data.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch districts", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'Could not load districts for the dropdown.',
+                });
+            }
+        }
+        fetchDistricts();
+    }, [toast]);
 
     useEffect(() => {
         if (!contentId) return;
@@ -110,11 +142,11 @@ export function ItemOrderForm() {
             return;
         }
         
-        if (!item || !deliveryDetails.address_line_1 || !deliveryDetails.city || !deliveryDetails.postal_code || !deliveryDetails.phone_number_1) {
+        if (!item || !deliveryDetails.address_line_1 || !deliveryDetails.city || !deliveryDetails.postal_code || !deliveryDetails.phone_number_1 || !deliveryDetails.district) {
             toast({
                 variant: 'destructive',
                 title: "Validation Error",
-                description: "Please fill in all required fields: Address Line 1, City, Postal Code, and Phone Number 1.",
+                description: "Please fill in all required fields: Address Line 1, City, District, Postal Code, and Phone Number 1.",
             });
             return;
         }
@@ -123,7 +155,6 @@ export function ItemOrderForm() {
         if (itemPrice > 0) {
             setIsPaymentDialogOpen(true);
         } else {
-            // Handle free item order directly
             placeFreeOrder();
         }
     }
@@ -272,8 +303,19 @@ export function ItemOrderForm() {
                                     </div>
                                 </div>
                                     <div className="grid gap-2">
-                                    <Label htmlFor="district">District</Label>
-                                    <Input id="district" placeholder="e.g., Colombo" value={deliveryDetails.district} onChange={handleInputChange} />
+                                        <Label htmlFor="district">District</Label>
+                                        <Select value={deliveryDetails.district} onValueChange={handleDistrictChange}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a district..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {districts.map((district) => (
+                                                    <SelectItem key={district.id} value={district.name_en}>
+                                                        {district.name_en}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -341,3 +383,5 @@ export function ItemOrderForm() {
         </>
     );
 }
+
+    
