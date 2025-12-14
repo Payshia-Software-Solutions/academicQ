@@ -6,12 +6,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, AlertCircle } from 'lucide-react';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Preloader } from '@/components/ui/preloader';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -130,11 +130,7 @@ export default function StudentDashboardPage() {
       <section>
         <h2 className="text-xl font-bold mb-4">My Classes</h2>
         {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <Card key={i}><CardContent className="p-6"><Skeleton className="h-48 w-full" /></CardContent></Card>
-                ))}
-            </div>
+            <Preloader />
         ) : approvedCourses.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {approvedCourses.map((course) => (

@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { User, Mail, Smartphone, Edit, Briefcase, Home, Cake, UserSquare, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -14,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import Link from 'next/link';
+import { Preloader } from '@/components/ui/preloader';
 
 
 interface CurrentUser {
@@ -99,37 +99,7 @@ export default function MyProfilePage() {
   }, [router, toast]);
 
   if (loading) {
-    return (
-        <div className="space-y-6">
-            <header>
-                <Skeleton className="h-10 w-1/3 mb-2" />
-                <Skeleton className="h-5 w-1/2" />
-            </header>
-            <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-6">
-                        <Skeleton className="h-20 w-20 rounded-full" />
-                        <div className="space-y-2">
-                             <Skeleton className="h-8 w-48" />
-                             <Skeleton className="h-5 w-32" />
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div className="space-y-6">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                     </div>
-                     <div className="space-y-6">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                     </div>
-                </CardContent>
-            </Card>
-        </div>
-    )
+    return <Preloader />;
   }
 
   if (!user) {

@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { ArrowLeft, Download, FileText, Paperclip, Upload, Loader2, Calendar } from 'lucide-react';
@@ -19,6 +18,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
+import { Preloader } from '@/components/ui/preloader';
 
 interface AssignmentDetails {
     id: string;
@@ -206,13 +206,7 @@ export default function AssignmentDetailsPage() {
 
 
     if (isLoading) {
-        return (
-            <div className="space-y-6">
-                 <Skeleton className="h-10 w-48" />
-                 <Skeleton className="h-96 w-full" />
-                 <Skeleton className="h-24 w-full" />
-            </div>
-        )
+        return <Preloader />;
     }
 
     if (!assignment) {

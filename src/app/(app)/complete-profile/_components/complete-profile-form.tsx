@@ -15,6 +15,7 @@ import { Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { Preloader } from '@/components/ui/preloader';
 
 const profileSchema = z.object({
   full_name: z.string().min(1, 'Full name is required.'),
@@ -185,9 +186,7 @@ export function CompleteProfileForm() {
       return (
         <Card>
             <CardContent className="pt-6">
-                <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
+                <Preloader />
             </CardContent>
         </Card>
       )

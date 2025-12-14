@@ -10,8 +10,8 @@ import { Users, BookOpen, AlertCircle, ArrowRight, Building } from "lucide-react
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Preloader } from '@/components/ui/preloader';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -63,24 +63,7 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return (
-        <div className="space-y-4">
-             <header>
-                <Skeleton className="h-10 w-3/4 mb-2" />
-                <Skeleton className="h-6 w-1/2" />
-            </header>
-             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Skeleton className="h-28 w-full" />
-                <Skeleton className="h-28 w-full" />
-                <Skeleton className="h-28 w-full" />
-                <Skeleton className="h-28 w-full" />
-            </div>
-             <div className="grid gap-4 md:grid-cols-3">
-                <Skeleton className="md:col-span-2 h-96 w-full" />
-                <Skeleton className="md:col-span-1 h-48 w-full" />
-            </div>
-        </div>
-    )
+    return <Preloader />
   }
 
   return (

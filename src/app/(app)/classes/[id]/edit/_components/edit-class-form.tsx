@@ -25,9 +25,9 @@ import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
+import { Preloader } from '@/components/ui/preloader';
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
@@ -164,16 +164,8 @@ export function EditClassForm({ classId }: EditClassFormProps) {
   if (isLoading) {
       return (
         <Card>
-            <CardHeader>
-                <Skeleton className="h-8 w-1/4" />
-                <Skeleton className="h-4 w-1/2" />
-            </CardHeader>
             <CardContent>
-                <div className="space-y-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                </div>
+                <Preloader />
             </CardContent>
         </Card>
       )

@@ -9,12 +9,12 @@ import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video, Edit
 import { useEffect, useState, useMemo, useRef } from "react";
 import type { Plyr as PlyrInstance } from 'plyr';
 import dynamic from 'next/dynamic';
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Preloader } from "@/components/ui/preloader";
 
 
 const Plyr = dynamic(() => import('plyr-react'), { ssr: false });
@@ -275,28 +275,7 @@ export default function ClassDetailsPage() {
 
 
     if (loading) {
-        return (
-             <div className="space-y-6">
-                <header>
-                    <Skeleton className="h-6 w-1/4 mb-4" />
-                    <div className="flex items-center justify-between gap-4">
-                        <div>
-                            <Skeleton className="h-10 w-1/2 mb-2" />
-                            <Skeleton className="h-5 w-3/4" />
-                        </div>
-                        <Skeleton className="h-10 w-36" />
-                    </div>
-                </header>
-                <section>
-                    <Skeleton className="h-8 w-1/3 mb-4" />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <Skeleton className="h-32 w-full" />
-                        <Skeleton className="h-32 w-full" />
-                        <Skeleton className="h-32 w-full" />
-                    </div>
-                </section>
-            </div>
-        );
+        return <Preloader />;
     }
 
   if (!course) {
@@ -305,7 +284,7 @@ export default function ClassDetailsPage() {
 
   const renderEnrollmentButton = () => {
     if (isCheckingEnrollment) {
-        return <Skeleton className="h-10 w-36" />;
+        return <Button disabled><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Checking...</Button>;
     }
 
     if (enrollmentStatus) {
@@ -397,7 +376,7 @@ export default function ClassDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="w-full aspect-video bg-background rounded-lg flex items-center justify-center border overflow-hidden relative">
-                  {videoId ? (
+                  {videoId && (
                     <Plyr 
                         ref={(player) => {
                             if (player?.plyr) {
@@ -415,8 +394,6 @@ export default function ClassDetailsPage() {
                         }}
                         options={plyrOptions}
                     />
-                  ) : (
-                    <Skeleton className="w-full h-full" />
                   )}
               </div>
             </CardContent>

@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-react';
 import { EditBucketForm } from './_components/edit-bucket-form';
 import { useParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { Preloader } from '@/components/ui/preloader';
 
 function EditBucketPageContent() {
   const params = useParams();
@@ -33,7 +34,7 @@ function EditBucketPageContent() {
 
 export default function EditBucketPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<Preloader />}>
             <EditBucketPageContent />
         </Suspense>
     )

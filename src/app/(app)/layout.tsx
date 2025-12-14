@@ -1,4 +1,5 @@
 
+
 'use client';
 import { Logo } from '@/components/icons';
 import {
@@ -24,8 +25,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import { ProfileCheckHandler } from './_components/profile-check-handler';
+import { Preloader } from '@/components/ui/preloader';
 
 interface CurrentUser {
   id?: string;
@@ -344,7 +346,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarTrigger className="md:hidden" />
           </header>
           <main className="p-4 sm:p-6">
-              {children}
+              <Suspense fallback={<Preloader />}>
+                  {children}
+              </Suspense>
           </main>
           <footer className="text-center p-4 text-xs text-muted-foreground">
             Powered By Payshia software Solutions

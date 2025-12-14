@@ -5,8 +5,6 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
 import { FileVideo, Image, Link as LinkIcon, FileText, File, Eye, Lock, DollarSign, Youtube, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -14,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PaymentSlipUploadForm } from './payment-slip-upload-form';
+import { Preloader } from '@/components/ui/preloader';
 
 interface BucketContent {
     id: string;
@@ -102,13 +101,8 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
     if (isLoading) {
         return (
             <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-1/3" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
+                <CardContent>
+                    <Preloader />
                 </CardContent>
             </Card>
         )

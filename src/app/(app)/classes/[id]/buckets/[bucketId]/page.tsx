@@ -7,7 +7,6 @@ import { useParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { BucketContentList } from './_components/bucket-content-list';
-import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
 import { PaymentSlipUploadForm } from './_components/payment-slip-upload-form';
 import {
@@ -18,6 +17,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Preloader } from '@/components/ui/preloader';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -118,21 +118,7 @@ function BucketContentPageContent() {
   const canViewContent = isAdmin || isPaid;
   
   if (loading) {
-      return (
-          <div className="space-y-6">
-              <header>
-                <Skeleton className="h-6 w-3/4 mb-4" />
-                <div className="flex items-center justify-between gap-4">
-                    <div>
-                        <Skeleton className="h-10 w-1/2 mb-2" />
-                        <Skeleton className="h-5 w-3/4" />
-                    </div>
-                    <Skeleton className="h-10 w-36" />
-                </div>
-              </header>
-              <Skeleton className="h-96 w-full" />
-          </div>
-      )
+      return <Preloader />;
   }
 
   return (
@@ -175,7 +161,7 @@ function BucketContentPageContent() {
 
 export default function BucketContentPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<Preloader />}>
             <BucketContentPageContent />
         </Suspense>
     )

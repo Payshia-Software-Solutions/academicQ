@@ -25,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Preloader } from '@/components/ui/preloader';
 
 const editBucketSchema = z.object({
   name: z.string().min(1, { message: 'Bucket name is required.' }),
@@ -143,14 +143,8 @@ export function EditBucketForm({ bucketId }: EditBucketFormProps) {
   if (isLoading) {
       return (
           <Card>
-              <CardHeader>
-                  <Skeleton className="h-8 w-1/3" />
-                  <Skeleton className="h-4 w-2/3" />
-              </CardHeader>
-              <CardContent className="space-y-6">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-10 w-full" />
+              <CardContent>
+                  <Preloader />
               </CardContent>
           </Card>
       )

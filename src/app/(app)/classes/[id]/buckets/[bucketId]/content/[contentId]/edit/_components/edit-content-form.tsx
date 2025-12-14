@@ -25,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Preloader } from '@/components/ui/preloader';
 
 const editContentSchema = z.object({
   content_type: z.string().min(1, { message: 'Content type is required.' }),
@@ -150,11 +150,8 @@ export function EditContentForm() {
   if (isLoading) {
       return (
           <Card>
-              <CardHeader><Skeleton className="h-8 w-1/4" /></CardHeader>
-              <CardContent className="space-y-4">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-24 w-full" />
+              <CardContent>
+                  <Preloader />
               </CardContent>
           </Card>
       );

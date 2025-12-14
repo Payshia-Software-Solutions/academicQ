@@ -2,19 +2,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { notFound, useParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useParams } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { List, User, Mail, Smartphone, Hash } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import { Preloader } from '@/components/ui/preloader';
 
 interface Submission {
     id: string;
@@ -111,23 +111,7 @@ function StudentProfilePageContent() {
     }, [studentId, toast]);
 
     if (isLoading) {
-        return (
-            <div className="space-y-8">
-                <header>
-                    <Skeleton className="h-10 w-1/2" />
-                    <Skeleton className="h-5 w-1/3 mt-2" />
-                </header>
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-1 space-y-6">
-                        <Skeleton className="h-48 w-full" />
-                        <Skeleton className="h-64 w-full" />
-                    </div>
-                    <div className="lg:col-span-2 space-y-6">
-                        <Skeleton className="h-96 w-full" />
-                    </div>
-                </div>
-            </div>
-        );
+        return <Preloader />;
     }
 
     if (!studentData) {

@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-react';
 import { EditContentForm } from './_components/edit-content-form';
 import { useParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { Preloader } from '@/components/ui/preloader';
 
 function EditContentPageContent() {
   const params = useParams();
@@ -34,7 +35,7 @@ function EditContentPageContent() {
 
 export default function EditContentPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<Preloader />}>
             <EditContentPageContent />
         </Suspense>
     )

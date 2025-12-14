@@ -3,6 +3,7 @@
 
 import { Suspense } from 'react';
 import { CompleteProfileForm } from './_components/complete-profile-form';
+import { Preloader } from '@/components/ui/preloader';
 
 function CompleteProfilePageContent() {
   return (
@@ -19,7 +20,7 @@ function CompleteProfilePageContent() {
 
 export default function CompleteProfilePage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<Preloader />}>
             <CompleteProfilePageContent />
         </Suspense>
     )

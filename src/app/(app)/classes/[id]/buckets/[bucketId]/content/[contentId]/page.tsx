@@ -5,7 +5,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { ArrowLeft, FileText, Image as ImageIcon, Video, Download, Plus, Calendar, PlayCircle } from 'lucide-react';
@@ -13,6 +12,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import { Preloader } from '@/components/ui/preloader';
 
 interface ContentDetails {
     id: string;
@@ -157,7 +157,7 @@ export default function ContentDetailsPage() {
                             )}
                             </>
                         ) : (
-                            <Skeleton className="w-full h-full" />
+                            <Preloader />
                         )}
                         </div>
                 );
@@ -203,12 +203,7 @@ export default function ContentDetailsPage() {
     };
 
     if (isLoading) {
-        return (
-            <div className="space-y-6">
-                 <Skeleton className="h-10 w-48" />
-                 <Skeleton className="h-96 w-full" />
-            </div>
-        )
+        return <Preloader />;
     }
 
     if (!content) {

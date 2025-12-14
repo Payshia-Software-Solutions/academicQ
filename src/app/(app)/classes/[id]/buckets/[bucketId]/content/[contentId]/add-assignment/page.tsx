@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-react';
 import { AddAssignmentForm } from './_components/add-assignment-form';
 import { useParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { Preloader } from '@/components/ui/preloader';
 
 function AddAssignmentPageContent() {
   const params = useParams();
@@ -35,7 +36,7 @@ function AddAssignmentPageContent() {
 
 export default function AddAssignmentPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<Preloader />}>
             <AddAssignmentPageContent />
         </Suspense>
     )
