@@ -54,7 +54,7 @@ interface Student {
 
 
 const statusOptions: OrderStatus[] = ['pending', 'packed', 'handed over', 'delivered', 'returned', 'cancelled'];
-
+const ROWS_PER_PAGE = 10;
 
 export function OrdersList() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -69,6 +69,7 @@ export function OrdersList() {
     const [filterTrigger, setFilterTrigger] = useState(0);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
 
     useEffect(() => {
@@ -122,6 +123,7 @@ export function OrdersList() {
 
 
     const handleApplyFilters = () => {
+        setCurrentPage(1);
         setFilterTrigger(prev => prev + 1);
     };
 
@@ -146,6 +148,12 @@ export function OrdersList() {
     
     const StatusBadge = ({ status }: { status: OrderStatus}) => (
         <Badge variant={getStatusVariant(status)} className="capitalize">{status}</Badge>
+    );
+
+    const totalPages = Math.ceil(orders.length / ROWS_PER_PAGE);
+    const paginatedOrders = orders.slice(
+        (currentPage - 1) * ROWS_PER_PAGE,
+        currentPage * ROWS_PER_PAGE
     );
 
     return (
@@ -221,8 +229,8 @@ export function OrdersList() {
                                             </TableCell>
                                         </TableRow>
                                     ))
-                                ) : orders.length > 0 ? (
-                                    orders.map((order) => (
+                                ) : paginatedOrders.length > 0 ? (
+                                    paginatedOrders.map((order) => (
                                         <TableRow key={order.id}>
                                             <TableCell className="font-mono text-xs">#{order.id}</TableCell>
                                             <TableCell className="font-mono text-xs">{order.student_number}</TableCell>
@@ -253,6 +261,27 @@ export function OrdersList() {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+                     <div className="flex items-center justify-end space-x-2 py-4">
+                        <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        >
+                        Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                            Page {currentPage} of {totalPages > 0 ? totalPages : 1}
+                        </span>
+                        <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        >
+                        Next
+                        </Button>
                     </div>
                 </CardContent>
             </Card>
