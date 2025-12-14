@@ -69,9 +69,8 @@ export function FilteredPaymentRequestsList() {
     const [selectedCourse, setSelectedCourse] = useState('');
     const [selectedBucket, setSelectedBucket] = useState('all');
     const [selectedStudent, setSelectedStudent] = useState('all');
-    const [selectedStatus, setSelectedStatus] = useState<PaymentRequest['request_status'] | 'all'>('all');
-    const [filterTrigger, setFilterTrigger] = useState(0);
-
+    const [selectedStatus, setSelectedStatus] = useState<PaymentRequest['request_status'] | 'all'>('pending');
+    
     const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -159,18 +158,13 @@ export function FilteredPaymentRequestsList() {
 
     useEffect(() => {
         fetchFilters();
-    }, [toast]);
+        fetchPaymentRequests(); // Fetch on initial component mount
+    }, []);
     
-    useEffect(() => {
-        if (filterTrigger > 0) {
-            fetchPaymentRequests();
-        }
-    }, [toast, filterTrigger]);
-
 
     const handleApplyFilters = () => {
         setCurrentPage(1);
-        setFilterTrigger(prev => prev + 1);
+        fetchPaymentRequests();
     };
 
     const handleViewDetails = (req: PaymentRequest) => {
@@ -205,7 +199,7 @@ export function FilteredPaymentRequestsList() {
         setSelectedRequest(null);
     }
     
-    const hasAppliedFilters = filterTrigger > 0;
+    const hasAppliedFilters = requests.length > 0 || isLoading;
     
     const totalPages = Math.ceil(requests.length / ROWS_PER_PAGE);
     const paginatedRequests = requests.slice(
@@ -242,6 +236,7 @@ export function FilteredPaymentRequestsList() {
                                 <SelectValue placeholder="Select a course..." />
                             </SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="">All Courses</SelectItem>
                                 {courses.map(course => (
                                     <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
                                 ))}
@@ -496,3 +491,5 @@ export function FilteredPaymentRequestsList() {
         </>
     );
 }
+
+    
