@@ -118,8 +118,10 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         });
       }
     }
-    fetchInitialData();
-  }, [toast]);
+    if (isDialogMode) {
+      fetchInitialData();
+    }
+  }, [toast, isDialogMode]);
   
   useEffect(() => {
     if (paymentRequest) {
@@ -191,7 +193,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         });
       }
     } catch (error: any) {
-       if (error.response && error.response.data && error.response.data.message === "This payment slip (hash) has already been used for an approved payment.") {
+       if (error.response?.data?.message === "This payment slip (hash) has already been used for an approved payment.") {
          toast({
             variant: 'destructive',
             title: 'Duplicate Payment Slip',
