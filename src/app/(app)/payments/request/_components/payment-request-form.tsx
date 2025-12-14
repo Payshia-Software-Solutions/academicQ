@@ -29,8 +29,8 @@ const requestPaymentSchema = z.object({
   payment_amount: z.string().refine(val => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
     message: "Amount must be a positive number.",
   }),
-  bank: z.string().min(1, { message: "Bank name is required."}),
-  branch: z.string().min(1, { message: "Branch name is required."}),
+  bank: z.string().min(1, { message: "Bank is required."}),
+  branch: z.string().min(1, { message: "Branch is required."}),
   ref: z.string().min(1, { message: "Reference is required."}),
   payment_slip: z
     .any()
@@ -50,13 +50,32 @@ interface Bank {
     name: string;
 }
 
+interface Branch {
+    id: string;
+    branch_name: string;
+}
+
 export function PaymentRequestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const [banks, setBanks] = useState<Bank[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [isBranchesLoading, setIsBranchesLoading] = useState(false);
+
   const { toast } = useToast();
   const router = useRouter();
 
+  const form = useForm<RequestPaymentFormValues>({
+    resolver: zodResolver(requestPaymentSchema),
+    defaultValues: {
+        payment_amount: '',
+        bank: '',
+        branch: '',
+    }
+  });
+  
+  const selectedBankId = form.watch('bank');
+  
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -79,15 +98,35 @@ export function PaymentRequestForm() {
     }
     fetchBanks();
   }, [toast]);
-
-  const form = useForm<RequestPaymentFormValues>({
-    resolver: zodResolver(requestPaymentSchema),
-    defaultValues: {
-        payment_amount: '',
-        bank: '',
-    }
-  });
   
+  useEffect(() => {
+      if (!selectedBankId) {
+          setBranches([]);
+          form.setValue('branch', '');
+          return;
+      }
+      
+      async function fetchBranches() {
+          setIsBranchesLoading(true);
+          try {
+              const response = await api.get(`/bank_branches?bank_id=${selectedBankId}`);
+              if (response.data.status === 'success' && Array.isArray(response.data.data)) {
+                  setBranches(response.data.data);
+              } else {
+                  setBranches([]);
+              }
+          } catch(e) {
+              setBranches([]);
+              toast({ variant: 'destructive', title: 'Error fetching branches'});
+          } finally {
+              setIsBranchesLoading(false);
+          }
+      }
+      
+      fetchBranches();
+  }, [selectedBankId, form, toast]);
+
+
   const fileRef = form.register("payment_slip");
 
   const onSubmit = async (data: RequestPaymentFormValues) => {
@@ -105,10 +144,12 @@ export function PaymentRequestForm() {
 
     const formData = new FormData();
     
+    const selectedBank = banks.find(b => b.id === data.bank);
+    
     const paymentData = {
         student_number: user.student_number,
         payment_amount: data.payment_amount,
-        bank: data.bank,
+        bank: selectedBank?.name || data.bank,
         branch: data.branch,
         ref: data.ref,
         request_status: 'pending'
@@ -204,7 +245,7 @@ export function PaymentRequestForm() {
                                 </FormControl>
                                 <SelectContent>
                                     {banks.map(bank => (
-                                        <SelectItem key={bank.id} value={bank.name}>{bank.name}</SelectItem>
+                                        <SelectItem key={bank.id} value={bank.id}>{bank.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -220,10 +261,19 @@ export function PaymentRequestForm() {
                         <FormItem>
                           <FormLabel>Branch</FormLabel>
                            <div className="relative">
-                             <GitBranch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                             <FormControl>
-                                <Input placeholder="e.g. Main Street Branch" {...field} className="pl-8" />
-                             </FormControl>
+                             <GitBranch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                             <Select onValueChange={field.onChange} value={field.value} disabled={!selectedBankId || isBranchesLoading}>
+                                <FormControl>
+                                <SelectTrigger className="pl-8">
+                                    <SelectValue placeholder={isBranchesLoading ? "Loading..." : "Select a branch"} />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {branches.map(branch => (
+                                        <SelectItem key={branch.id} value={branch.branch_name}>{branch.branch_name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                            </div>
                           <FormMessage />
                         </FormItem>
