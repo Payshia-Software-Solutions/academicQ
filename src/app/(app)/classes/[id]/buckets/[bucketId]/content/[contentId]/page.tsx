@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -19,6 +20,7 @@ interface ContentDetails {
     content_type: string;
     content_title: string;
     content: string;
+    assignments: any[];
 }
 
 interface CurrentUser {
@@ -157,7 +159,7 @@ export default function ContentDetailsPage() {
                             )}
                             </>
                         ) : (
-                            <Preloader />
+                            <Preloader icon="book" />
                         )}
                         </div>
                 );
@@ -203,7 +205,7 @@ export default function ContentDetailsPage() {
     };
 
     if (isLoading) {
-        return <Preloader />;
+        return <Preloader icon="book" />;
     }
 
     if (!content) {
@@ -256,7 +258,25 @@ export default function ContentDetailsPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground text-center">No assignments yet.</p>
+                        {content.assignments && content.assignments.length > 0 ? (
+                             <ul className="space-y-2">
+                                {content.assignments.map((assignment: any) => (
+                                    <li key={assignment.id} className="border p-3 rounded-md flex justify-between items-center">
+                                        <div>
+                                            <p className="font-semibold">{assignment.content_title}</p>
+                                            <p className="text-xs text-muted-foreground">Deadline: {assignment.deadline_date ? format(new Date(assignment.deadline_date), 'PP') : 'N/A'}</p>
+                                        </div>
+                                        <Button variant="ghost" size="sm" asChild>
+                                            <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/assignments/${assignment.id}`}>
+                                                View
+                                            </Link>
+                                        </Button>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-muted-foreground text-center">No assignments yet.</p>
+                        )}
                     </CardContent>
                 </Card>
             )}

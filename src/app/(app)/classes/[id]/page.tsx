@@ -501,26 +501,20 @@ export default function ClassDetailsPage() {
                 )}
             </section>
             
-            <section>
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <CardTitle>All Assignments</CardTitle>
-                            {isAdmin && (
-                                <Button asChild variant="outline">
-                                    <Link href="/classes">
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Assignment
-                                    </Link>
-                                </Button>
-                            )}
-                        </div>
-                        <CardDescription>To add a new assignment, please navigate to the relevant content item within a payment bucket.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {allAssignments.length > 0 ? (
-                            <ul className="space-y-3">
-                                {allAssignments.map((assignment) => (
+            {allAssignments.length > 0 && (
+                <section>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>All Course Assignments</CardTitle>
+                             <Button asChild variant="outline" size="sm" className="w-fit">
+                                <Link href={`/classes/${course.id}/assignments`}>
+                                    View All
+                                </Link>
+                             </Button>
+                        </CardHeader>
+                        <CardContent>
+                             <ul className="space-y-3">
+                                {allAssignments.slice(0, 5).map((assignment) => (
                                     <li key={assignment.id}>
                                         <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
                                             <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -536,14 +530,10 @@ export default function ClassDetailsPage() {
                                     </li>
                                 ))}
                             </ul>
-                        ) : (
-                             <div className="text-center py-12 border-2 border-dashed rounded-lg">
-                                <p className="text-muted-foreground">No assignments found for this course.</p>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </section>
+                        </CardContent>
+                    </Card>
+                </section>
+            )}
         </>
       )}
     </div>
