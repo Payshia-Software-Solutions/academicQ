@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { BucketContentList } from './_components/bucket-content-list';
 import api from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Preloader } from '@/components/ui/preloader';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -22,7 +23,7 @@ interface Course {
 }
 interface Bucket {
   id: string;
-  bucket_name: string;
+  name: string;
   payment_amount: string;
 }
 
@@ -47,7 +48,7 @@ async function getBucketDetails(id: string): Promise<Bucket | null> {
     try {
         const response = await api.get(`/course_buckets/${id}`);
         if (!response.data || response.data.status !== 'success') return null;
-        return response.data.data;
+        return { ...response.data.data, name: response.data.data.bucket_name };
     } catch (error) {
         console.error("Failed to fetch bucket details:", error);
         return null;
@@ -102,7 +103,9 @@ function BucketContentPageContent() {
 
         setLoading(false);
     }
-    loadData();
+    if (courseId && bucketId) {
+      loadData();
+    }
   }, [courseId, bucketId]);
 
   const isAdmin = user?.user_status === 'admin';
@@ -121,7 +124,7 @@ function BucketContentPageContent() {
                      <Skeleton className="h-10 w-36" />
                 </div>
             </header>
-            <Skeleton className="h-96 w-full" />
+            <Preloader icon="book" />
         </div>
       )
   }
@@ -134,11 +137,11 @@ function BucketContentPageContent() {
             <ChevronRight className="h-4 w-4 mx-1" />
             <Link href={`/classes/${courseId}`} className="hover:underline">{course?.course_name || 'Course'}</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
-            <span className="truncate">{bucket?.bucket_name || 'Bucket'}</span>
+            <span className="truncate">{bucket?.name || 'Bucket'}</span>
         </div>
          <div className="flex items-center justify-between gap-4">
             <div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{bucket?.bucket_name}</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">{bucket?.name}</h1>
                 <p className="text-muted-foreground mt-1">Content available in this payment bucket.</p>
             </div>
             {isAdmin && (

@@ -505,12 +505,16 @@ export default function ClassDetailsPage() {
                 <section>
                     <Card>
                         <CardHeader>
-                            <CardTitle>All Course Assignments</CardTitle>
-                             <Button asChild variant="outline" size="sm" className="w-fit">
-                                <Link href={`/classes/${course.id}/assignments`}>
-                                    View All
-                                </Link>
-                             </Button>
+                            <div className="flex items-center justify-between">
+                                <CardTitle>All Course Assignments</CardTitle>
+                                {isAdmin && (
+                                     <Button asChild variant="outline" size="sm">
+                                        <Link href={`/classes/${course.id}/assignments`}>
+                                            View All
+                                        </Link>
+                                     </Button>
+                                )}
+                            </div>
                         </CardHeader>
                         <CardContent>
                              <ul className="space-y-3">
