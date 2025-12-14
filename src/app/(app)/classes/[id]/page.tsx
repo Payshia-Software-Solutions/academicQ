@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video, Edit, Trash2 } from "lucide-react";
+import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video, Edit, Trash2, Book } from "lucide-react";
 import { useEffect, useState, useMemo, useRef } from "react";
 import type { Plyr as PlyrInstance } from 'plyr';
 import dynamic from 'next/dynamic';
@@ -276,7 +276,7 @@ export default function ClassDetailsPage() {
 
 
     if (loading) {
-        return <Preloader />;
+        return <Preloader icon="book" />;
     }
 
   if (!course) {
@@ -357,12 +357,20 @@ export default function ClassDetailsPage() {
                 <p className="text-muted-foreground mt-1">{course.description}</p>
             </div>
             {isAdmin ? (
-                <Button asChild>
-                    <Link href={`/classes/${courseId}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Bucket
-                    </Link>
-                </Button>
+                 <div className="flex items-center gap-2">
+                    <Button asChild variant="outline">
+                         <Link href={`/classes/${courseId}/assignments`}>
+                            <Book className="mr-2 h-4 w-4" />
+                            View All Assignments
+                        </Link>
+                    </Button>
+                    <Button asChild>
+                        <Link href={`/classes/${courseId}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Bucket
+                        </Link>
+                    </Button>
+                </div>
             ) : (
                 renderEnrollmentButton()
             )}
