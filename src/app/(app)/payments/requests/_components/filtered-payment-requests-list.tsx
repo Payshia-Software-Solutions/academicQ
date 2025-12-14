@@ -59,7 +59,7 @@ const ROWS_PER_PAGE = 10;
 
 export function FilteredPaymentRequestsList() {
     const [requests, setRequests] = useState<PaymentRequest[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
     const [courses, setCourses] = useState<Course[]>([]);
@@ -71,6 +71,7 @@ export function FilteredPaymentRequestsList() {
     const [selectedStudent, setSelectedStudent] = useState('all');
     const [selectedStatus, setSelectedStatus] = useState<PaymentRequest['request_status'] | 'all'>('pending');
     
+    const [filterTrigger, setFilterTrigger] = useState(1);
     const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -133,7 +134,7 @@ export function FilteredPaymentRequestsList() {
         try {
             const params = new URLSearchParams();
             if (selectedStudent !== 'all') params.append('student_number', selectedStudent);
-            if (selectedCourse) params.append('course_id', selectedCourse);
+            if (selectedCourse && selectedCourse !== 'all') params.append('course_id', selectedCourse);
             if (selectedBucket && selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
             if (selectedStatus !== 'all') params.append('request_status', selectedStatus);
             
@@ -236,7 +237,7 @@ export function FilteredPaymentRequestsList() {
                                 <SelectValue placeholder="Select a course..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All Courses</SelectItem>
+                                <SelectItem value="all">All Courses</SelectItem>
                                 {courses.map(course => (
                                     <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
                                 ))}
@@ -491,5 +492,3 @@ export function FilteredPaymentRequestsList() {
         </>
     );
 }
-
-    
