@@ -20,6 +20,8 @@ import { Loader2, DollarSign, Info, Paperclip, Building, GitBranch } from 'lucid
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import type { DeliveryDetails } from '@/app/(app)/study-packs/[id]/bucket/[bucketId]/order/[contentId]/_components/item-order-form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
@@ -53,9 +55,15 @@ interface PaymentSlipUploadFormProps {
     orderableItemId?: string;
 }
 
+interface Bank {
+    id: string;
+    name: string;
+}
+
 export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSuccess, paymentType = 'course_fee', deliveryDetails, orderableItemId }: PaymentSlipUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<LoggedInUser | null>(null);
+  const [banks, setBanks] = useState<Bank[]>([]);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -64,7 +72,22 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
     if (storedUser) {
         setUser(JSON.parse(storedUser));
     }
-  }, []);
+     async function fetchBanks() {
+        try {
+            const response = await api.get('/banks');
+            if (response.data.status === 'success' && Array.isArray(response.data.data)) {
+                setBanks(response.data.data);
+            }
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Failed to load banks',
+                description: 'Could not fetch the list of banks.'
+            });
+        }
+    }
+    fetchBanks();
+  }, [toast]);
 
   const form = useForm<RequestPaymentFormValues>({
     resolver: zodResolver(requestPaymentSchema),
@@ -205,10 +228,19 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
                     <FormItem>
                         <FormLabel>Bank</FormLabel>
                         <div className="relative">
-                            <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <FormControl>
-                            <Input placeholder="e.g. ABC Bank" {...field} className="pl-8" />
-                            </FormControl>
+                            <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger className="pl-8">
+                                    <SelectValue placeholder="Select a bank" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {banks.map(bank => (
+                                        <SelectItem key={bank.id} value={bank.name}>{bank.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <FormMessage />
                     </FormItem>
