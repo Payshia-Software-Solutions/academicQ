@@ -2,22 +2,13 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Plus, DollarSign } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { BucketContentList } from './_components/bucket-content-list';
 import api from '@/lib/api';
-import { PaymentSlipUploadForm } from './_components/payment-slip-upload-form';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Preloader } from '@/components/ui/preloader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -118,7 +109,21 @@ function BucketContentPageContent() {
   const canViewContent = isAdmin || isPaid;
   
   if (loading) {
-      return <Preloader />;
+      return (
+        <div className="space-y-6">
+            <header>
+                <Skeleton className="h-6 w-1/3" />
+                <div className="flex items-center justify-between gap-4 mt-2">
+                    <div>
+                        <Skeleton className="h-10 w-64" />
+                        <Skeleton className="h-4 w-80 mt-2" />
+                    </div>
+                     <Skeleton className="h-10 w-36" />
+                </div>
+            </header>
+            <Skeleton className="h-96 w-full" />
+        </div>
+      )
   }
 
   return (
@@ -160,9 +165,5 @@ function BucketContentPageContent() {
 }
 
 export default function BucketContentPage() {
-    return (
-        <Suspense fallback={<Preloader />}>
-            <BucketContentPageContent />
-        </Suspense>
-    )
+    return <BucketContentPageContent />;
 }

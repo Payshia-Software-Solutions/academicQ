@@ -11,7 +11,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Preloader } from '@/components/ui/preloader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -63,7 +63,24 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <Preloader />
+    return (
+      <div className="space-y-4">
+        <header>
+          <Skeleton className="h-10 w-1/2" />
+          <Skeleton className="h-4 w-3/4 mt-2" />
+        </header>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-96 md:col-span-2" />
+          <Skeleton className="h-64 md:col-span-1" />
+        </div>
+      </div>
+    )
   }
 
   return (

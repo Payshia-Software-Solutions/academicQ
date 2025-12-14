@@ -4,7 +4,6 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { Suspense } from 'react';
 import { ItemOrderForm } from './_components/item-order-form';
 
 function OrderItemPageContent() {
@@ -34,9 +33,5 @@ function OrderItemPageContent() {
 }
 
 export default function OrderItemPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <OrderItemPageContent />
-        </Suspense>
-    )
+    return <OrderItemPageContent />;
 }

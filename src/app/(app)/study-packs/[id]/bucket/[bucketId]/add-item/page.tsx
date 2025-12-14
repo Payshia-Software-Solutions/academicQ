@@ -4,8 +4,7 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { AddItemForm } from './_components/add-item-form';
-import { useParams, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { useParams } from 'next/navigation';
 
 function AddItemPageContent() {
   const params = useParams();
@@ -34,9 +33,5 @@ function AddItemPageContent() {
 }
 
 export default function AddItemPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <AddItemPageContent />
-        </Suspense>
-    )
+    return <AddItemPageContent />;
 }

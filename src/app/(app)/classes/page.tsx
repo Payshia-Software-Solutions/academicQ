@@ -13,7 +13,7 @@ import api from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Preloader } from '@/components/ui/preloader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -212,7 +212,23 @@ export default function ClassesPage() {
 
 
   const renderLoadingSkeletons = () => (
-    <Preloader />
+     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <Card key={index} className="flex flex-col overflow-hidden">
+           <CardHeader className="p-0">
+              <Skeleton className="h-48 w-full" />
+            </CardHeader>
+            <CardContent className="p-6 flex-grow">
+              <Skeleton className="h-6 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-1/2 mt-1" />
+            </CardContent>
+            <CardFooter className="p-6 pt-0">
+                <Skeleton className="h-10 w-full" />
+            </CardFooter>
+        </Card>
+      ))}
+    </div>
   );
 
   return (

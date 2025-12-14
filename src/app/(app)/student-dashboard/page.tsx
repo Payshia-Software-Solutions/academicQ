@@ -11,7 +11,7 @@ import { ArrowRight, AlertCircle } from 'lucide-react';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Preloader } from '@/components/ui/preloader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -130,7 +130,21 @@ export default function StudentDashboardPage() {
       <section>
         <h2 className="text-xl font-bold mb-4">My Classes</h2>
         {loading ? (
-            <Preloader />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                 {Array.from({length: 4}).map((_, i) => (
+                    <Card key={i}>
+                        <CardHeader className="p-0"><Skeleton className="h-48 w-full rounded-t-lg"/></CardHeader>
+                        <CardContent className="p-4 space-y-2">
+                             <Skeleton className="h-6 w-3/4" />
+                             <Skeleton className="h-4 w-full" />
+                             <Skeleton className="h-4 w-1/2" />
+                        </CardContent>
+                        <CardFooter className="p-4">
+                            <Skeleton className="h-10 w-full" />
+                        </CardFooter>
+                    </Card>
+                 ))}
+            </div>
         ) : approvedCourses.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {approvedCourses.map((course) => (

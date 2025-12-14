@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import Link from 'next/link';
-import { Preloader } from '@/components/ui/preloader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 interface CurrentUser {
@@ -99,7 +99,39 @@ export default function MyProfilePage() {
   }, [router, toast]);
 
   if (loading) {
-    return <Preloader />;
+    return (
+        <div className="space-y-6">
+            <header>
+                <Skeleton className="h-10 w-48" />
+                <Skeleton className="h-4 w-72 mt-2" />
+            </header>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center gap-6">
+                        <Skeleton className="h-20 w-20 rounded-full" />
+                        <div className="space-y-2">
+                             <Skeleton className="h-8 w-64" />
+                             <Skeleton className="h-5 w-48" />
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div className="space-y-6">
+                        <Skeleton className="h-6 w-32 mb-2" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-6">
+                        <Skeleton className="h-6 w-32 mb-2" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
   }
 
   if (!user) {

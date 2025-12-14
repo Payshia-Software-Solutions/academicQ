@@ -10,7 +10,6 @@ import { ArrowRight, Package } from "lucide-react";
 import type { Class } from "@/lib/types";
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
@@ -196,4 +195,3 @@ export default function StudyPacksPage() {
     </div>
   );
 }
-

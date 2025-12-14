@@ -4,9 +4,7 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { AddContentForm } from './_components/add-content-form';
-import { useParams, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
-import { Preloader } from '@/components/ui/preloader';
+import { useParams } from 'next/navigation';
 
 function AddContentPageContent() {
   const params = useParams();
@@ -32,9 +30,5 @@ function AddContentPageContent() {
 }
 
 export default function AddContentPage() {
-    return (
-        <Suspense fallback={<Preloader />}>
-            <AddContentPageContent />
-        </Suspense>
-    )
+    return <AddContentPageContent />;
 }

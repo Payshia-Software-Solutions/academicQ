@@ -6,15 +6,12 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { EditClassForm } from './_components/edit-class-form';
 import { useParams } from 'next/navigation';
-import { Suspense } from 'react';
-import { Preloader } from '@/components/ui/preloader';
 
 export default function EditClassPage() {
     const params = useParams();
     const classId = params.id as string;
 
   return (
-    <Suspense fallback={<Preloader />}>
       <div className="space-y-6">
         <header>
           <div className="flex items-center text-sm text-muted-foreground mb-2 flex-wrap">
@@ -29,6 +26,5 @@ export default function EditClassPage() {
         <EditClassForm classId={classId} />
 
       </div>
-    </Suspense>
   );
 }

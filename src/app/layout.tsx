@@ -1,10 +1,8 @@
 
 import type {Metadata} from 'next';
-import { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { NProgressNext } from '@/components/ui/nprogress';
 import { ThemeProvider } from "@/components/theme-provider"
-import { Preloader } from '@/components/ui/preloader';
 import "plyr/dist/plyr.css";
 import './globals.css';
 
@@ -37,7 +35,7 @@ export default function RootLayout({
             disableTransitionOnChange
         >
           <NProgressNext />
-          <Suspense fallback={<Preloader />}>{children}</Suspense>
+          {children}
           <Toaster />
         </ThemeProvider>
       </body>

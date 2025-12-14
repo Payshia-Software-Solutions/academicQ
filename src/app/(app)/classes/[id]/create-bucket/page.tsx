@@ -7,7 +7,6 @@ import { ChevronRight } from 'lucide-react';
 import { CreateBucketForm } from './_components/create-bucket-form';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { Preloader } from '@/components/ui/preloader';
 
 function CreateBucketPageContent() {
   const searchParams = useSearchParams();
@@ -37,7 +36,7 @@ function CreateBucketPageContent() {
 
 export default function CreateBucketPage() {
     return (
-        <Suspense fallback={<Preloader />}>
+        <Suspense>
             <CreateBucketPageContent />
         </Suspense>
     )

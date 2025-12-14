@@ -16,10 +16,12 @@ import { format } from 'date-fns';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentRequestsList } from './_components/payment-requests-list';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type PaymentStatus = "All" | "Paid" | "Pending";
 
-export default function PaymentsPage() {
+function PaymentsPageContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus>('All');
 
@@ -237,4 +239,10 @@ export default function PaymentsPage() {
   );
 }
 
-    
+export default function PaymentsPage() {
+    return (
+        <Suspense fallback={<Skeleton className="h-[500px] w-full" />}>
+            <PaymentsPageContent />
+        </Suspense>
+    )
+}

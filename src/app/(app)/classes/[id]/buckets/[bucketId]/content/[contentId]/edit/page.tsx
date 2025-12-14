@@ -5,12 +5,10 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { EditContentForm } from './_components/edit-content-form';
 import { useParams } from 'next/navigation';
-import { Suspense } from 'react';
-import { Preloader } from '@/components/ui/preloader';
 
 function EditContentPageContent() {
   const params = useParams();
-  const { id: courseId, bucketId, contentId } = params;
+  const { id: courseId, bucketId } = params;
 
   return (
     <div className="space-y-6">
@@ -34,9 +32,5 @@ function EditContentPageContent() {
 }
 
 export default function EditContentPage() {
-    return (
-        <Suspense fallback={<Preloader />}>
-            <EditContentPageContent />
-        </Suspense>
-    )
+    return <EditContentPageContent />;
 }
