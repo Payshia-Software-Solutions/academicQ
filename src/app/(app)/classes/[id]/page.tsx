@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video, Edit, Trash2, Book } from "lucide-react";
+import { ChevronRight, Plus, Folder, List, FileText, Clock, Loader2, Video, Edit, Trash2, Book, Eye } from "lucide-react";
 import { useEffect, useState, useMemo, useRef } from "react";
 import type { Plyr as PlyrInstance } from 'plyr';
 import dynamic from 'next/dynamic';
@@ -31,6 +31,7 @@ interface Content {
     id: string;
     content_title: string;
     content_type: string;
+    content_id: string;
 }
 
 interface Assignment {
@@ -38,6 +39,9 @@ interface Assignment {
     content_title: string;
     content_type: string;
     submition_count?: string;
+    courseId: string;
+    bucketId: string;
+    contentId: string;
 }
 
 interface Bucket {
@@ -131,8 +135,15 @@ export default function ClassDetailsPage() {
     const videoId = useMemo(() => getYouTubeId(course?.intro_url || ''), [course?.intro_url]);
 
     const allAssignments = useMemo(() => {
-        return buckets.flatMap(bucket => bucket.assignments || []);
-    }, [buckets]);
+        return buckets.flatMap(bucket => 
+            (bucket.assignments || []).map(assignment => ({
+                ...assignment,
+                courseId: courseId,
+                bucketId: bucket.id,
+                contentId: (bucket.contents.find(c => c.id === (assignment as any).content_id)?.id) || ''
+            }))
+        );
+    }, [buckets, courseId]);
 
 
     useEffect(() => {
@@ -276,7 +287,7 @@ export default function ClassDetailsPage() {
 
 
     if (loading) {
-        return <Preloader />;
+        return <Preloader icon="book" />;
     }
 
   if (!course) {
@@ -528,17 +539,22 @@ export default function ClassDetailsPage() {
                              <ul className="space-y-3">
                                 {allAssignments.slice(0, 5).map((assignment) => (
                                     <li key={assignment.id}>
-                                        <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
-                                            <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                <div className="p-2 bg-accent/10 rounded-lg">
-                                                    <FileText className="h-5 w-5 text-accent" />
+                                         <Link href={`/classes/${assignment.courseId}/buckets/${assignment.bucketId}/content/${assignment.contentId}/assignments/${assignment.id}`}>
+                                            <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
+                                                <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                    <div className="p-2 bg-accent/10 rounded-lg">
+                                                        <FileText className="h-5 w-5 text-accent" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-semibold truncate">{assignment.content_title}</p>
+                                                        <Badge variant="outline" className="capitalize mt-1">{assignment.content_type}</Badge>
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-semibold truncate">{assignment.content_title}</p>
-                                                    <Badge variant="outline" className="capitalize mt-1">{assignment.content_type}</Badge>
-                                                </div>
+                                                <Button variant="ghost" size="sm">
+                                                    View <Eye className="ml-2 h-4 w-4" />
+                                                </Button>
                                             </div>
-                                        </div>
+                                        </Link>
                                     </li>
                                 ))}
                             </ul>
