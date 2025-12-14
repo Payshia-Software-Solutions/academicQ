@@ -118,11 +118,8 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         });
       }
     }
-    // Only fetch if not in dialog mode, or if in dialog mode and data is not already present
-    if (!isDialogMode || (isDialogMode && (courses.length === 0 || students.length === 0))) {
-        fetchInitialData();
-    }
-  }, [toast, isDialogMode, courses.length, students.length]);
+    fetchInitialData();
+  }, [toast]);
   
   useEffect(() => {
     if (paymentRequest) {
@@ -232,7 +229,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
                       </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                      {students.map(student => (
+                      {students.filter(student => student && student.id).map(student => (
                           <SelectItem key={student.id} value={student.student_number}>
                           {student.name} ({student.student_number})
                           </SelectItem>
@@ -257,7 +254,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
                       </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                      {courses.map(course => (
+                      {courses.filter(course => course && course.id).map(course => (
                           <SelectItem key={course.id} value={course.id}>
                           {course.course_name}
                           </SelectItem>
@@ -282,7 +279,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
                       </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                      {buckets.map(bucket => (
+                      {buckets.filter(bucket => bucket && bucket.id).map(bucket => (
                           <SelectItem key={bucket.id} value={bucket.id}>
                           {bucket.name || bucket.bucket_name}
                           </SelectItem>
@@ -397,5 +394,3 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
     </Form>
   );
 }
-
-    
