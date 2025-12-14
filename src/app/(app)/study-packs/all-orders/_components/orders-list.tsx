@@ -100,8 +100,8 @@ export function OrdersList() {
                 if (selectedStatus !== 'all') params.append('order_status', selectedStatus);
 
                 const response = await api.get(`/student-orders/records/filter/?${params.toString()}`);
-                if (Array.isArray(response.data)) {
-                    setOrders(response.data);
+                if (response.data.status === 'success' && Array.isArray(response.data.data)) {
+                    setOrders(response.data.data);
                 } else {
                     setOrders([]);
                 }
