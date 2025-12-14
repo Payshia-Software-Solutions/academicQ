@@ -47,7 +47,7 @@ interface Assignment {
 
 interface Bucket {
   id: string;
-  bucket_name: string;
+  name: string;
   description: string;
   payment_amount: string;
   payment_type: string;
@@ -288,7 +288,7 @@ export default function ClassDetailsPage() {
 
 
     if (loading) {
-        return <Preloader icon="book" />;
+        return <Preloader />;
     }
 
   if (!course) {
@@ -422,7 +422,7 @@ export default function ClassDetailsPage() {
                 <h2 className="text-xl font-bold mb-4">Payment Buckets</h2>
                 {buckets.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {buckets.map((bucket: any) => {
+                            {(buckets as any[]).map((bucket) => {
                             const totalContent = bucket.contents?.length || 0;
                             const totalAssignments = bucket.assignments?.length || 0;
                             
@@ -445,7 +445,7 @@ export default function ClassDetailsPage() {
                                         </div>
                                     </CardHeader>
                                     <CardContent className="flex-grow">
-                                        <h3 className="font-semibold text-lg truncate group-hover:text-primary">{bucket.bucket_name}</h3>
+                                        <h3 className="font-semibold text-lg truncate group-hover:text-primary">{bucket.name}</h3>
                                         <p className="text-sm text-muted-foreground line-clamp-2">{bucket.description}</p>
                                     </CardContent>
                                     <CardFooter className="flex-col items-start text-xs text-muted-foreground">
@@ -482,7 +482,7 @@ export default function ClassDetailsPage() {
                                                         <AlertDialogHeader>
                                                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                                             <AlertDialogDescription>
-                                                                This action cannot be undone. This will permanently delete the bucket "{bucket.bucket_name}".
+                                                                This action cannot be undone. This will permanently delete the bucket "{bucket.name}".
                                                             </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>
@@ -527,7 +527,7 @@ export default function ClassDetailsPage() {
                                             </Link>
                                         </Button>
                                          <Button asChild size="sm">
-                                            <Link href={`/classes`}>
+                                            <Link href={`/classes/${course.id}/assignments`}>
                                                 <Plus className="mr-2 h-4 w-4" />
                                                 Add Assignment
                                             </Link>
