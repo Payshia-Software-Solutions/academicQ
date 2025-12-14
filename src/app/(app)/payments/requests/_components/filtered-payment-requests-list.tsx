@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw, Package, CreditCard, Hash } from 'lucide-react';
+import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw, Package, CreditCard, Hash, DollarSign, AlertCircle, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { CoursePaymentForm } from '../../course-payment/_components/course-payment-form';
 
@@ -66,7 +66,7 @@ export function FilteredPaymentRequestsList() {
     const [buckets, setBuckets] = useState<Bucket[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
 
-    const [selectedCourse, setSelectedCourse] = useState('');
+    const [selectedCourse, setSelectedCourse] = useState('all');
     const [selectedBucket, setSelectedBucket] = useState('all');
     const [selectedStudent, setSelectedStudent] = useState('all');
     const [selectedStatus, setSelectedStatus] = useState<PaymentRequest['request_status'] | 'all'>('pending');
@@ -104,7 +104,7 @@ export function FilteredPaymentRequestsList() {
     };
     
     useEffect(() => {
-        if (!selectedCourse) {
+        if (!selectedCourse || selectedCourse === 'all') {
             setBuckets([]);
             setSelectedBucket('all');
             return;
@@ -159,7 +159,7 @@ export function FilteredPaymentRequestsList() {
 
     useEffect(() => {
         fetchFilters();
-        fetchPaymentRequests(); // Fetch on initial component mount
+        fetchPaymentRequests(); 
     }, []);
     
 
@@ -167,6 +167,22 @@ export function FilteredPaymentRequestsList() {
         setCurrentPage(1);
         fetchPaymentRequests();
     };
+    
+    const summary = useMemo(() => {
+        return requests.reduce((acc, req) => {
+            const amount = parseFloat(req.payment_amount) || 0;
+            if (req.request_status === 'pending') {
+                acc.pendingAmount += amount;
+                acc.pendingCount += 1;
+            } else if (req.request_status === 'approved') {
+                acc.approvedAmount += amount;
+            } else if (req.request_status === 'rejected') {
+                acc.rejectedAmount += amount;
+            }
+            return acc;
+        }, { pendingAmount: 0, approvedAmount: 0, rejectedAmount: 0, pendingCount: 0 });
+    }, [requests]);
+
 
     const handleViewDetails = (req: PaymentRequest) => {
         setSelectedRequest(req);
@@ -210,6 +226,45 @@ export function FilteredPaymentRequestsList() {
 
     return (
         <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Pending Amount</CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">${summary.pendingAmount.toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Pending Count</CardTitle>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{summary.pendingCount}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Approved Amount</CardTitle>
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">${summary.approvedAmount.toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Rejected Amount</CardTitle>
+                        <AlertCircle className="h-4 w-4 text-destructive" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">${summary.rejectedAmount.toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+            </div>
+
             <Card>
                 <CardHeader>
                     <CardTitle>Filter Requests</CardTitle>
@@ -243,10 +298,10 @@ export function FilteredPaymentRequestsList() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0 || !selectedCourse}>
+                        <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0 || !selectedCourse || selectedCourse === 'all'}>
                             <SelectTrigger>
                                 <Inbox className="mr-2 h-4 w-4" />
-                                <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
+                                <SelectValue placeholder={!selectedCourse || selectedCourse === 'all' ? 'Select course first' : 'Select a bucket...'} />
                             </SelectTrigger>
                             <SelectContent>
                                  <SelectItem value="all">All Buckets</SelectItem>
