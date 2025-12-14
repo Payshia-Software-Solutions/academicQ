@@ -191,13 +191,21 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         });
       }
     } catch (error: any) {
-       toast({
-        variant: 'destructive',
-        title: 'Submission Error',
-        description:
-          error.response?.data?.message ||
-          'Could not connect to the server. Please try again later.',
-      });
+      if (error.response && error.response.data && error.response.data.message === "This payment slip (hash) has already been used for an approved payment.") {
+         toast({
+            variant: 'destructive',
+            title: 'Duplicate Payment Slip',
+            description: "This payment slip has already been used. Please use a different one.",
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Submission Error',
+          description:
+            error.response?.data?.message ||
+            'Could not connect to the server. Please try again later.',
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -212,7 +220,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
               render={({ field }) => (
                   <FormItem>
                   <FormLabel>Student</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isDialogMode}>
+                   <Select onValueChange={field.onChange} value={field.value} disabled={isDialogMode}>
                       <FormControl>
                       <SelectTrigger>
                           <Users className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -237,7 +245,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
               render={({ field }) => (
                   <FormItem>
                   <FormLabel>Course</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isDialogMode}>
+                   <Select onValueChange={field.onChange} value={field.value} disabled={isDialogMode}>
                       <FormControl>
                       <SelectTrigger>
                           <BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -262,7 +270,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
               render={({ field }) => (
                   <FormItem>
                   <FormLabel>Payment Bucket</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isDialogMode || !selectedCourseId || buckets.length === 0}>
+                   <Select onValueChange={field.onChange} value={field.value} disabled={isDialogMode || !selectedCourseId || buckets.length === 0}>
                       <FormControl>
                       <SelectTrigger>
                           <Inbox className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -385,5 +393,3 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
     </Form>
   );
 }
-
-    
