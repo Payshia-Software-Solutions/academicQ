@@ -53,6 +53,7 @@ interface Assignment {
 }
 
 const statusOptions: Submission['sub_status'][] = ['submitted', 'graded', 'rejected'];
+const ROWS_PER_PAGE = 10;
 
 
 export function SubmissionsList() {
@@ -73,6 +74,7 @@ export function SubmissionsList() {
     const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
     const [currentGrade, setCurrentGrade] = useState('');
     const [updatingGrade, setUpdatingGrade] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
 
     useEffect(() => {
@@ -266,6 +268,12 @@ export function SubmissionsList() {
             <Badge variant={currentStatus.variant as any} className="capitalize">{currentStatus.text}</Badge>
         )
     };
+    
+    const totalPages = Math.ceil(submissions.length / ROWS_PER_PAGE);
+    const paginatedSubmissions = submissions.slice(
+        (currentPage - 1) * ROWS_PER_PAGE,
+        currentPage * ROWS_PER_PAGE
+    );
 
     return (
         <Card>
@@ -346,8 +354,8 @@ export function SubmissionsList() {
                                         </TableCell>
                                     </TableRow>
                                 ))
-                            ) : submissions.length > 0 ? (
-                                submissions.map((sub) => (
+                            ) : paginatedSubmissions.length > 0 ? (
+                                paginatedSubmissions.map((sub) => (
                                     <TableRow key={sub.id}>
                                         <TableCell>
                                             <div className="font-medium">{getStudentName(sub.student_number)}</div>
@@ -447,6 +455,27 @@ export function SubmissionsList() {
                         </TableBody>
                     </Table>
                  </div>
+                 <div className="flex items-center justify-end space-x-2 py-4">
+                    <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    >
+                    Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                        Page {currentPage} of {totalPages > 0 ? totalPages : 1}
+                    </span>
+                    <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    >
+                    Next
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     );
