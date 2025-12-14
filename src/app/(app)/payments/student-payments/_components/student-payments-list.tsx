@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookOpen, Inbox, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface StudentPayment {
     id: string;
@@ -41,6 +42,8 @@ interface Student {
   l_name: string;
 }
 
+const ROWS_PER_PAGE = 10;
+
 export function StudentPaymentsList() {
     const [payments, setPayments] = useState<StudentPayment[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -53,6 +56,8 @@ export function StudentPaymentsList() {
     const [selectedCourse, setSelectedCourse] = useState('');
     const [selectedBucket, setSelectedBucket] = useState('');
     const [selectedStudent, setSelectedStudent] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
+
 
     useEffect(() => {
         async function fetchFilters() {
@@ -124,10 +129,17 @@ export function StudentPaymentsList() {
                 });
             } finally {
                 setIsLoading(false);
+                setCurrentPage(1);
             }
         };
         fetchPayments();
     }, [toast, selectedCourse, selectedBucket, selectedStudent]);
+
+    const totalPages = Math.ceil(payments.length / ROWS_PER_PAGE);
+    const paginatedPayments = payments.slice(
+        (currentPage - 1) * ROWS_PER_PAGE,
+        currentPage * ROWS_PER_PAGE
+    );
 
     return (
         <Card>
@@ -196,8 +208,8 @@ export function StudentPaymentsList() {
                                         </TableCell>
                                     </TableRow>
                                 ))
-                            ) : payments.length > 0 ? (
-                                payments.map((payment) => (
+                            ) : paginatedPayments.length > 0 ? (
+                                paginatedPayments.map((payment) => (
                                     <TableRow key={payment.id}>
                                         <TableCell className="font-mono text-xs">#{payment.id}</TableCell>
                                         <TableCell>{payment.student_number}</TableCell>
@@ -217,6 +229,27 @@ export function StudentPaymentsList() {
                             )}
                         </TableBody>
                     </Table>
+                </div>
+                 <div className="flex items-center justify-end space-x-2 py-4">
+                    <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    >
+                    Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                        Page {currentPage} of {totalPages > 0 ? totalPages : 1}
+                    </span>
+                    <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    >
+                    Next
+                    </Button>
                 </div>
             </CardContent>
         </Card>
