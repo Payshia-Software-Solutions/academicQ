@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import api from '@/lib/api';
@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Users } from 'lucide-react';
+import { BookOpen, Inbox, Users, DollarSign, Percent, BadgeCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface StudentPayment {
@@ -23,6 +23,7 @@ interface StudentPayment {
     created_at: string;
     course_name: string | null;
     course_bucket_name: string | null;
+    hash?: string;
 }
 
 interface Course {
@@ -135,6 +136,19 @@ export function StudentPaymentsList() {
         fetchPayments();
     }, [toast, selectedCourse, selectedBucket, selectedStudent]);
 
+    const { totalAmount, totalDiscount, finalAmount } = useMemo(() => {
+        const totals = payments.reduce((acc, payment) => {
+            acc.totalAmount += parseFloat(payment.payment_amount) || 0;
+            acc.totalDiscount += parseFloat(payment.discount_amount || '0') || 0;
+            return acc;
+        }, { totalAmount: 0, totalDiscount: 0 });
+
+        return {
+            ...totals,
+            finalAmount: totals.totalAmount - totals.totalDiscount
+        };
+    }, [payments]);
+
     const totalPages = Math.ceil(payments.length / ROWS_PER_PAGE);
     const paginatedPayments = payments.slice(
         (currentPage - 1) * ROWS_PER_PAGE,
@@ -142,116 +156,149 @@ export function StudentPaymentsList() {
     );
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Filter Payments</CardTitle>
-                <CardDescription>
-                    Use the dropdowns to filter student payment records.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                        <SelectTrigger>
-                            <Users className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Filter by student..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Students</SelectItem>
-                            {students.map(student => (
-                                <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-                        <SelectTrigger>
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Select a course..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {courses.map(course => (
-                                <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                    <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0 || !selectedCourse}>
-                        <SelectTrigger>
-                            <Inbox className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {buckets.map(bucket => (
-                                <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Payment ID</TableHead>
-                                <TableHead>Student No.</TableHead>
-                                <TableHead>Course</TableHead>
-                                <TableHead>Bucket</TableHead>
-                                <TableHead className="text-right">Amount</TableHead>
-                                <TableHead className="text-right">Discount</TableHead>
-                                <TableHead>Date</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                Array.from({ length: 5 }).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell colSpan={7}>
-                                            <Skeleton className="h-8 w-full" />
+        <div className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-3">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">${totalAmount.toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Discount</CardTitle>
+                        <Percent className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">${totalDiscount.toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Final Amount</CardTitle>
+                        <BadgeCheck className="h-4 w-4 text-green-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">${finalAmount.toFixed(2)}</div>
+                    </CardContent>
+                </Card>
+            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Filter Payments</CardTitle>
+                    <CardDescription>
+                        Use the dropdowns to filter student payment records.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                            <SelectTrigger>
+                                <Users className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Filter by student..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Students</SelectItem>
+                                {students.map(student => (
+                                    <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                            <SelectTrigger>
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Select a course..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {courses.map(course => (
+                                    <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0 || !selectedCourse}>
+                            <SelectTrigger>
+                                <Inbox className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {buckets.map(bucket => (
+                                    <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Payment ID</TableHead>
+                                    <TableHead>Student No.</TableHead>
+                                    <TableHead>Course</TableHead>
+                                    <TableHead>Bucket</TableHead>
+                                    <TableHead>Hash</TableHead>
+                                    <TableHead className="text-right">Amount</TableHead>
+                                    <TableHead className="text-right">Discount</TableHead>
+                                    <TableHead>Date</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell colSpan={8}>
+                                                <Skeleton className="h-8 w-full" />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : paginatedPayments.length > 0 ? (
+                                    paginatedPayments.map((payment) => (
+                                        <TableRow key={payment.id}>
+                                            <TableCell className="font-mono text-xs">#{payment.id}</TableCell>
+                                            <TableCell>{payment.student_number}</TableCell>
+                                            <TableCell>{payment.course_name || 'N/A'}</TableCell>
+                                            <TableCell>{payment.course_bucket_name || 'N/A'}</TableCell>
+                                            <TableCell className="font-mono text-xs truncate" style={{ maxWidth: '100px' }}>{payment.hash || 'N/A'}</TableCell>
+                                            <TableCell className="text-right font-semibold">${parseFloat(payment.payment_amount).toFixed(2)}</TableCell>
+                                            <TableCell className="text-right text-green-600">${parseFloat(payment.discount_amount || '0').toFixed(2)}</TableCell>
+                                            <TableCell className="text-xs">{format(new Date(payment.created_at), 'PP p')}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                                        {selectedCourse && selectedBucket ? 'No payments found for the selected filters.' : 'Please select a course and bucket to view payments.'}
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            ) : paginatedPayments.length > 0 ? (
-                                paginatedPayments.map((payment) => (
-                                    <TableRow key={payment.id}>
-                                        <TableCell className="font-mono text-xs">#{payment.id}</TableCell>
-                                        <TableCell>{payment.student_number}</TableCell>
-                                        <TableCell>{payment.course_name || 'N/A'}</TableCell>
-                                        <TableCell>{payment.course_bucket_name || 'N/A'}</TableCell>
-                                        <TableCell className="text-right font-semibold">${parseFloat(payment.payment_amount).toFixed(2)}</TableCell>
-                                        <TableCell className="text-right text-green-600">${parseFloat(payment.discount_amount || '0').toFixed(2)}</TableCell>
-                                        <TableCell className="text-xs">{format(new Date(payment.created_at), 'PP p')}</TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
-                                    {selectedCourse && selectedBucket ? 'No payments found for the selected filters.' : 'Please select a course and bucket to view payments.'}
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-                 <div className="flex items-center justify-end space-x-2 py-4">
-                    <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    >
-                    Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                        Page {currentPage} of {totalPages > 0 ? totalPages : 1}
-                    </span>
-                    <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    >
-                    Next
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <div className="flex items-center justify-end space-x-2 py-4">
+                        <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        >
+                        Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                            Page {currentPage} of {totalPages > 0 ? totalPages : 1}
+                        </span>
+                        <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        >
+                        Next
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
     );
 }
