@@ -42,6 +42,7 @@ interface Assignment {
     courseId: string;
     bucketId: string;
     contentId: string;
+    content_id?: string;
 }
 
 interface Bucket {
@@ -140,7 +141,7 @@ export default function ClassDetailsPage() {
                 ...assignment,
                 courseId: courseId,
                 bucketId: bucket.id,
-                contentId: (bucket.contents.find(c => c.id === (assignment as any).content_id)?.id) || ''
+                contentId: assignment.content_id || ''
             }))
         );
     }, [buckets, courseId]);
@@ -526,7 +527,7 @@ export default function ClassDetailsPage() {
                                             </Link>
                                         </Button>
                                          <Button asChild size="sm">
-                                            <Link href={`/classes/${course.id}/assignments`}>
+                                            <Link href={`/classes`}>
                                                 <Plus className="mr-2 h-4 w-4" />
                                                 Add Assignment
                                             </Link>
