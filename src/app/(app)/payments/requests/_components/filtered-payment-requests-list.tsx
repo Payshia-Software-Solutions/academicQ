@@ -67,7 +67,7 @@ export function FilteredPaymentRequestsList() {
     const [students, setStudents] = useState<Student[]>([]);
 
     const [selectedCourse, setSelectedCourse] = useState('');
-    const [selectedBucket, setSelectedBucket] = useState('');
+    const [selectedBucket, setSelectedBucket] = useState('all');
     const [selectedStudent, setSelectedStudent] = useState('all');
     const [selectedStatus, setSelectedStatus] = useState<PaymentRequest['request_status'] | 'all'>('all');
     const [filterTrigger, setFilterTrigger] = useState(0);
@@ -106,7 +106,7 @@ export function FilteredPaymentRequestsList() {
     useEffect(() => {
         if (!selectedCourse) {
             setBuckets([]);
-            setSelectedBucket('');
+            setSelectedBucket('all');
             return;
         }
 
@@ -122,24 +122,20 @@ export function FilteredPaymentRequestsList() {
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not load buckets for the selected course.'});
                 setBuckets([]);
             } finally {
-                setSelectedBucket('');
+                setSelectedBucket('all');
             }
         }
         fetchBucketsForCourse();
     }, [selectedCourse, toast]);
     
     const fetchPaymentRequests = async () => {
-        if (!selectedCourse || !selectedBucket) {
-            setRequests([]);
-            setIsLoading(false);
-            return;
-        }
+        
         setIsLoading(true);
         try {
             const params = new URLSearchParams();
             if (selectedStudent !== 'all') params.append('student_number', selectedStudent);
             if (selectedCourse) params.append('course_id', selectedCourse);
-            if (selectedBucket) params.append('course_bucket_id', selectedBucket);
+            if (selectedBucket && selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
             if (selectedStatus !== 'all') params.append('request_status', selectedStatus);
             
             const response = await api.get(`/payment_requests/filter/?${params.toString()}`);
@@ -173,14 +169,7 @@ export function FilteredPaymentRequestsList() {
 
 
     const handleApplyFilters = () => {
-        if (!selectedCourse || !selectedBucket) {
-            toast({
-                variant: 'destructive',
-                title: 'Filter Requirement',
-                description: 'Please select both a course and a bucket to apply filters.',
-            });
-            return;
-        }
+        setCurrentPage(1);
         setFilterTrigger(prev => prev + 1);
     };
 
@@ -264,6 +253,7 @@ export function FilteredPaymentRequestsList() {
                                 <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
                             </SelectTrigger>
                             <SelectContent>
+                                 <SelectItem value="all">All Buckets</SelectItem>
                                 {buckets.map(bucket => (
                                     <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
                                 ))}
@@ -321,7 +311,7 @@ export function FilteredPaymentRequestsList() {
                             ))
                          ) : (
                              <p className="text-center text-muted-foreground py-10">
-                                {hasAppliedFilters ? 'No requests found for the selected filters.' : 'Please select a course and bucket, then click "Apply Filters".'}
+                                {hasAppliedFilters ? 'No requests found for the selected filters.' : 'Please apply filters to see results.'}
                              </p>
                          )}
                     </div>
@@ -374,7 +364,7 @@ export function FilteredPaymentRequestsList() {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={9} className="text-center h-24 text-muted-foreground">
-                                        {hasAppliedFilters ? 'No payment requests found for the selected filters.' : 'Please select a course and bucket to view requests.'}
+                                        {hasAppliedFilters ? 'No payment requests found for the selected filters.' : 'Please apply filters to see results.'}
                                         </TableCell>
                                     </TableRow>
                                 )}
