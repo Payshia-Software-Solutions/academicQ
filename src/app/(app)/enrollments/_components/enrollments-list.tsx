@@ -25,6 +25,7 @@ interface Enrollment {
 }
 
 const statusOptions: Enrollment['status'][] = ['pending', 'approved', 'rejected'];
+const ROWS_PER_PAGE = 10;
 
 export function EnrollmentsList() {
     const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -35,6 +36,7 @@ export function EnrollmentsList() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
     const [targetStatus, setTargetStatus] = useState<Enrollment['status'] | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
 
     useEffect(() => {
@@ -122,6 +124,12 @@ export function EnrollmentsList() {
         )
     };
 
+    const totalPages = Math.ceil(enrollments.length / ROWS_PER_PAGE);
+    const paginatedEnrollments = enrollments.slice(
+        (currentPage - 1) * ROWS_PER_PAGE,
+        currentPage * ROWS_PER_PAGE
+    );
+
 
     return (
         <>
@@ -153,8 +161,8 @@ export function EnrollmentsList() {
                                         </TableCell>
                                     </TableRow>
                                 ))
-                            ) : enrollments.length > 0 ? (
-                                enrollments.map((req) => (
+                            ) : paginatedEnrollments.length > 0 ? (
+                                paginatedEnrollments.map((req) => (
                                     <TableRow key={req.id}>
                                         <TableCell className="font-mono text-xs">#{req.id}</TableCell>
                                         <TableCell>{req.student_id}</TableCell>
@@ -197,6 +205,27 @@ export function EnrollmentsList() {
                         </TableBody>
                     </Table>
                  </div>
+                 <div className="flex items-center justify-end space-x-2 py-4">
+                    <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    >
+                    Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                        Page {currentPage} of {totalPages > 0 ? totalPages : 1}
+                    </span>
+                    <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    >
+                    Next
+                    </Button>
+                </div>
             </CardContent>
         </Card>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
