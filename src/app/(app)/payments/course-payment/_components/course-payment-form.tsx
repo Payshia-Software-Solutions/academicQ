@@ -53,7 +53,9 @@ interface Bucket {
 interface Student {
   id: string;
   student_number: string;
-  name: string;
+  name?: string;
+  f_name: string;
+  l_name: string;
 }
 
 interface PaymentRequest {
@@ -98,15 +100,16 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
 
   useEffect(() => {
     async function fetchInitialData() {
-      if (isDialogMode) return;
       try {
         const [coursesRes, studentsRes] = await Promise.all([
           api.get('/courses'),
-          api.get('/users'),
+          api.get('/users?status=student'),
         ]);
-        setCourses(coursesRes.data.records || []);
+        setCourses(coursesRes.data.data || []);
         
-        setStudents(studentsRes.data.records.filter((u: any) => u.user_status === 'student' && u.student_number) || []);
+        const studentData = studentsRes.data.data.map((s: any) => ({...s, name: `${s.f_name} ${s.l_name}`}));
+        setStudents(studentData || []);
+
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -116,7 +119,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
       }
     }
     fetchInitialData();
-  }, [toast, isDialogMode]);
+  }, [toast]);
   
   useEffect(() => {
     if (paymentRequest) {
@@ -165,6 +168,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
       course_id: parseInt(data.course_id),
       course_bucket_id: parseInt(data.course_bucket_id),
       payment_request_id: data.payment_request_id || null,
+      hash: data.hash || null,
     }
 
     try {
@@ -288,7 +292,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
                         <div className="relative">
                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <FormControl>
-                            <Input type="number" step="0.01" placeholder="e.g. 25000.00" {...field} className="pl-8" disabled={isDialogMode}/>
+                            <Input type="number" step="0.01" placeholder="e.g. 25000.00" {...field} className="pl-8" />
                             </FormControl>
                         </div>
                         <FormMessage />
@@ -381,3 +385,5 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
     </Form>
   );
 }
+
+    
