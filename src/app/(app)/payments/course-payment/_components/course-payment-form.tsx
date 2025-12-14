@@ -118,10 +118,11 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         });
       }
     }
-    if (isDialogMode) {
-      fetchInitialData();
+    // Only fetch if not in dialog mode, or if in dialog mode and data is not already present
+    if (!isDialogMode || (isDialogMode && (courses.length === 0 || students.length === 0))) {
+        fetchInitialData();
     }
-  }, [toast, isDialogMode]);
+  }, [toast, isDialogMode, courses.length, students.length]);
   
   useEffect(() => {
     if (paymentRequest) {
@@ -193,18 +194,19 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         });
       }
     } catch (error: any) {
-       if (error.response?.data?.message === "This payment slip (hash) has already been used for an approved payment.") {
+       const errorMessage = error.response?.data?.message;
+       if (errorMessage === "This payment slip (hash) has already been used for an approved payment.") {
          toast({
             variant: 'destructive',
             title: 'Duplicate Payment Slip',
-            description: "This payment slip has already been used for an approved payment.",
+            description: errorMessage,
         });
       } else {
         toast({
           variant: 'destructive',
           title: 'Submission Error',
           description:
-            error.response?.data?.message ||
+            errorMessage ||
             'Could not connect to the server. Please try again later.',
         });
       }
@@ -395,3 +397,5 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
     </Form>
   );
 }
+
+    
