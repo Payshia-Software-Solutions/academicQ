@@ -60,6 +60,11 @@ function ClassCard({ cls, enrollmentStatus, isAdmin }: { cls: Class, enrollmentS
             default: return 'outline';
         }
     };
+    
+    const getButtonText = () => {
+        if (isAdmin) return 'View Course';
+        return enrollmentStatus ? 'View Details' : 'Enroll Now';
+    }
 
     return (
         <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
@@ -106,7 +111,7 @@ function ClassCard({ cls, enrollmentStatus, isAdmin }: { cls: Class, enrollmentS
                 )}
                 <Button asChild size="sm" className="w-full sm:w-auto">
                     <Link href={`/classes/${cls.id}`}>
-                        {enrollmentStatus ? 'View Details' : 'Enroll Now'}
+                        {getButtonText()}
                         <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                 </Button>
