@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -54,6 +55,7 @@ interface Student {
 }
 
 const statusOptions: PaymentRequest['request_status'][] = ['pending', 'approved', 'rejected'];
+const ROWS_PER_PAGE = 10;
 
 export function FilteredPaymentRequestsList() {
     const [requests, setRequests] = useState<PaymentRequest[]>([]);
@@ -74,6 +76,7 @@ export function FilteredPaymentRequestsList() {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [zoom, setZoom] = useState(1);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
@@ -214,6 +217,12 @@ export function FilteredPaymentRequestsList() {
     }
     
     const hasAppliedFilters = filterTrigger > 0;
+    
+    const totalPages = Math.ceil(requests.length / ROWS_PER_PAGE);
+    const paginatedRequests = requests.slice(
+        (currentPage - 1) * ROWS_PER_PAGE,
+        currentPage * ROWS_PER_PAGE
+    );
 
     return (
         <>
@@ -284,8 +293,8 @@ export function FilteredPaymentRequestsList() {
                             Array.from({ length: 3 }).map((_, i) => (
                                 <Card key={i} className="p-4"><Skeleton className="h-24 w-full" /></Card>
                             ))
-                         ) : requests.length > 0 ? (
-                            requests.map((req) => (
+                         ) : paginatedRequests.length > 0 ? (
+                            paginatedRequests.map((req) => (
                                 <Card key={req.id}>
                                     <CardContent className="p-4">
                                         <div className="flex justify-between items-start">
@@ -342,8 +351,8 @@ export function FilteredPaymentRequestsList() {
                                             </TableCell>
                                         </TableRow>
                                     ))
-                                ) : requests.length > 0 ? (
-                                    requests.map((req) => (
+                                ) : paginatedRequests.length > 0 ? (
+                                    paginatedRequests.map((req) => (
                                         <TableRow key={req.id}>
                                             <TableCell className="font-mono text-xs">#{req.id}</TableCell>
                                             <TableCell>{req.student_number}</TableCell>
@@ -371,6 +380,27 @@ export function FilteredPaymentRequestsList() {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+                     <div className="flex items-center justify-end space-x-2 py-4">
+                        <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        >
+                        Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                            Page {currentPage} of {totalPages > 0 ? totalPages : 1}
+                        </span>
+                        <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        >
+                        Next
+                        </Button>
                     </div>
                 </CardContent>
             </Card>

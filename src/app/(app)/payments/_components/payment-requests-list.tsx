@@ -31,6 +31,8 @@ interface PaymentRequest {
     course_bucket_name?: string;
 }
 
+const ROWS_PER_PAGE = 10;
+
 export function PaymentRequestsList() {
     const [requests, setRequests] = useState<PaymentRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +41,7 @@ export function PaymentRequestsList() {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [zoom, setZoom] = useState(1);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const fetchPaymentRequests = async () => {
         setIsLoading(true);
@@ -114,6 +117,13 @@ export function PaymentRequestsList() {
         setSelectedRequest(null);
     }
 
+    const totalPages = Math.ceil(requests.length / ROWS_PER_PAGE);
+    const paginatedRequests = requests.slice(
+        (currentPage - 1) * ROWS_PER_PAGE,
+        currentPage * ROWS_PER_PAGE
+    );
+
+
     return (
         <>
             <Card>
@@ -146,8 +156,8 @@ export function PaymentRequestsList() {
                                             </TableCell>
                                         </TableRow>
                                     ))
-                                ) : requests.length > 0 ? (
-                                    requests.map((req) => (
+                                ) : paginatedRequests.length > 0 ? (
+                                    paginatedRequests.map((req) => (
                                         <TableRow key={req.id}>
                                             <TableCell className="font-mono text-xs">#{req.id}</TableCell>
                                             <TableCell>{req.student_number}</TableCell>
@@ -171,6 +181,27 @@ export function PaymentRequestsList() {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+                     <div className="flex items-center justify-end space-x-2 py-4">
+                        <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        >
+                        Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                            Page {currentPage} of {totalPages > 0 ? totalPages : 1}
+                        </span>
+                        <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        >
+                        Next
+                        </Button>
                     </div>
                 </CardContent>
             </Card>
