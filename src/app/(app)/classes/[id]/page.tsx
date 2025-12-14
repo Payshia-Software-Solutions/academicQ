@@ -358,12 +358,6 @@ export default function ClassDetailsPage() {
             </div>
             {isAdmin ? (
                  <div className="flex items-center gap-2">
-                    <Button asChild variant="outline">
-                         <Link href={`/classes/${courseId}/assignments`}>
-                            <Book className="mr-2 h-4 w-4" />
-                            View All Assignments
-                        </Link>
-                    </Button>
                     <Button asChild>
                         <Link href={`/classes/${courseId}/create-bucket?name=${encodeURIComponent(course.course_name)}&description=${encodeURIComponent(course.description)}`}>
                             <Plus className="mr-2 h-4 w-4" />
@@ -510,8 +504,18 @@ export default function ClassDetailsPage() {
             <section>
                 <Card>
                     <CardHeader>
-                        <CardTitle>All Assignments</CardTitle>
-                        <CardDescription>{allAssignments.length} assignment(s) found for this course.</CardDescription>
+                        <div className="flex items-center justify-between">
+                            <CardTitle>All Assignments</CardTitle>
+                            {isAdmin && (
+                                <Button asChild variant="outline">
+                                    <Link href="/classes">
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add Assignment
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
+                        <CardDescription>To add a new assignment, please navigate to the relevant content item within a payment bucket.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {allAssignments.length > 0 ? (
