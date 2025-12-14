@@ -276,7 +276,7 @@ export default function ClassDetailsPage() {
 
 
     if (loading) {
-        return <Preloader icon="book" />;
+        return <Preloader />;
     }
 
   if (!course) {
@@ -508,11 +508,19 @@ export default function ClassDetailsPage() {
                             <div className="flex items-center justify-between">
                                 <CardTitle>All Course Assignments</CardTitle>
                                 {isAdmin && (
-                                     <Button asChild variant="outline" size="sm">
-                                        <Link href={`/classes/${course.id}/assignments`}>
-                                            View All
-                                        </Link>
-                                     </Button>
+                                     <div className="flex items-center gap-2">
+                                        <Button asChild variant="outline" size="sm">
+                                            <Link href={`/classes/${course.id}/assignments`}>
+                                                View All
+                                            </Link>
+                                        </Button>
+                                         <Button asChild size="sm">
+                                            <Link href={`/classes/${course.id}/assignments`}>
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Assignment
+                                            </Link>
+                                        </Button>
+                                    </div>
                                 )}
                             </div>
                         </CardHeader>
