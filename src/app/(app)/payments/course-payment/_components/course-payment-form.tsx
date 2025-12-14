@@ -36,6 +36,7 @@ const coursePaymentSchema = z.object({
   payment_request_id: z.coerce.number().optional(),
   payment_amount: z.coerce.number().positive({ message: 'Amount must be a positive number.' }),
   discount_amount: z.coerce.number().min(0, { message: 'Discount cannot be negative.' }).optional(),
+  hash: z.string().optional(),
 });
 
 type CoursePaymentFormValues = z.infer<typeof coursePaymentSchema>;
@@ -61,6 +62,7 @@ interface PaymentRequest {
     payment_amount: string;
     course_id: string;
     course_bucket_id: string;
+    hash?: string;
 }
 
 interface CoursePaymentFormProps {
@@ -87,7 +89,8 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
       course_bucket_id: paymentRequest?.course_bucket_id || '',
       payment_request_id: paymentRequest ? parseInt(paymentRequest.id) : undefined,
       payment_amount: paymentRequest ? parseFloat(paymentRequest.payment_amount) : undefined,
-      discount_amount: 0.00
+      discount_amount: 0.00,
+      hash: paymentRequest?.hash || '',
     }
   });
 
@@ -117,7 +120,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
   
   useEffect(() => {
     if (paymentRequest) {
-        const { student_number, course_id, course_bucket_id, payment_amount, id } = paymentRequest;
+        const { student_number, course_id, course_bucket_id, payment_amount, id, hash } = paymentRequest;
         form.reset({
             student_number: student_number,
             course_id: course_id.toString(),
@@ -125,6 +128,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
             payment_amount: parseFloat(payment_amount),
             payment_request_id: parseInt(id),
             discount_amount: 0.00,
+            hash: hash || '',
         });
     }
   }, [paymentRequest, form]);

@@ -33,6 +33,7 @@ interface PaymentRequest {
     course_bucket_name?: string;
     payment_status: 'course_fee' | 'study_pack';
     ref_id: string;
+    hash?: string;
 }
 
 interface Course {
@@ -71,7 +72,7 @@ export function FilteredPaymentRequestsList() {
     const [selectedStudent, setSelectedStudent] = useState('all');
     const [selectedStatus, setSelectedStatus] = useState<PaymentRequest['request_status'] | 'all'>('pending');
     
-    const [filterTrigger, setFilterTrigger] = useState(1);
+    const [filterTrigger, setFilterTrigger] = useState(0);
     const [selectedRequest, setSelectedRequest] = useState<PaymentRequest | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
