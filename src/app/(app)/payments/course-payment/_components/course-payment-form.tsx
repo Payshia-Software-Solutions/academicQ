@@ -107,8 +107,8 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         ]);
         setCourses(coursesRes.data.data || []);
         
-        const studentData = studentsRes.data.data.map((s: any) => ({...s, name: `${s.f_name} ${s.l_name}`}));
-        setStudents(studentData || []);
+        const studentData = (studentsRes.data.data || []).map((s: any) => ({...s, name: `${s.f_name} ${s.l_name}`}));
+        setStudents(studentData);
 
       } catch (error) {
         toast({
@@ -191,19 +191,19 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         });
       }
     } catch (error: any) {
-       const errorMessage = error.response?.data?.message;
-       if (errorMessage === "This payment slip (hash) has already been used for an approved payment.") {
+       const errorMessage = error.response?.data?.message?.toLowerCase() || '';
+       if (errorMessage.includes('payment slip (hash) has already been used')) {
          toast({
             variant: 'destructive',
             title: 'Duplicate Payment Slip',
-            description: errorMessage,
+            description: "This payment slip has already been used for an approved payment.",
         });
       } else {
         toast({
           variant: 'destructive',
           title: 'Submission Error',
           description:
-            errorMessage ||
+            error.response?.data?.message ||
             'Could not connect to the server. Please try again later.',
         });
       }
