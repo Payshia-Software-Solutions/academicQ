@@ -573,7 +573,7 @@ export function FilteredPaymentRequestsList() {
                                 </div>
                             </div>
                         </div>
-                        <DialogFooter className="flex-col sm:flex-row sm:justify-between w-full">
+                        <DialogFooter className="sm:justify-between">
                             <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>Close</Button>
                              {selectedRequest.request_status === 'pending' && (
                                 <Button onClick={handleProceed} disabled={duplicateData?.duplicate}>
@@ -607,3 +607,4 @@ export function FilteredPaymentRequestsList() {
         </>
     );
 }
+
