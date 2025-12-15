@@ -167,11 +167,11 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                   <h3 className="font-semibold text-base border-b pb-2">Order Info</h3>
                    <div>
                       <p className="text-muted-foreground">Order Item</p>
-                      <p className="font-semibold">{order.orderable_item_name}</p>
+                      <p className="font-semibold">{order.orderable_item_name || 'N/A'}</p>
                   </div>
                    <div>
                       <p className="text-muted-foreground">Course / Bucket</p>
-                      <p className="font-semibold">{order.course_name} / {order.bucket_name || order.course_bucket_name}</p>
+                      <p className="font-semibold">{order.course_name || 'N/A'} / {order.bucket_name || order.course_bucket_name || 'N/A'}</p>
                   </div>
                    <div className="grid grid-cols-2 gap-4">
                      <div>
