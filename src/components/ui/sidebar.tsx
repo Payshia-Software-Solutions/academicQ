@@ -449,7 +449,7 @@ const SidebarMenuButton = React.forwardRef<
       </Comp>
     )
 
-    if (state === 'expanded' && !isMobile) {
+    if (state === 'expanded' || isMobile) {
       return button;
     }
     
@@ -534,7 +534,7 @@ const SidebarSubMenuButton = React.forwardRef<
     </AccordionPrimitive.Header>
   )
 
-  if (state === 'expanded' && !isMobile) {
+  if (state === 'expanded' || isMobile) {
     return button;
   }
   
