@@ -47,3 +47,5 @@ export function ProfileCheckHandler({ studentNumber }: ProfileCheckHandlerProps)
   // This component does not render anything to the UI
   return null;
 }
+
+    

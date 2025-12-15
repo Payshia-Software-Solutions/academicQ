@@ -57,7 +57,7 @@ export default function MyProfilePage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
-  const [profileSkipped, setProfileSkipped] = useState(false);
+  const [profileIncomplete, setProfileIncomplete] = useState(false);
 
   useEffect(() => {
     const storedUserStr = localStorage.getItem('user');
@@ -67,20 +67,20 @@ export default function MyProfilePage() {
     }
     const loggedInUser: CurrentUser = JSON.parse(storedUserStr);
 
-    const isSkipped = sessionStorage.getItem('profileSkipped') === 'true';
-    setProfileSkipped(isSkipped);
-
     async function fetchUserDetails() {
         if (loggedInUser.student_number) {
             try {
                 const response = await api.get(`/user-full-details/get/student/?student_number=${loggedInUser.student_number}`);
                 if (response.data && response.data.message !== "User not found.") {
                     setUser({ ...loggedInUser, ...response.data.data });
+                    setProfileIncomplete(false);
                 } else {
                     setUser(loggedInUser);
+                    setProfileIncomplete(true);
                 }
             } catch (error) {
                  setUser(loggedInUser);
+                 setProfileIncomplete(true); // Assume incomplete if check fails
                  toast({
                     variant: 'destructive',
                     title: 'Error',
@@ -141,8 +141,7 @@ export default function MyProfilePage() {
   const fullName = user.full_name || `${user.f_name} ${user.l_name}`;
   const isAdmin = user.user_status === 'admin';
   const address = [user.address_line_1, user.address_line_2, user.city].filter(Boolean).join(', ');
-  const hasFullDetails = !!user.full_name;
-
+  
   return (
     <div className="space-y-6">
       <header>
@@ -150,7 +149,7 @@ export default function MyProfilePage() {
         <p className="text-muted-foreground mt-1">View and manage your personal information.</p>
       </header>
 
-       {profileSkipped && !hasFullDetails && (
+       {profileIncomplete && (
          <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Profile Incomplete</AlertTitle>
@@ -211,3 +210,5 @@ export default function MyProfilePage() {
     </div>
   );
 }
+
+    

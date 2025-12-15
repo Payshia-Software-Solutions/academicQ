@@ -107,7 +107,6 @@ export function CompleteProfileForm() {
 
   const handleSkip = () => {
     sessionStorage.setItem('profileSkipped', 'true');
-    sessionStorage.setItem('profileCheckComplete', 'true');
     const homePath = currentUser?.user_status === 'admin' ? '/dashboard' : '/student-dashboard';
     router.push(homePath);
   };
@@ -143,7 +142,7 @@ export function CompleteProfileForm() {
         }
 
         response = await api.put(`/users/full-details/${currentUser.student_number}`, changedData);
-        if (response.data.message !== "Record updated successfully.") {
+        if (response.status !== 200) {
              throw new Error(response.data.message || "An unknown error occurred during update.");
         }
 
@@ -156,7 +155,7 @@ export function CompleteProfileForm() {
             nic: currentUser.nic,
         };
         response = await api.post('/user-full-details', postData);
-        if (response.data.message !== "Record created successfully.") {
+        if (response.status !== 201 && response.status !== 200) {
              throw new Error(response.data.message || "An unknown error occurred during creation.");
         }
       }
@@ -166,7 +165,6 @@ export function CompleteProfileForm() {
           description: 'Your details have been saved successfully. Redirecting...',
       });
       sessionStorage.removeItem('profileSkipped');
-      sessionStorage.setItem('profileCheckComplete', 'true'); // Ensure check is marked complete
       const homePath = currentUser?.user_status === 'admin' ? '/dashboard' : '/student-dashboard';
       router.push(homePath);
       router.refresh();
@@ -196,6 +194,12 @@ export function CompleteProfileForm() {
     <Card>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardHeader>
+                <CardTitle>Complete Your Profile</CardTitle>
+                <CardDescription>
+                    Please fill out the form below with your full details.
+                </CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4 pt-6">
                 <FormField control={form.control} name="full_name" render={({ field }) => (
                     <FormItem>
@@ -323,3 +327,5 @@ export function CompleteProfileForm() {
     </Card>
   );
 }
+
+    

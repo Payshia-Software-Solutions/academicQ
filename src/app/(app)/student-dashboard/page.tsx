@@ -12,6 +12,7 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -40,35 +41,40 @@ export default function StudentDashboardPage() {
   const [approvedCourses, setApprovedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const [profileSkipped, setProfileSkipped] = useState(false);
+  const [profileIncomplete, setProfileIncomplete] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+    } else {
+        router.push('/login');
     }
-    const isSkipped = sessionStorage.getItem('profileSkipped') === 'true';
-    setProfileSkipped(isSkipped);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (user?.student_number) {
       async function fetchDashboardData() {
         setLoading(true);
         try {
-          // 1. Fetch all courses to get details like description and image
-          const coursesRes = await api.get('/courses');
+          const [coursesRes, enrollmentsRes, profileRes] = await Promise.all([
+             api.get('/courses'),
+             api.get(`/enrollments/?student_number=${user.student_number}&status=approved`),
+             api.get(`/user-full-details/get/student/?student_number=${user.student_number}`)
+          ]);
+
           const allCourses: Course[] = coursesRes.data.data || [];
-          
-          // 2. Fetch student-specific approved enrollments
-          const enrollmentsRes = await api.get(`/enrollments/?student_number=${user.student_number}&status=approved`);
           const enrollments: Enrollment[] = enrollmentsRes.data || [];
           const approvedCourseIds = new Set(enrollments.map(e => e.course_id.toString()));
-
-          // 3. Filter allCourses to get the details of the approved ones
           const coursesToShow = allCourses.filter(course => approvedCourseIds.has(course.id.toString()));
-
           setApprovedCourses(coursesToShow);
+
+          if (profileRes.data && profileRes.data.message === "User not found.") {
+              setProfileIncomplete(true);
+          } else {
+              setProfileIncomplete(false);
+          }
 
         } catch (error) {
           console.error("Failed to fetch dashboard data:", error);
@@ -103,6 +109,32 @@ export default function StudentDashboardPage() {
     }
   }
 
+  if (loading || !user) {
+      return (
+          <div className="space-y-6">
+              <header>
+                  <Skeleton className="h-10 w-48" />
+                  <Skeleton className="h-5 w-72 mt-2" />
+              </header>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {Array.from({length: 4}).map((_, i) => (
+                    <Card key={i}>
+                        <CardHeader className="p-0"><Skeleton className="h-48 w-full rounded-t-lg"/></CardHeader>
+                        <CardContent className="p-4 space-y-2">
+                             <Skeleton className="h-6 w-3/4" />
+                             <Skeleton className="h-4 w-full" />
+                             <Skeleton className="h-4 w-1/2" />
+                        </CardContent>
+                        <CardFooter className="p-4">
+                            <Skeleton className="h-10 w-full" />
+                        </CardFooter>
+                    </Card>
+                  ))}
+              </div>
+          </div>
+      )
+  }
+
   return (
     <div className="space-y-6">
       <header>
@@ -114,7 +146,7 @@ export default function StudentDashboardPage() {
         </p>
       </header>
 
-      {profileSkipped && (
+      {profileIncomplete && (
          <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Complete Your Profile</AlertTitle>
@@ -129,23 +161,7 @@ export default function StudentDashboardPage() {
 
       <section>
         <h2 className="text-xl font-bold mb-4">My Classes</h2>
-        {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                 {Array.from({length: 4}).map((_, i) => (
-                    <Card key={i}>
-                        <CardHeader className="p-0"><Skeleton className="h-48 w-full rounded-t-lg"/></CardHeader>
-                        <CardContent className="p-4 space-y-2">
-                             <Skeleton className="h-6 w-3/4" />
-                             <Skeleton className="h-4 w-full" />
-                             <Skeleton className="h-4 w-1/2" />
-                        </CardContent>
-                        <CardFooter className="p-4">
-                            <Skeleton className="h-10 w-full" />
-                        </CardFooter>
-                    </Card>
-                 ))}
-            </div>
-        ) : approvedCourses.length > 0 ? (
+        {approvedCourses.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {approvedCourses.map((course) => (
                 <Card key={course.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
@@ -191,3 +207,5 @@ export default function StudentDashboardPage() {
     </div>
   );
 }
+
+    

@@ -12,28 +12,56 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import api from '@/lib/api';
+import { useRouter } from 'next/navigation';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
   f_name: string;
   l_name: string;
+  student_number?: string;
   [key: string]: any;
 }
 
 export default function DashboardPage() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileSkipped, setProfileSkipped] = useState(false);
-  
+  const [profileIncomplete, setProfileIncomplete] = useState(false);
+  const router = useRouter();
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+    } else {
+        router.push('/login');
     }
-    const isSkipped = sessionStorage.getItem('profileSkipped') === 'true';
-    setProfileSkipped(isSkipped);
-    setLoading(false);
-  }, []);
+  }, [router]);
+  
+  useEffect(() => {
+    async function checkProfile() {
+      if (user?.student_number) {
+        try {
+          const response = await api.get(`/user-full-details/get/student/?student_number=${user.student_number}`);
+          if (response.data && response.data.message === "User not found.") {
+            setProfileIncomplete(true);
+          } else {
+            setProfileIncomplete(false);
+          }
+        } catch (error) {
+          console.error("Failed to check user details:", error);
+          // Assume profile is fine if check fails, to avoid blocking user
+          setProfileIncomplete(false);
+        }
+      }
+      setLoading(false);
+    }
+    
+    if (user) {
+        checkProfile();
+    }
+
+  }, [user]);
 
   const totalStudents = users.length;
   const totalClasses = classes.length;
@@ -62,7 +90,7 @@ export default function DashboardPage() {
     return "Welcome! Here's an overview of your institute's activity.";
   }
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="space-y-4">
         <header>
@@ -90,7 +118,7 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">{getDashboardDescription()}</p>
       </header>
 
-      {profileSkipped && (
+      {profileIncomplete && (
          <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Complete Your Profile</AlertTitle>
@@ -244,3 +272,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

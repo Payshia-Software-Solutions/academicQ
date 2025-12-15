@@ -1,5 +1,4 @@
 
-
 'use client';
 import { Logo } from '@/components/icons';
 import {
@@ -79,12 +78,16 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     return '/my-profile';
   }, [user]);
 
-  if (!user) {
+  if (!user && (pathname === '/login' || pathname === '/register')) {
     return (
         <div className="flex items-center justify-center h-screen">
              {children}
         </div>
     );
+  }
+
+  if (!user) {
+    return null; // Or a loading spinner
   }
 
   return (
@@ -98,7 +101,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {isAdmin && (
+            {isAdmin ? (
                <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
@@ -111,8 +114,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            )}
-             {!isAdmin && (
+            ) : (
                <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
