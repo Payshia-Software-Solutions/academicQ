@@ -16,6 +16,7 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Preloader } from "@/components/ui/preloader";
+import { BucketAssignmentsList } from "./buckets/[bucketId]/_components/bucket-assignments-list";
 
 
 const Plyr = dynamic(() => import('plyr-react'), { ssr: false });

@@ -1,10 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import api from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
 import { FileText, Eye, Lock, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -25,54 +22,13 @@ interface Assignment {
 interface BucketAssignmentsListProps {
     courseId: string;
     bucketId: string;
+    assignments: Assignment[];
     isLocked: boolean;
     isAdmin: boolean;
 }
 
-export function BucketAssignmentsList({ courseId, bucketId, isLocked, isAdmin }: BucketAssignmentsListProps) {
-    const [assignments, setAssignments] = useState<Assignment[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const { toast } = useToast();
-
-    useEffect(() => {
-        if (!bucketId || !courseId) return;
-
-        async function fetchAssignments() {
-            setIsLoading(true);
-            try {
-                const response = await api.get(`/assignments/filter/?course_id=${courseId}&course_bucket_id=${bucketId}`);
-                if (response.data.status === 'success') {
-                    setAssignments(response.data.data || []);
-                } else {
-                    setAssignments([]);
-                }
-            } catch (error: any) {
-                setAssignments([]);
-                toast({
-                    variant: 'destructive',
-                    title: 'API Error',
-                    description: error.message || 'Could not fetch assignments.',
-                });
-            } finally {
-                setIsLoading(false);
-            }
-        }
-        fetchAssignments();
-    }, [courseId, bucketId, toast]);
+export function BucketAssignmentsList({ courseId, bucketId, assignments, isLocked, isAdmin }: BucketAssignmentsListProps) {
     
-    if (isLoading) {
-        return (
-             <Card>
-                <CardHeader>
-                    <CardTitle>Assignments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Preloader />
-                </CardContent>
-            </Card>
-        )
-    }
-
     if (!isAdmin && assignments.length === 0) {
         return null; // Don't show the card if there are no assignments for a student
     }

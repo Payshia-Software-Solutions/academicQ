@@ -22,10 +22,19 @@ interface Course {
   id: string;
   course_name: string;
 }
+interface Assignment {
+    id: string;
+    content_title: string;
+    deadline_date?: string;
+    content: string;
+    course_id: string;
+    course_bucket_id: string;
+}
 interface Bucket {
   id: string;
   name: string;
   payment_amount: string;
+  assignments: Assignment[];
 }
 
 interface StudentPayment {
@@ -167,6 +176,7 @@ function BucketContentPageContent() {
       <BucketAssignmentsList
         courseId={courseId}
         bucketId={bucketId}
+        assignments={bucket?.assignments || []}
         isLocked={!canViewContent}
         isAdmin={isAdmin}
       />
