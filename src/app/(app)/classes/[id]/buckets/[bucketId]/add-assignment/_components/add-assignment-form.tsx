@@ -53,7 +53,7 @@ export function AddAssignmentForm() {
   const { toast } = useToast();
   const router = useRouter();
   const params = useParams();
-  const { id: courseId, bucketId, contentId } = params;
+  const { id: courseId, bucketId } = params;
 
 
   const form = useForm<AddAssignmentFormValues>({
@@ -77,7 +77,6 @@ export function AddAssignmentForm() {
       const postData: any = {
         course_id: parseInt(courseId as string),
         course_bucket_id: parseInt(bucketId as string),
-        content_id: parseInt(contentId as string),
         content_type: data.content_type,
         content_title: data.content_title,
         content: data.content,
@@ -104,7 +103,7 @@ export function AddAssignmentForm() {
           title: 'Assignment Created',
           description: `The assignment "${data.content_title}" has been successfully created.`,
         });
-        router.push(`/classes/${courseId}/buckets/${bucketId}/content/${contentId}`);
+        router.push(`/classes/${courseId}`);
       } else {
         toast({
           variant: 'destructive',
@@ -125,7 +124,7 @@ export function AddAssignmentForm() {
     }
   };
   
-  const cancelUrl = `/classes/${courseId}/buckets/${bucketId}/content/${contentId}`;
+  const cancelUrl = `/classes/${courseId}`;
 
   return (
     <Form {...form}>
@@ -133,7 +132,7 @@ export function AddAssignmentForm() {
         <Card>
             <CardHeader>
             <CardTitle>New Assignment Details</CardTitle>
-                <CardDescription>Fill in the details to create a new assignment for this content.</CardDescription>
+                <CardDescription>Fill in the details to create a new assignment for this course bucket.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
             
@@ -291,5 +290,3 @@ export function AddAssignmentForm() {
     </Form>
   );
 }
-
-    

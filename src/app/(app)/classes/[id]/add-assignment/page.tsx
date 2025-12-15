@@ -4,9 +4,9 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { SelectContentForAssignment } from './_components/select-content-for-assignment';
+import { SelectBucketForAssignment } from './_components/select-bucket-for-assignment';
 
-function AddAssignmentContentPage() {
+function AddAssignmentBucketPage() {
   const params = useParams();
   const courseId = params.id as string;
 
@@ -21,13 +21,13 @@ function AddAssignmentContentPage() {
             <span>Add Assignment</span>
         </div>
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">Add New Assignment</h1>
-        <p className="text-muted-foreground mt-1">First, select the content this assignment will be associated with.</p>
+        <p className="text-muted-foreground mt-1">First, select the bucket this assignment will be associated with.</p>
       </header>
-      <SelectContentForAssignment courseId={courseId} />
+      <SelectBucketForAssignment courseId={courseId} />
     </div>
   );
 }
 
 export default function AddAssignmentPage() {
-    return <AddAssignmentContentPage />;
+    return <AddAssignmentBucketPage />;
 }

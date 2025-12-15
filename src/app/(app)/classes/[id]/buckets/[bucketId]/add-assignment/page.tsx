@@ -8,7 +8,7 @@ import { useParams } from 'next/navigation';
 
 function AddAssignmentPageContent() {
   const params = useParams();
-  const { id: courseId, bucketId, contentId } = params;
+  const { id: courseId, bucketId } = params;
 
   return (
     <div className="space-y-6">
@@ -19,13 +19,11 @@ function AddAssignmentPageContent() {
             <Link href={`/classes/${courseId}`} className="hover:underline">Course Details</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
             <Link href={`/classes/${courseId}/buckets/${bucketId}`} className="hover:underline">Bucket</Link>
-             <ChevronRight className="h-4 w-4 mx-1" />
-             <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}`} className="hover:underline">Content</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
             <span>Add Assignment</span>
         </div>
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-headline font-bold text-foreground">Add New Assignment</h1>
-        <p className="text-muted-foreground mt-1">Create a new assignment associated with this content.</p>
+        <p className="text-muted-foreground mt-1">Create a new assignment for this course bucket.</p>
       </header>
       <AddAssignmentForm />
     </div>
