@@ -300,10 +300,10 @@ function BucketContentPageContent() {
                           <p className="text-xl font-bold text-green-600">LKR {balance.total_pay_amount.toLocaleString()}</p>
                       </div>
                       <div>
-                          <p className="text-sm text-muted-foreground">Balance</p>
-                          <p className={`text-xl font-bold ${balance.balance <= 0 ? 'text-destructive' : 'text-foreground'}`}>
+                          <p className={`text-xl font-bold ${balance.balance <= 0 ? 'text-green-600' : 'text-destructive'}`}>
                               LKR {Math.abs(balance.balance).toLocaleString()}
                           </p>
+                          <p className="text-sm text-muted-foreground">{balance.balance <= 0 ? 'Paid' : 'Balance Due'}</p>
                       </div>
                   </div>
               </CardContent>
@@ -413,7 +413,7 @@ function BucketContentPageContent() {
                         </AlertDialogHeader>
                         <div className="py-4">
                             <PaymentSlipUploadForm 
-                                bucketAmount={bucket?.payment_amount || '0'}
+                                bucketAmount={balance && balance.balance > 0 ? String(balance.balance) : bucket?.payment_amount || '0'}
                                 courseId={courseId}
                                 bucketId={bucketId}
                                 onSuccess={async () => {
@@ -481,3 +481,5 @@ function BucketContentPageContent() {
 export default function BucketContentPage() {
     return <BucketContentPageContent />;
 }
+
+    
