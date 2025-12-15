@@ -96,7 +96,7 @@ export default function DashboardPage() {
           <AlertTitle>Complete Your Profile</AlertTitle>
           <AlertDescription>
             Your profile details are incomplete. Please fill them out to ensure full access to all features.
-            <Button asChild variant="link" className="p-0 h-auto ml-2 text-destructive-foreground font-semibold">
+            <Button asChild variant="link" className="p-0 h-auto ml-2 font-bold underline">
                 <Link href="/complete-profile">Complete Profile</Link>
             </Button>
           </AlertDescription>

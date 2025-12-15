@@ -156,7 +156,7 @@ export default function MyProfilePage() {
           <AlertTitle>Profile Incomplete</AlertTitle>
           <AlertDescription>
             Your profile details are missing. Please complete your profile to access all features.
-             <Button asChild variant="link" className="p-0 h-auto ml-2 text-destructive-foreground font-semibold">
+             <Button asChild variant="link" className="p-0 h-auto ml-2 font-bold underline">
                 <Link href="/complete-profile">Complete Profile Now</Link>
             </Button>
           </AlertDescription>
