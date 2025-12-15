@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -102,7 +103,7 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
         return (
             <Card>
                 <CardContent>
-                    <Preloader />
+                    <Preloader icon="book" />
                 </CardContent>
             </Card>
         )
@@ -136,6 +137,9 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                     bucketId={bucketId}
                                 />
                             </div>
+                             <AlertDialogFooter>
+                                <AlertDialogCancel>Close</AlertDialogCancel>
+                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
                 </div>
