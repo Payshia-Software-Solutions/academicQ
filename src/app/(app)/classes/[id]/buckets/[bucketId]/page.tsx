@@ -2,15 +2,18 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Plus } from 'lucide-react';
+import { ChevronRight, Plus, DollarSign, Lock, Clock, AlertCircle } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { BucketContentList } from './_components/bucket-content-list';
 import api from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Preloader } from '@/components/ui/preloader';
 import { BucketAssignmentsList } from './_components/bucket-assignments-list';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { PaymentSlipUploadForm } from './_components/payment-slip-upload-form';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -41,6 +44,12 @@ interface StudentPayment {
     id: string;
     course_bucket_id: string;
     status: string;
+}
+
+interface PaymentRequest {
+    id: string;
+    request_status: 'pending' | 'approved' | 'rejected';
+    [key: string]: any;
 }
 
 async function getCourseDetails(id: string): Promise<Course | null> {
@@ -78,6 +87,19 @@ async function getStudentPayments(studentNumber: string, courseId: string, bucke
     }
 }
 
+async function getPaymentRequests(studentNumber: string, courseId: string, bucketId: string): Promise<PaymentRequest[]> {
+    try {
+        const response = await api.get(`/payment_requests/filter/?student_number=${studentNumber}&course_id=${courseId}&course_bucket_id=${bucketId}`);
+        if (response.data.status === 'success') {
+            return response.data.data || [];
+        }
+        return [];
+    } catch (error) {
+        console.error("Failed to fetch payment requests:", error);
+        return [];
+    }
+}
+
 
 function BucketContentPageContent() {
   const params = useParams();
@@ -89,6 +111,9 @@ function BucketContentPageContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [isPaid, setIsPaid] = useState(false);
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+
   
    useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -105,10 +130,14 @@ function BucketContentPageContent() {
         setBucket(bucketData);
 
         if (currentUser?.user_status === 'student' && currentUser.student_number && bucketData && courseData) {
-            const payments = await getStudentPayments(currentUser.student_number, courseData.id, bucketData.id);
-            // Assuming any successful payment record means paid. A more robust check might be needed.
-            const hasPaid = payments.length > 0;
+            const [payments, requests] = await Promise.all([
+                getStudentPayments(currentUser.student_number, courseData.id, bucketData.id),
+                getPaymentRequests(currentUser.student_number, courseData.id, bucketData.id),
+            ]);
+
+            const hasPaid = payments.some(p => p.status === 'approved');
             setIsPaid(hasPaid);
+            setPaymentRequests(requests);
         }
 
         setLoading(false);
@@ -119,8 +148,18 @@ function BucketContentPageContent() {
   }, [courseId, bucketId]);
 
   const isAdmin = user?.user_status === 'admin';
-  const canViewContent = isAdmin || isPaid;
   
+  const pendingRequest = useMemo(() => 
+    paymentRequests.find(req => req.request_status === 'pending'), 
+  [paymentRequests]);
+
+  const rejectedRequest = useMemo(() => 
+    paymentRequests.find(req => req.request_status === 'rejected'), 
+  [paymentRequests]);
+  
+  const canViewContent = isAdmin || isPaid;
+  const showPaymentButton = !isAdmin && !canViewContent && !pendingRequest;
+
   if (loading) {
       return (
         <div className="space-y-6">
@@ -165,13 +204,83 @@ function BucketContentPageContent() {
         </div>
       </header>
       
-      <BucketContentList 
-        courseId={courseId} 
-        bucketId={bucketId} 
-        isLocked={!canViewContent}
-        bucketAmount={bucket?.payment_amount || '0'}
-        isAdmin={isAdmin}
-       />
+      {!isAdmin && !isPaid && (
+          <div className="space-y-4">
+            {pendingRequest && (
+                <Alert>
+                    <Clock className="h-4 w-4" />
+                    <AlertTitle>Payment Pending</AlertTitle>
+                    <AlertDescription>
+                        Your payment for this bucket is currently under review. You will be notified once it is approved.
+                    </AlertDescription>
+                </Alert>
+            )}
+            {rejectedRequest && !pendingRequest && (
+                 <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Payment Rejected</AlertTitle>
+                    <AlertDescription>
+                        Your previous payment was rejected. Please review the details and submit a new payment.
+                    </AlertDescription>
+                </Alert>
+            )}
+          </div>
+      )}
+
+      {showPaymentButton && (
+           <Card className="relative">
+             <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-4 text-center p-4">
+                <Lock className="h-12 w-12 text-destructive" />
+                <h3 className="text-xl font-bold">Content Locked</h3>
+                <p className="text-muted-foreground">You must complete the payment for this bucket to view its content.</p>
+                <AlertDialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                    <AlertDialogTrigger asChild>
+                        <Button>
+                            <DollarSign className="mr-2 h-4 w-4" />
+                            Add Payment
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="sm:max-w-[425px]">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Upload Payment Slip</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                To access this content, please upload your proof of payment.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="py-4">
+                            <PaymentSlipUploadForm 
+                                bucketAmount={bucket?.payment_amount || '0'}
+                                courseId={courseId}
+                                bucketId={bucketId}
+                                onSuccess={() => setIsPaymentDialogOpen(false)}
+                            />
+                        </div>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Close</AlertDialogCancel>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+             <CardHeader>
+                <CardTitle>Bucket Content</CardTitle>
+             </CardHeader>
+            <CardContent>
+                <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                    <p className="text-muted-foreground">This content is locked.</p>
+                </div>
+            </CardContent>
+           </Card>
+      )}
+
+      {canViewContent && (
+        <BucketContentList 
+            courseId={courseId} 
+            bucketId={bucketId} 
+            isLocked={!canViewContent}
+            bucketAmount={bucket?.payment_amount || '0'}
+            isAdmin={isAdmin}
+        />
+      )}
 
       <BucketAssignmentsList
         courseId={courseId}

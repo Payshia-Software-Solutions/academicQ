@@ -111,47 +111,10 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
 
     return (
         <Card className="relative">
-             {isLocked && !isAdmin && (
-                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-4 text-center p-4">
-                    <Lock className="h-12 w-12 text-destructive" />
-                    <h3 className="text-xl font-bold">Content Locked</h3>
-                    <p className="text-muted-foreground">You must complete the payment for this bucket to view its content.</p>
-                    <AlertDialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-                        <AlertDialogTrigger asChild>
-                            <Button>
-                                <DollarSign className="mr-2 h-4 w-4" />
-                                Add Payment
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="sm:max-w-[425px]">
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Upload Payment Slip</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    To access this content, please upload your proof of payment.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <div className="py-4">
-                                <PaymentSlipUploadForm 
-                                    bucketAmount={bucketAmount || '0'}
-                                    courseId={courseId}
-                                    bucketId={bucketId}
-                                    onSuccess={() => setIsPaymentDialogOpen(false)}
-                                />
-                            </div>
-                             <AlertDialogFooter>
-                                <AlertDialogCancel>Close</AlertDialogCancel>
-                             </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
-             )}
             <CardHeader>
                 <CardTitle>Bucket Content</CardTitle>
                 <CardDescription>
-                    {isLocked 
-                        ? `This content is locked. Complete payment to gain access.`
-                        : `${content.length} item(s) found in this bucket.`
-                    }
+                    {content.length} item(s) found in this bucket.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -165,7 +128,7 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                <li key={item.id}>
                                      <div className={cn(
                                          "flex items-center justify-between p-4 rounded-lg border transition-colors gap-4",
-                                         isLocked ? "bg-muted/50" : "hover:bg-muted/50",
+                                         "hover:bg-muted/50",
                                      )}>
                                         <div className="flex items-center gap-4 flex-1 min-w-0">
                                              <div className="p-2 bg-accent/10 rounded-lg">
@@ -184,12 +147,12 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                         <div className="flex items-center gap-2">
                                             {isAdmin && (
                                                 <>
-                                                <Button asChild variant="secondary" size="icon" className="h-9 w-9" disabled={isLocked}>
+                                                <Button asChild variant="secondary" size="icon" className="h-9 w-9">
                                                     <Link href={editHref}><Edit className="h-4 w-4" /></Link>
                                                 </Button>
                                                  <AlertDialog>
                                                     <AlertDialogTrigger asChild>
-                                                        <Button variant="destructive" size="icon" className="h-9 w-9" disabled={isLocked}>
+                                                        <Button variant="destructive" size="icon" className="h-9 w-9">
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     </AlertDialogTrigger>
@@ -208,18 +171,10 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                                 </AlertDialog>
                                                 </>
                                             )}
-                                            <Button asChild variant="ghost" size="sm" disabled={isLocked}>
+                                            <Button asChild variant="ghost" size="sm">
                                                 <Link href={viewHref}>
-                                                    {isLocked ? (
-                                                        <>
-                                                            <Lock className="mr-2 h-4 w-4" /> Locked
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            View
-                                                            <Eye className="ml-2 h-4 w-4" />
-                                                        </>
-                                                    )}
+                                                    View
+                                                    <Eye className="ml-2 h-4 w-4" />
                                                 </Link>
                                             </Button>
                                         </div>
