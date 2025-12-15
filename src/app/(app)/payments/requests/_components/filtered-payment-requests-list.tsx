@@ -12,9 +12,10 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw, Package, CreditCard, Hash, DollarSign, AlertCircle, Clock } from 'lucide-react';
+import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw, Package, CreditCard, Hash, DollarSign, AlertCircle, Clock, FileWarning } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { CoursePaymentForm } from '../../course-payment/_components/course-payment-form';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 
 interface PaymentRequest {
@@ -55,6 +56,11 @@ interface Student {
   l_name: string;
 }
 
+interface DuplicateHashData {
+    duplicate: boolean;
+    data: PaymentRequest[];
+}
+
 const statusOptions: PaymentRequest['request_status'][] = ['pending', 'approved', 'rejected'];
 const ROWS_PER_PAGE = 10;
 
@@ -78,6 +84,8 @@ export function FilteredPaymentRequestsList() {
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [zoom, setZoom] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
+    const [duplicateData, setDuplicateData] = useState<DuplicateHashData | null>(null);
+    const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
 
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
@@ -185,10 +193,28 @@ export function FilteredPaymentRequestsList() {
     }, [requests]);
 
 
-    const handleViewDetails = (req: PaymentRequest) => {
+    const handleViewDetails = async (req: PaymentRequest) => {
         setSelectedRequest(req);
+        setDuplicateData(null);
         setIsDetailsOpen(true);
         setZoom(1);
+
+        if (req.hash) {
+            setIsCheckingDuplicates(true);
+            try {
+                const response = await api.get(`/duplicate/hash/${req.hash}`);
+                if (response.data.status === 'success') {
+                    setDuplicateData(response.data);
+                } else {
+                    setDuplicateData(null);
+                }
+            } catch (error) {
+                console.error("Failed to check for duplicate hash:", error);
+                setDuplicateData(null);
+            } finally {
+                setIsCheckingDuplicates(false);
+            }
+        }
     }
     
     const handleProceed = () => {
@@ -463,6 +489,30 @@ export function FilteredPaymentRequestsList() {
                             </DialogDescription>
                         </DialogHeader>
                          <div className="grid md:grid-cols-2 gap-x-8 gap-y-6 py-4 max-h-[70vh] overflow-y-auto px-1">
+                            {isCheckingDuplicates ? (
+                                <div className="md:col-span-2 flex items-center justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin" />
+                                    <span className="ml-2">Checking for duplicates...</span>
+                                </div>
+                            ) : duplicateData?.duplicate ? (
+                                <div className="md:col-span-2">
+                                     <Alert variant="destructive">
+                                        <FileWarning className="h-4 w-4" />
+                                        <AlertTitle>Duplicate Payment Slip Found!</AlertTitle>
+                                        <AlertDescription>
+                                            This payment slip hash has been used in multiple requests. Please review carefully.
+                                            <ul className="mt-2 list-disc list-inside text-xs">
+                                                {duplicateData.data.map(dup => (
+                                                    <li key={dup.id}>
+                                                        Request ID: <strong>#{dup.id}</strong>, Status: <Badge variant="outline" className="capitalize text-xs">{dup.request_status}</Badge>, Amount: ${dup.payment_amount}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </AlertDescription>
+                                    </Alert>
+                                </div>
+                            ) : null}
+
                              <div className="space-y-2">
                                 {selectedRequest.slip_url && (
                                     <div className="relative w-full h-[450px] bg-muted rounded-lg overflow-hidden border">
@@ -523,7 +573,7 @@ export function FilteredPaymentRequestsList() {
                         <DialogFooter>
                             <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
                              {selectedRequest.request_status === 'pending' && (
-                                <Button onClick={handleProceed}>
+                                <Button onClick={handleProceed} disabled={duplicateData?.duplicate}>
                                     <CheckCircle className="mr-2 h-4 w-4" />
                                     Proceed to Payment
                                 </Button>
