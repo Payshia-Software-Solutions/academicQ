@@ -205,7 +205,7 @@ export function SubmissionsList() {
         setUpdatingGrade(submissionId);
 
         const originalSubmissions = [...submissions];
-        setSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, grade: currentGrade } : s));
+        setSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, grade: currentGrade, sub_status: 'graded' } : s));
         
         try {
             const response = await api.put(`/assignment-submissions/stu/update/grade/?id=${submissionId}&grade=${currentGrade}`);
