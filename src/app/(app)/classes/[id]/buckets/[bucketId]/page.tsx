@@ -10,6 +10,7 @@ import { BucketContentList } from './_components/bucket-content-list';
 import api from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Preloader } from '@/components/ui/preloader';
+import { BucketAssignmentsList } from './_components/bucket-assignments-list';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -163,6 +164,12 @@ function BucketContentPageContent() {
         isAdmin={isAdmin}
        />
 
+      <BucketAssignmentsList
+        courseId={courseId}
+        bucketId={bucketId}
+        isLocked={!canViewContent}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }
