@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { ArrowLeft, Package, DollarSign, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface OrderableItem {
     id: string;
@@ -42,9 +43,50 @@ const getFullFileUrl = (filePath?: string) => {
     return `${baseUrl}${filePath}`;
 };
 
+function ItemCard({ item, isOrdered, courseId, bucketId }: { item: OrderableItem, isOrdered: boolean, courseId: string, bucketId: string }) {
+    return (
+        <Card className="flex flex-col">
+            <CardHeader className="p-0">
+                <div className="relative h-48 w-full">
+                    <Image
+                        src={getFullFileUrl(item.img_url)}
+                        alt={item.name}
+                        fill
+                        style={{ objectFit: 'cover' }}
+                        className="rounded-t-lg"
+                    />
+                </div>
+            </CardHeader>
+            <CardContent className="p-4 flex-grow">
+                <h3 className="font-semibold text-lg">{item.name}</h3>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                <Badge className="mt-2 text-base" variant="secondary">
+                    <DollarSign className="mr-1 h-4 w-4"/>
+                    LKR {parseFloat(item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </Badge>
+            </CardContent>
+            <CardFooter className="p-4 pt-0">
+                {isOrdered ? (
+                    <Button size="sm" className="w-full" disabled>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Already Ordered
+                    </Button>
+                ) : (
+                    <Button size="sm" asChild className="w-full">
+                        <Link href={`/study-packs/${courseId}/bucket/${bucketId}/order/${item.id}`}>
+                            <Package className="mr-2 h-4 w-4" />
+                            Order Now
+                        </Link>
+                    </Button>
+                )}
+            </CardFooter>
+        </Card>
+    );
+}
+
 export function OrderableItemsList() {
     const params = useParams();
-    const { id: courseId, bucketId } = params;
+    const { id: courseId, bucketId } = params as { id: string, bucketId: string };
     const [items, setItems] = useState<OrderableItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
@@ -96,6 +138,18 @@ export function OrderableItemsList() {
         fetchAllData();
     }, [courseId, bucketId, toast]);
 
+    const { availableItems, orderedItems } = useMemo(() => {
+        const available: OrderableItem[] = [];
+        const ordered: OrderableItem[] = [];
+        items.forEach(item => {
+            if (orderedItemIds.has(item.id)) {
+                ordered.push(item);
+            } else {
+                available.push(item);
+            }
+        });
+        return { availableItems: available, orderedItems: ordered };
+    }, [items, orderedItemIds]);
 
     return (
         <Card>
@@ -120,48 +174,27 @@ export function OrderableItemsList() {
                         ))}
                     </div>
                 ) : items.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {items.map((item) => {
-                            const isOrdered = orderedItemIds.has(item.id);
-                            return (
-                                <Card key={item.id} className="flex flex-col">
-                                    <CardHeader className="p-0">
-                                        <div className="relative h-48 w-full">
-                                            <Image
-                                                src={getFullFileUrl(item.img_url)}
-                                                alt={item.name}
-                                                fill
-                                                style={{ objectFit: 'cover' }}
-                                                className="rounded-t-lg"
-                                            />
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="p-4 flex-grow">
-                                        <h3 className="font-semibold text-lg">{item.name}</h3>
-                                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
-                                        <Badge className="mt-2 text-base" variant="secondary">
-                                            <DollarSign className="mr-1 h-4 w-4"/>
-                                            LKR {parseFloat(item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </Badge>
-                                    </CardContent>
-                                    <CardFooter className="p-4 pt-0">
-                                        {isOrdered ? (
-                                            <Button size="sm" className="w-full" disabled>
-                                                <CheckCircle className="mr-2 h-4 w-4" />
-                                                Already Ordered
-                                            </Button>
-                                        ) : (
-                                            <Button size="sm" asChild className="w-full">
-                                                <Link href={`/study-packs/${courseId}/bucket/${bucketId}/order/${item.id}`}>
-                                                    <Package className="mr-2 h-4 w-4" />
-                                                    Order Now
-                                                </Link>
-                                            </Button>
-                                        )}
-                                    </CardFooter>
-                                </Card>
-                            );
-                        })}
+                    <div className="space-y-8">
+                        {availableItems.length > 0 && (
+                            <div>
+                                <h3 className="text-lg font-semibold mb-4">Available to Order</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {availableItems.map(item => (
+                                        <ItemCard key={item.id} item={item} isOrdered={false} courseId={courseId} bucketId={bucketId} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {orderedItems.length > 0 && (
+                             <div>
+                                <h3 className="text-lg font-semibold mb-4">Already Ordered</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                     {orderedItems.map(item => (
+                                        <ItemCard key={item.id} item={item} isOrdered={true} courseId={courseId} bucketId={bucketId} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="text-center py-12 border-2 border-dashed rounded-lg">
