@@ -31,7 +31,6 @@ const requestPaymentSchema = z.object({
     message: "Amount must be a positive number.",
   }),
   bank: z.string().min(1, { message: "Bank name is required."}),
-  branch: z.string().min(1, { message: "Branch name is required."}),
   ref: z.string().min(1, { message: "Reference is required."}),
   payment_slip: z
     .any()
@@ -61,17 +60,10 @@ interface Bank {
     name: string;
 }
 
-interface Branch {
-    id: string;
-    branch_name: string;
-}
-
 export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSuccess, paymentType = 'course_fee', deliveryDetails, orderableItemId }: PaymentSlipUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const [banks, setBanks] = useState<Bank[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [isBranchesLoading, setIsBranchesLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -80,12 +72,9 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
     defaultValues: {
         payment_amount: bucketAmount || '',
         bank: '',
-        branch: '',
         ref: ''
     }
   });
-
-  const selectedBankId = form.watch('bank');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -113,34 +102,6 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
     form.setValue('payment_amount', bucketAmount);
   }, [bucketAmount, form]);
   
-  useEffect(() => {
-    if (!selectedBankId) {
-      setBranches([]);
-      form.setValue('branch', '');
-      return;
-    }
-
-    async function fetchBranches() {
-      setIsBranchesLoading(true);
-      try {
-        const response = await api.get(`/bank_branches?bank_id=${selectedBankId}`);
-        if (response.data.status === 'success' && Array.isArray(response.data.data)) {
-          setBranches(response.data.data);
-        } else {
-          setBranches([]);
-        }
-      } catch (e) {
-        setBranches([]);
-        toast({ variant: 'destructive', title: 'Error fetching branches' });
-      } finally {
-        setIsBranchesLoading(false);
-      }
-    }
-
-    fetchBranches();
-  }, [selectedBankId, form, toast]);
-
-
   const fileRef = form.register("payment_slip");
 
   const onSubmit = async (data: RequestPaymentFormValues) => {
@@ -170,7 +131,7 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
         course_bucket_id: bucketId,
         payment_amount: data.payment_amount,
         bank: selectedBankName,
-        branch: data.branch,
+        branch: 'N/A',
         ref: data.ref,
         request_status: 'pending',
         payment_status: paymentType,
@@ -260,58 +221,31 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
                 )}
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                    control={form.control}
-                    name="bank"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Bank</FormLabel>
-                        <div className="relative">
-                            <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                <SelectTrigger className="pl-8">
-                                    <SelectValue placeholder="Select a bank" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {banks.map(bank => (
-                                        <SelectItem key={bank.id} value={bank.id}>{bank.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                    <FormField
-                    control={form.control}
-                    name="branch"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Branch</FormLabel>
-                        <div className="relative">
-                            <GitBranch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                            <Select onValueChange={field.onChange} value={field.value} disabled={!selectedBankId || isBranchesLoading}>
-                                <FormControl>
-                                <SelectTrigger className="pl-8">
-                                    <SelectValue placeholder={isBranchesLoading ? "Loading..." : "Select a branch"} />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {branches.map(branch => (
-                                        <SelectItem key={branch.id} value={branch.branch_name}>{branch.branch_name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-            </div>
+            <FormField
+                control={form.control}
+                name="bank"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Bank</FormLabel>
+                    <div className="relative">
+                        <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                            <SelectTrigger className="pl-8">
+                                <SelectValue placeholder="Select a bank" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {banks.map(bank => (
+                                    <SelectItem key={bank.id} value={bank.id}>{bank.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
 
             <FormField
                 control={form.control}
@@ -369,5 +303,3 @@ export function PaymentSlipUploadForm({ bucketAmount, courseId, bucketId, onSucc
     </Form>
   );
 }
-
-    

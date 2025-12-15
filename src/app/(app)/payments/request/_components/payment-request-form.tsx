@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -30,7 +31,6 @@ const requestPaymentSchema = z.object({
     message: "Amount must be a positive number.",
   }),
   bank: z.string().min(1, { message: "Bank is required."}),
-  branch: z.string().min(1, { message: "Branch is required."}),
   ref: z.string().min(1, { message: "Reference is required."}),
   payment_slip: z
     .any()
@@ -50,17 +50,10 @@ interface Bank {
     name: string;
 }
 
-interface Branch {
-    id: string;
-    branch_name: string;
-}
-
 export function PaymentRequestForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const [banks, setBanks] = useState<Bank[]>([]);
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [isBranchesLoading, setIsBranchesLoading] = useState(false);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -70,11 +63,8 @@ export function PaymentRequestForm() {
     defaultValues: {
         payment_amount: '',
         bank: '',
-        branch: '',
     }
   });
-  
-  const selectedBankId = form.watch('bank');
   
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -99,33 +89,6 @@ export function PaymentRequestForm() {
     fetchBanks();
   }, [toast]);
   
-  useEffect(() => {
-      if (!selectedBankId) {
-          setBranches([]);
-          form.setValue('branch', '');
-          return;
-      }
-      
-      async function fetchBranches() {
-          setIsBranchesLoading(true);
-          try {
-              const response = await api.get(`/bank_branches?bank_id=${selectedBankId}`);
-              if (response.data.status === 'success' && Array.isArray(response.data.data)) {
-                  setBranches(response.data.data);
-              } else {
-                  setBranches([]);
-              }
-          } catch(e) {
-              setBranches([]);
-              toast({ variant: 'destructive', title: 'Error fetching branches'});
-          } finally {
-              setIsBranchesLoading(false);
-          }
-      }
-      
-      fetchBranches();
-  }, [selectedBankId, form, toast]);
-
 
   const fileRef = form.register("payment_slip");
 
@@ -150,7 +113,7 @@ export function PaymentRequestForm() {
         student_number: user.student_number,
         payment_amount: data.payment_amount,
         bank: selectedBank?.name || data.bank,
-        branch: data.branch,
+        branch: 'N/A',
         ref: data.ref,
         request_status: 'pending'
     };
@@ -171,7 +134,7 @@ export function PaymentRequestForm() {
         if (response.status === 201 || response.status === 200) {
             toast({
                 title: 'Payment Request Sent',
-                description: `Request for $${data.payment_amount} has been sent.`,
+                description: `Request for LKR ${parseFloat(data.payment_amount).toLocaleString()} has been sent.`,
             });
             form.reset();
             router.push('/payments');
@@ -228,58 +191,31 @@ export function PaymentRequestForm() {
                   )}
                 />
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="bank"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bank</FormLabel>
-                           <div className="relative">
-                             <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger className="pl-8">
-                                    <SelectValue placeholder="Select a bank" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {banks.map(bank => (
-                                        <SelectItem key={bank.id} value={bank.id}>{bank.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                           </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <FormField
-                      control={form.control}
-                      name="branch"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Branch</FormLabel>
-                           <div className="relative">
-                             <GitBranch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                             <Select onValueChange={field.onChange} value={field.value} disabled={!selectedBankId || isBranchesLoading}>
-                                <FormControl>
-                                <SelectTrigger className="pl-8">
-                                    <SelectValue placeholder={isBranchesLoading ? "Loading..." : "Select a branch"} />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {branches.map(branch => (
-                                        <SelectItem key={branch.id} value={branch.branch_name}>{branch.branch_name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                           </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="bank"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bank</FormLabel>
+                       <div className="relative">
+                         <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger className="pl-8">
+                                <SelectValue placeholder="Select a bank" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {banks.map(bank => (
+                                    <SelectItem key={bank.id} value={bank.id}>{bank.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                       </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
