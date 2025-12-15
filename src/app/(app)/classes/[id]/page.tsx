@@ -526,7 +526,7 @@ export default function ClassDetailsPage() {
                                         </Link>
                                     </Button>
                                      <Button asChild size="sm">
-                                        <Link href={`/classes/${course.id}/assignments`}>
+                                        <Link href={`/classes/${course.id}/add-assignment`}>
                                             <Plus className="mr-2 h-4 w-4" />
                                             Add Assignment
                                         </Link>
