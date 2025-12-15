@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Plus, DollarSign, Lock, Clock, AlertCircle, Info, Building } from 'lucide-react';
+import { ChevronRight, Plus, DollarSign, Lock, Clock, AlertCircle, Info, Building, Eye, Trash2, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,14 @@ import api from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Preloader } from '@/components/ui/preloader';
 import { BucketAssignmentsList } from './_components/bucket-assignments-list';
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { PaymentSlipUploadForm } from './_components/payment-slip-upload-form';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
+import { Dialog, DialogClose } from '@/components/ui/dialog';
+import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -54,6 +58,7 @@ interface PaymentRequest {
     bank: string;
     ref: string;
     created_at: string;
+    slip_url: string;
     [key: string]: any;
 }
 
@@ -110,6 +115,7 @@ function BucketContentPageContent() {
   const params = useParams();
   const courseId = params.id as string;
   const bucketId = params.bucketId as string;
+  const { toast } = useToast();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [bucket, setBucket] = useState<Bucket | null>(null);
@@ -118,15 +124,17 @@ function BucketContentPageContent() {
   const [isPaid, setIsPaid] = useState(false);
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isSlipDialogOpen, setIsSlipDialogOpen] = useState(false);
+  const [selectedSlipUrl, setSelectedSlipUrl] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  
-   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const currentUser = storedUser ? JSON.parse(storedUser) : null;
-    setUser(currentUser);
 
-    async function loadData() {
+  const loadData = async () => {
         setLoading(true);
+        const storedUser = localStorage.getItem('user');
+        const currentUser = storedUser ? JSON.parse(storedUser) : null;
+        setUser(currentUser);
+
         const [courseData, bucketData] = await Promise.all([
             getCourseDetails(courseId),
             getBucketDetails(bucketId),
@@ -147,6 +155,8 @@ function BucketContentPageContent() {
 
         setLoading(false);
     }
+  
+   useEffect(() => {
     if (courseId && bucketId) {
       loadData();
     }
@@ -164,6 +174,45 @@ function BucketContentPageContent() {
   
   const canViewContent = isAdmin || isPaid;
   const showPaymentButton = !isAdmin && !canViewContent && !pendingRequest;
+
+  const getFullFileUrl = (filePath: string) => {
+    if (!filePath) return '#';
+    const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL;
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        return filePath;
+    }
+    return `${baseUrl}${filePath}`;
+  };
+
+  const openSlipDialog = (slipUrl: string) => {
+      setSelectedSlipUrl(slipUrl);
+      setIsSlipDialogOpen(true);
+  }
+  
+  const handleDeleteRequest = async (requestId: string) => {
+      setIsDeleting(true);
+      try {
+        const response = await api.delete(`/payment_requests/${requestId}`);
+        if (response.status === 200 || response.status === 204) {
+             toast({
+                title: "Request Deleted",
+                description: "Your rejected payment request has been removed.",
+            });
+            // Refetch data to update the UI
+            await loadData();
+        } else {
+            throw new Error(response.data.message || "Failed to delete request.");
+        }
+      } catch (error: any) {
+           toast({
+            variant: "destructive",
+            title: "Deletion Failed",
+            description: error.message || "Could not delete the payment request.",
+        });
+      } finally {
+          setIsDeleting(false);
+      }
+  }
 
   if (loading) {
       return (
@@ -231,6 +280,9 @@ function BucketContentPageContent() {
                                 <span className="font-mono">{pendingRequest.ref}</span>
                             </div>
                         </div>
+                        <Button variant="outline" size="sm" className="mt-4" onClick={() => openSlipDialog(pendingRequest.slip_url)}>
+                            <Eye className="mr-2 h-4 w-4" /> View Submitted Slip
+                        </Button>
                     </AlertDescription>
                 </Alert>
             )}
@@ -239,7 +291,7 @@ function BucketContentPageContent() {
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Previous Payment Rejected</AlertTitle>
                     <AlertDescription>
-                        Your previous payment attempt was rejected. Please review the details below and submit a new payment if needed.
+                        Your previous payment attempt was rejected. You can delete this record and submit a new payment.
                         <div className="mt-4 p-4 bg-destructive/10 rounded-lg space-y-2 text-xs">
                             <div className="flex justify-between items-center">
                                 <span className="flex items-center gap-2"><DollarSign className="h-3 w-3" /> Amount</span>
@@ -253,6 +305,33 @@ function BucketContentPageContent() {
                                 <span className="flex items-center gap-2"><Info className="h-3 w-3" /> Reference</span>
                                 <span className="font-mono">{rejectedRequest.ref}</span>
                             </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-4">
+                             <Button variant="secondary" size="sm" onClick={() => openSlipDialog(rejectedRequest.slip_url)}>
+                                <Eye className="mr-2 h-4 w-4" /> View Rejected Slip
+                            </Button>
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm" disabled={isDeleting}>
+                                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Trash2 className="mr-2 h-4 w-4" />}
+                                        Delete Request
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This will permanently delete your rejected payment request. You will be able to submit a new one after this.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteRequest(rejectedRequest.id)} disabled={isDeleting}>
+                                            {isDeleting ? "Deleting..." : "Confirm Delete"}
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </div>
                     </AlertDescription>
                 </Alert>
@@ -285,7 +364,10 @@ function BucketContentPageContent() {
                                 bucketAmount={bucket?.payment_amount || '0'}
                                 courseId={courseId}
                                 bucketId={bucketId}
-                                onSuccess={() => setIsPaymentDialogOpen(false)}
+                                onSuccess={async () => {
+                                    setIsPaymentDialogOpen(false);
+                                    await loadData();
+                                }}
                             />
                         </div>
                          <AlertDialogFooter>
@@ -322,6 +404,24 @@ function BucketContentPageContent() {
         isLocked={!canViewContent}
         isAdmin={isAdmin}
       />
+      
+      <Dialog open={isSlipDialogOpen} onOpenChange={setIsSlipDialogOpen}>
+          <DialogContent className="max-w-lg">
+              <DialogHeader>
+                  <DialogTitle>Payment Slip</DialogTitle>
+              </DialogHeader>
+              <div className="mt-4 relative h-96 w-full bg-muted rounded-md overflow-hidden">
+                  {selectedSlipUrl && (
+                      <Image
+                        src={getFullFileUrl(selectedSlipUrl)}
+                        alt="Payment Slip"
+                        fill
+                        style={{ objectFit: 'contain' }}
+                      />
+                  )}
+              </div>
+          </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -329,5 +429,3 @@ function BucketContentPageContent() {
 export default function BucketContentPage() {
     return <BucketContentPageContent />;
 }
-
-    
