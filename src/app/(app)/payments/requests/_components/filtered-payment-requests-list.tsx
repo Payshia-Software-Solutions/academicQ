@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -265,7 +266,7 @@ export function FilteredPaymentRequestsList() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">${summary.pendingAmount.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">LKR {summary.pendingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -283,7 +284,7 @@ export function FilteredPaymentRequestsList() {
                         <CheckCircle className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">${summary.approvedAmount.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">LKR {summary.approvedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -292,7 +293,7 @@ export function FilteredPaymentRequestsList() {
                         <AlertCircle className="h-4 w-4 text-destructive" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">${summary.rejectedAmount.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">LKR {summary.rejectedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -382,7 +383,7 @@ export function FilteredPaymentRequestsList() {
                                         </div>
                                         <div className="flex justify-between items-end mt-4">
                                             <div className="text-sm">
-                                                <p className="font-bold text-lg">${parseFloat(req.payment_amount).toFixed(2)}</p>
+                                                <p className="font-bold text-lg">LKR {parseFloat(req.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                                 <p className="text-xs text-muted-foreground">{format(new Date(req.created_at), 'PP p')}</p>
                                             </div>
                                             <Button variant="outline" size="sm" onClick={() => handleViewDetails(req)}>
@@ -431,7 +432,7 @@ export function FilteredPaymentRequestsList() {
                                             <TableCell>{req.student_number}</TableCell>
                                             <TableCell>{req.course_name || 'N/A'}</TableCell>
                                             <TableCell>{req.course_bucket_name || 'N/A'}</TableCell>
-                                            <TableCell>${parseFloat(req.payment_amount).toFixed(2)}</TableCell>
+                                            <TableCell>LKR {parseFloat(req.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                             <TableCell>
                                                 <Badge variant={req.request_status === 'approved' ? 'secondary' : req.request_status === 'rejected' ? 'destructive' : 'outline'} className="capitalize">{req.request_status}</Badge>
                                             </TableCell>
@@ -504,7 +505,7 @@ export function FilteredPaymentRequestsList() {
                                             <ul className="mt-2 list-disc list-inside text-xs">
                                                 {duplicateData.data.map(dup => (
                                                     <li key={dup.id}>
-                                                        Request ID: <strong>#{dup.id}</strong>, Status: <Badge variant="outline" className="capitalize text-xs">{dup.request_status}</Badge>, Amount: ${dup.payment_amount}
+                                                        Request ID: <strong>#{dup.id}</strong>, Status: <Badge variant="outline" className="capitalize text-xs">{dup.request_status}</Badge>, Amount: LKR {parseFloat(dup.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </li>
                                                 ))}
                                             </ul>
@@ -544,7 +545,7 @@ export function FilteredPaymentRequestsList() {
                                 </div>
                                 <div className="flex justify-between p-2 rounded-md bg-muted">
                                     <span className="text-muted-foreground">Amount:</span>
-                                    <span className="font-semibold">${parseFloat(selectedRequest.payment_amount).toFixed(2)}</span>
+                                    <span className="font-semibold">LKR {parseFloat(selectedRequest.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                                  <div className="flex justify-between p-2 rounded-md bg-muted">
                                     <span className="text-muted-foreground">Course:</span>

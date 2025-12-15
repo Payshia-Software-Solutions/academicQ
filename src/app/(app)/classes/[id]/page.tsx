@@ -43,6 +43,7 @@ interface Assignment {
     bucketId: string;
     contentId: string;
     content_id?: string;
+    course_bucket_id: string;
 }
 
 interface Bucket {
@@ -541,7 +542,7 @@ export default function ClassDetailsPage() {
                             {allAssignments && allAssignments.length > 0 ? (
                                 <ul className="space-y-3">
                                     {allAssignments.slice(0, 5).map((assignment) => (
-                                         <li key={assignment.id}>
+                                        <li key={assignment.id}>
                                             <Link href={`/classes/${assignment.courseId}/buckets/${assignment.bucketId}/content/${assignment.contentId}/assignments/${assignment.id}`}>
                                                 <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
                                                     <div className="flex items-center gap-4 flex-1 min-w-0">

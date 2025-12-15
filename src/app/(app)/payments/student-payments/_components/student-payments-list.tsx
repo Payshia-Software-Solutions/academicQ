@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -164,7 +165,7 @@ export function StudentPaymentsList() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">${totalAmount.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">LKR {totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -173,7 +174,7 @@ export function StudentPaymentsList() {
                         <Percent className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">${totalDiscount.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">LKR {totalDiscount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -182,7 +183,7 @@ export function StudentPaymentsList() {
                         <BadgeCheck className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">${finalAmount.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">LKR {finalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -261,8 +262,8 @@ export function StudentPaymentsList() {
                                             <TableCell>{payment.course_name || 'N/A'}</TableCell>
                                             <TableCell>{payment.course_bucket_name || 'N/A'}</TableCell>
                                             <TableCell className="font-mono text-xs truncate" style={{ maxWidth: '100px' }}>{payment.hash || 'N/A'}</TableCell>
-                                            <TableCell className="text-right font-semibold">${parseFloat(payment.payment_amount).toFixed(2)}</TableCell>
-                                            <TableCell className="text-right text-green-600">${parseFloat(payment.discount_amount || '0').toFixed(2)}</TableCell>
+                                            <TableCell className="text-right font-semibold">LKR {parseFloat(payment.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell className="text-right text-green-600">LKR {parseFloat(payment.discount_amount || '0').toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                             <TableCell className="text-xs">{format(new Date(payment.created_at), 'PP p')}</TableCell>
                                         </TableRow>
                                     ))

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -163,7 +164,7 @@ export function PaymentRequestsList() {
                                             <TableCell>{req.student_number}</TableCell>
                                             <TableCell>{req.course_name || 'N/A'}</TableCell>
                                             <TableCell>{req.course_bucket_name || 'N/A'}</TableCell>
-                                            <TableCell>${parseFloat(req.payment_amount).toFixed(2)}</TableCell>
+                                            <TableCell>LKR {parseFloat(req.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                             <TableCell>
                                                 <Badge variant={req.request_status === 'approved' ? 'secondary' : 'destructive'} className="capitalize">{req.request_status}</Badge>
                                             </TableCell>
@@ -248,7 +249,7 @@ export function PaymentRequestsList() {
                                 </div>
                                 <div className="flex justify-between p-2 rounded-md bg-muted">
                                     <span className="text-muted-foreground">Amount:</span>
-                                    <span className="font-semibold">${parseFloat(selectedRequest.payment_amount).toFixed(2)}</span>
+                                    <span className="font-semibold">LKR {parseFloat(selectedRequest.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between p-2 rounded-md bg-muted">
                                     <span className="text-muted-foreground">Course:</span>

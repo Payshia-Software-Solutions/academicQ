@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -91,7 +92,7 @@ function PaymentsPageContent() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">LKR {totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             <p className="text-xs text-muted-foreground">From all paid invoices</p>
           </CardContent>
         </Card>
@@ -182,7 +183,7 @@ function PaymentsPageContent() {
                                     </div>
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-right font-medium">${payment.amount.toFixed(2)}</TableCell>
+                                <TableCell className="text-right font-medium">LKR {payment.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                 <TableCell className="text-center">
                                     <Badge variant={payment.status === 'Paid' ? 'secondary' : 'destructive'}>
                                     {payment.status}

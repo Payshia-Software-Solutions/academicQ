@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -83,7 +84,7 @@ export function AddPaymentForm() {
 
     toast({
       title: 'Payment Recorded (Simulation)',
-      description: `Payment of $${data.amount} for ${studentInfo?.name} on ${format(data.date, 'PPP')} has been recorded.`,
+      description: `Payment of LKR ${data.amount.toLocaleString()} for ${studentInfo?.name} on ${format(data.date, 'PPP')} has been recorded.`,
     });
     
     setIsSubmitting(false);
@@ -132,7 +133,7 @@ export function AddPaymentForm() {
                     <div className="space-y-4 pt-4">
                         <div className="flex items-center justify-between p-3 text-sm border rounded-lg bg-muted/50">
                              <span className="text-muted-foreground">Due Balance</span>
-                             <span className="font-bold text-lg text-destructive">${studentInfo.dueBalance.toFixed(2)}</span>
+                             <span className="font-bold text-lg text-destructive">LKR {studentInfo.dueBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </div>
                         <div>
                             <h4 className="font-medium mb-2 text-sm flex items-center gap-2"><Receipt /> Payment History</h4>
@@ -150,7 +151,7 @@ export function AddPaymentForm() {
                                         {studentInfo.paymentHistory.length > 0 ? studentInfo.paymentHistory.map(p => (
                                             <TableRow key={p.id}>
                                                 <TableCell className="text-xs">{format(new Date(p.date), 'dd MMM yyyy')}</TableCell>
-                                                <TableCell className="text-xs font-medium">${p.amount.toFixed(2)}</TableCell>
+                                                <TableCell className="text-xs font-medium">LKR {p.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                                 <TableCell className="text-xs"><Badge variant={p.status === 'Paid' ? 'secondary' : 'destructive'}>{p.status}</Badge></TableCell>
                                             </TableRow>
                                         )) : (

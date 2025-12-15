@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -107,7 +108,7 @@ export function OrderableItemsList() {
                                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
                                      <Badge className="mt-2 text-base" variant="secondary">
                                         <DollarSign className="mr-1 h-4 w-4"/>
-                                        {parseFloat(item.price).toFixed(2)}
+                                        LKR {parseFloat(item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                      </Badge>
                                 </CardContent>
                                 <CardFooter className="p-4 pt-0">

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -292,7 +293,7 @@ export function ItemOrderForm() {
                                 <p className="text-muted-foreground">{item.description}</p>
                                 <Badge variant="secondary" className="text-lg">
                                     <DollarSign className="mr-1 h-5 w-5" />
-                                    {parseFloat(item.price).toFixed(2)}
+                                    LKR {parseFloat(item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </Badge>
                             </div>
                         </div>

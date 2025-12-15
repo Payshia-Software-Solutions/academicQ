@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Image from 'next/image';
@@ -95,7 +96,7 @@ export function ShippingLabel({ order }: ShippingLabelProps) {
                 {/* Footer */}
                 <div className="border-2 border-black rounded-lg p-2 flex justify-between items-center text-xs">
                     <div>
-                        <p className="font-bold">COD Amount: <span className="text-xl">LKR {parseFloat(order.cod_amount || '0').toFixed(2)}</span></p>
+                        <p className="font-bold">COD Amount: <span className="text-xl">LKR {parseFloat(order.cod_amount || '0').toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></p>
                         <p className="mt-1">Remarks: බෙදා හැරීමේදී ගැටලුවක් ඇත්නම්</p>
                         <p className="font-bold">071 5 884 884 ට අමතන්න. ස්තූතියි!</p>
                     </div>
