@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -169,9 +170,13 @@ function BucketContentPageContent() {
                 getPaymentRequests(currentUser.student_number, courseData.id, bucketData.id),
                 getBalanceDetails(currentUser.student_number, courseData.id, bucketData.id)
             ]);
+            
+            const hasApprovedPayment = requests.some(req => req.request_status === 'approved');
+            const totalPaid = balanceData?.total_pay_amount ?? 0;
+            
+            // Unlock if there is any approved payment and some amount has been paid
+            setIsPaid(hasApprovedPayment && totalPaid > 0);
 
-            const hasPaid = payments.some(p => p.status === 'approved');
-            setIsPaid(hasPaid);
             setPaymentRequests(requests.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
             setBalance(balanceData);
         }
