@@ -241,45 +241,6 @@ export default function ContentDetailsPage() {
                 </CardContent>
             </Card>
 
-             {isAdmin && (
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <CardTitle>Manage Assignments</CardTitle>
-                             <Button asChild>
-                                <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/add-assignment`}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Assignment
-                                </Link>
-                            </Button>
-                        </div>
-                        <CardDescription>
-                            Create and manage assignments for this content.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {content.assignments && content.assignments.length > 0 ? (
-                             <ul className="space-y-2">
-                                {content.assignments.map((assignment: any) => (
-                                    <li key={assignment.id} className="border p-3 rounded-md flex justify-between items-center">
-                                        <div>
-                                            <p className="font-semibold">{assignment.content_title}</p>
-                                            <p className="text-xs text-muted-foreground">Deadline: {assignment.deadline_date ? format(new Date(assignment.deadline_date), 'PP') : 'N/A'}</p>
-                                        </div>
-                                        <Button variant="ghost" size="sm" asChild>
-                                            <Link href={`/classes/${courseId}/buckets/${bucketId}/content/${contentId}/assignments/${assignment.id}`}>
-                                                View
-                                            </Link>
-                                        </Button>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-muted-foreground text-center">No assignments yet.</p>
-                        )}
-                    </CardContent>
-                </Card>
-            )}
         </div>
     )
 

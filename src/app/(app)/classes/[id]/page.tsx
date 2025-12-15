@@ -513,52 +513,57 @@ export default function ClassDetailsPage() {
                 )}
             </section>
             
-            {allAssignments.length > 0 && (
+            {isAdmin && (
                 <section>
                     <Card>
                         <CardHeader>
                             <div className="flex items-center justify-between">
-                                <CardTitle>All Course Assignments</CardTitle>
-                                {isAdmin && (
-                                     <div className="flex items-center gap-2">
-                                        <Button asChild variant="outline" size="sm">
-                                            <Link href={`/classes/${course.id}/assignments`}>
-                                                View All
-                                            </Link>
-                                        </Button>
-                                         <Button asChild size="sm">
-                                            <Link href={`/classes/${course.id}/assignments`}>
-                                                <Plus className="mr-2 h-4 w-4" />
-                                                Add Assignment
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                )}
+                                <CardTitle>Manage Assignments</CardTitle>
+                                 <div className="flex items-center gap-2">
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href={`/classes/${course.id}/assignments`}>
+                                            View All
+                                        </Link>
+                                    </Button>
+                                     <Button asChild size="sm">
+                                        <Link href={`/classes/${course.id}/assignments`}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add Assignment
+                                        </Link>
+                                    </Button>
+                                </div>
                             </div>
+                            <CardDescription>
+                                Create and manage assignments for this course.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent>
-                             <ul className="space-y-3">
-                                {allAssignments.slice(0, 5).map((assignment) => (
-                                    <li key={assignment.id}>
-                                         <Link href={`/classes/${assignment.courseId}/buckets/${assignment.bucketId}/content/${assignment.contentId}/assignments/${assignment.id}`}>
-                                            <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
-                                                <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                    <div className="p-2 bg-accent/10 rounded-lg">
-                                                        <FileText className="h-5 w-5 text-accent" />
+                            {allAssignments && allAssignments.length > 0 ? (
+                                <ul className="space-y-3">
+                                    {allAssignments.slice(0, 5).map((assignment) => (
+                                         <li key={assignment.id}>
+                                            <Link href={`/classes/${assignment.courseId}/buckets/${assignment.bucketId}/content/${assignment.contentId}/assignments/${assignment.id}`}>
+                                                <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors gap-4">
+                                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                        <div className="p-2 bg-accent/10 rounded-lg">
+                                                            <FileText className="h-5 w-5 text-accent" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-semibold truncate">{assignment.content_title}</p>
+                                                            <Badge variant="outline" className="capitalize mt-1">{assignment.content_type}</Badge>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-semibold truncate">{assignment.content_title}</p>
-                                                        <Badge variant="outline" className="capitalize mt-1">{assignment.content_type}</Badge>
-                                                    </div>
+                                                    <Button variant="ghost" size="sm">
+                                                        View <Eye className="ml-2 h-4 w-4" />
+                                                    </Button>
                                                 </div>
-                                                <Button variant="ghost" size="sm">
-                                                    View <Eye className="ml-2 h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </Link>
-                                    </li>
-                                ))}
-                            </ul>
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-muted-foreground text-center">No assignments yet for this course.</p>
+                            )}
                         </CardContent>
                     </Card>
                 </section>
