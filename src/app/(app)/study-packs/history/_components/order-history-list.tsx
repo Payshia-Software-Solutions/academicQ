@@ -120,7 +120,40 @@ export function OrderHistoryList() {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="overflow-x-auto">
+                
+                {/* Mobile View */}
+                <div className="md:hidden space-y-4">
+                     {isLoading ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                            <Card key={i} className="p-4"><Skeleton className="h-24 w-full" /></Card>
+                        ))
+                     ) : orders.length > 0 ? (
+                        orders.map((order) => (
+                            <Card key={order.id}>
+                                <CardContent className="p-4">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-semibold">{order.orderable_item_name || `Item #${order.orderable_item_id}`}</p>
+                                            <p className="text-xs text-muted-foreground font-mono">#{order.id}</p>
+                                        </div>
+                                        <Badge variant={getStatusVariant(order.order_status)} className="capitalize">{order.order_status}</Badge>
+                                    </div>
+                                    <div className="mt-4 text-sm text-muted-foreground">
+                                        <p>{order.address_line_1}, {order.city}</p>
+                                        <p className="text-xs mt-1">{format(new Date(order.created_at), 'PP p')}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))
+                     ) : (
+                         <p className="text-center text-muted-foreground py-10">
+                            No orders found with the selected status.
+                         </p>
+                     )}
+                </div>
+
+                {/* Desktop View */}
+                <div className="hidden md:block overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
