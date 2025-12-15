@@ -216,6 +216,11 @@ export function FilteredPaymentRequestsList() {
         }
         setSelectedRequest(null);
     }
+
+    const handleBackToDetails = () => {
+        setIsPaymentOpen(false);
+        setIsDetailsOpen(true);
+    }
     
     const hasAppliedFilters = requests.length > 0 || isLoading;
     
@@ -541,6 +546,7 @@ export function FilteredPaymentRequestsList() {
                         <CoursePaymentForm 
                             paymentRequest={selectedRequest}
                             onPaymentSuccess={handlePaymentSuccess}
+                            onBack={handleBackToDetails}
                         />
                     )}
                 </DialogContent>

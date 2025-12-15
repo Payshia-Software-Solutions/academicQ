@@ -70,10 +70,11 @@ interface PaymentRequest {
 interface CoursePaymentFormProps {
     paymentRequest?: PaymentRequest;
     onPaymentSuccess?: () => void;
+    onBack?: () => void;
 }
 
 
-export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePaymentFormProps) {
+export function CoursePaymentForm({ paymentRequest, onPaymentSuccess, onBack }: CoursePaymentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [buckets, setBuckets] = useState<Bucket[]>([]);
@@ -181,7 +182,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         if (onPaymentSuccess) {
             onPaymentSuccess();
         } else {
-            router.push('/payments');
+            router.push('/payments/student-payments');
         }
       } else {
          toast({
@@ -191,22 +192,20 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         });
       }
     } catch (error: any) {
-       const errorMessage = error.response?.data?.message?.toLowerCase() || '';
-       if (errorMessage.includes('payment slip (hash) has already been used')) {
-         toast({
-            variant: 'destructive',
-            title: 'Duplicate Payment Slip',
-            description: "This payment slip has already been used for an approved payment.",
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Submission Error',
-          description:
-            error.response?.data?.message ||
-            'Could not connect to the server. Please try again later.',
-        });
-      }
+        const errorMessage = error.response?.data?.message?.toLowerCase() || '';
+        if (errorMessage.includes('payment slip (hash) has already been used')) {
+            toast({
+                variant: 'destructive',
+                title: 'Duplicate Payment Slip',
+                description: "This payment slip has already been used for an approved payment.",
+            });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Submission Error',
+                description: error.response?.data?.message || 'Could not connect to the server. Please try again later.',
+            });
+        }
     } finally {
       setIsSubmitting(false);
     }
@@ -350,7 +349,13 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
         {isDialogMode ? (
             <>
                 {formContent}
-                 <div className="flex justify-end pt-6">
+                 <div className="flex justify-between pt-6">
+                    {onBack && (
+                         <Button type="button" variant="outline" onClick={onBack}>
+                            <ArrowLeft className="mr-2 h-4 w-4"/>
+                            Back
+                        </Button>
+                    )}
                     <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting ? (
                         <>
@@ -372,7 +377,7 @@ export function CoursePaymentForm({ paymentRequest, onPaymentSuccess }: CoursePa
                 {formContent}
                 <CardFooter className="flex justify-between">
                     <Button variant="outline" asChild>
-                        <Link href="/payments">
+                        <Link href="/payments/student-payments">
                             <ArrowLeft className="mr-2 h-4 w-4"/>
                             Cancel
                         </Link>
