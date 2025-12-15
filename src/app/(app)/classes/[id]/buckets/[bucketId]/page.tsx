@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Plus, DollarSign, Lock, Clock, AlertCircle } from 'lucide-react';
+import { ChevronRight, Plus, DollarSign, Lock, Clock, AlertCircle, Info, Building } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { BucketAssignmentsList } from './_components/bucket-assignments-list';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { PaymentSlipUploadForm } from './_components/payment-slip-upload-form';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { format } from 'date-fns';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -49,6 +50,10 @@ interface StudentPayment {
 interface PaymentRequest {
     id: string;
     request_status: 'pending' | 'approved' | 'rejected';
+    payment_amount: string;
+    bank: string;
+    ref: string;
+    created_at: string;
     [key: string]: any;
 }
 
@@ -137,7 +142,7 @@ function BucketContentPageContent() {
 
             const hasPaid = payments.some(p => p.status === 'approved');
             setIsPaid(hasPaid);
-            setPaymentRequests(requests);
+            setPaymentRequests(requests.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         }
 
         setLoading(false);
@@ -209,18 +214,46 @@ function BucketContentPageContent() {
             {pendingRequest && (
                 <Alert>
                     <Clock className="h-4 w-4" />
-                    <AlertTitle>Payment Pending</AlertTitle>
+                    <AlertTitle>Payment Pending Review</AlertTitle>
                     <AlertDescription>
                         Your payment for this bucket is currently under review. You will be notified once it is approved.
+                         <div className="mt-4 p-4 bg-muted/50 rounded-lg space-y-2 text-xs">
+                             <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2"><DollarSign className="h-3 w-3" /> Amount</span>
+                                <span className="font-mono">LKR {parseFloat(pendingRequest.payment_amount).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2"><Building className="h-3 w-3" /> Bank</span>
+                                <span>{pendingRequest.bank}</span>
+                            </div>
+                             <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2"><Info className="h-3 w-3" /> Reference</span>
+                                <span className="font-mono">{pendingRequest.ref}</span>
+                            </div>
+                        </div>
                     </AlertDescription>
                 </Alert>
             )}
             {rejectedRequest && !pendingRequest && (
                  <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Payment Rejected</AlertTitle>
+                    <AlertTitle>Previous Payment Rejected</AlertTitle>
                     <AlertDescription>
-                        Your previous payment was rejected. Please review the details and submit a new payment.
+                        Your previous payment attempt was rejected. Please review the details below and submit a new payment if needed.
+                        <div className="mt-4 p-4 bg-destructive/10 rounded-lg space-y-2 text-xs">
+                            <div className="flex justify-between items-center">
+                                <span className="flex items-center gap-2"><DollarSign className="h-3 w-3" /> Amount</span>
+                                <span className="font-mono">LKR {parseFloat(rejectedRequest.payment_amount).toFixed(2)}</span>
+                            </div>
+                             <div className="flex justify-between items-center">
+                                <span className="flex items-center gap-2"><Building className="h-3 w-3" /> Bank</span>
+                                <span>{rejectedRequest.bank}</span>
+                            </div>
+                             <div className="flex justify-between items-center">
+                                <span className="flex items-center gap-2"><Info className="h-3 w-3" /> Reference</span>
+                                <span className="font-mono">{rejectedRequest.ref}</span>
+                            </div>
+                        </div>
                     </AlertDescription>
                 </Alert>
             )}
@@ -255,7 +288,7 @@ function BucketContentPageContent() {
                                 onSuccess={() => setIsPaymentDialogOpen(false)}
                             />
                         </div>
-                        <AlertDialogFooter>
+                         <AlertDialogFooter>
                             <AlertDialogCancel>Close</AlertDialogCancel>
                         </AlertDialogFooter>
                     </AlertDialogContent>
@@ -296,3 +329,5 @@ function BucketContentPageContent() {
 export default function BucketContentPage() {
     return <BucketContentPageContent />;
 }
+
+    
