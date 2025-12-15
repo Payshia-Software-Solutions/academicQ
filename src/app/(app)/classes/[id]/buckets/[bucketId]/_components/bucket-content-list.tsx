@@ -135,6 +135,7 @@ export function BucketContentList({ courseId, bucketId, isLocked, bucketAmount, 
                                     bucketAmount={bucketAmount || '0'}
                                     courseId={courseId}
                                     bucketId={bucketId}
+                                    onSuccess={() => setIsPaymentDialogOpen(false)}
                                 />
                             </div>
                              <AlertDialogFooter>
