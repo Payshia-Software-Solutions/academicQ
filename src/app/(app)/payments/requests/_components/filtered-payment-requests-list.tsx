@@ -227,7 +227,9 @@ export function FilteredPaymentRequestsList() {
         setIsPaymentOpen(false);
         if (selectedRequest) {
             try {
-                await api.put(`/payment_requests/update/status/?id=${selectedRequest.id}&status=approved`);
+                await api.put(`/payment_requests/${selectedRequest.id}`, {
+                    request_status: "approved"
+                });
                 toast({
                     title: 'Request Approved',
                     description: `Payment request #${selectedRequest.id} has been marked as approved.`,
@@ -571,8 +573,8 @@ export function FilteredPaymentRequestsList() {
                                 </div>
                             </div>
                         </div>
-                        <DialogFooter>
-                            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+                        <DialogFooter className="flex-col sm:flex-row sm:justify-between w-full">
+                            <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>Close</Button>
                              {selectedRequest.request_status === 'pending' && (
                                 <Button onClick={handleProceed} disabled={duplicateData?.duplicate}>
                                     <CheckCircle className="mr-2 h-4 w-4" />
