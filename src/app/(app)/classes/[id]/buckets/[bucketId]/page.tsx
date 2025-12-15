@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Plus, DollarSign, Lock, Clock, AlertCircle, Info, Building, Eye, Trash2, Loader2 } from 'lucide-react';
+import { ChevronRight, Plus, DollarSign, Lock, Clock, AlertCircle, Info, Building, Eye, Trash2, Loader2, Wallet } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -60,6 +61,12 @@ interface PaymentRequest {
     created_at: string;
     slip_url: string;
     [key: string]: any;
+}
+
+interface BalanceDetails {
+    course_bucket_price: string;
+    total_pay_amount: number;
+    balance: number;
 }
 
 async function getCourseDetails(id: string): Promise<Course | null> {
@@ -110,6 +117,19 @@ async function getPaymentRequests(studentNumber: string, courseId: string, bucke
     }
 }
 
+async function getBalanceDetails(studentNumber: string, courseId: string, bucketId: string): Promise<BalanceDetails | null> {
+    try {
+        const response = await api.get(`/student-payment-courses/balance/?student_number=${studentNumber}&course_id=${courseId}&course_bucket_id=${bucketId}`);
+        if (response.data.status === 'success' && response.data.data) {
+            return response.data.data;
+        }
+        return null;
+    } catch (error) {
+        console.error("Failed to fetch balance details:", error);
+        return null;
+    }
+}
+
 
 function BucketContentPageContent() {
   const params = useParams();
@@ -127,6 +147,7 @@ function BucketContentPageContent() {
   const [isSlipDialogOpen, setIsSlipDialogOpen] = useState(false);
   const [selectedSlipUrl, setSelectedSlipUrl] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [balance, setBalance] = useState<BalanceDetails | null>(null);
 
 
   const loadData = async () => {
@@ -143,14 +164,16 @@ function BucketContentPageContent() {
         setBucket(bucketData);
 
         if (currentUser?.user_status === 'student' && currentUser.student_number && bucketData && courseData) {
-            const [payments, requests] = await Promise.all([
+            const [payments, requests, balanceData] = await Promise.all([
                 getStudentPayments(currentUser.student_number, courseData.id, bucketData.id),
                 getPaymentRequests(currentUser.student_number, courseData.id, bucketData.id),
+                getBalanceDetails(currentUser.student_number, courseData.id, bucketData.id)
             ]);
 
             const hasPaid = payments.some(p => p.status === 'approved');
             setIsPaid(hasPaid);
             setPaymentRequests(requests.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+            setBalance(balanceData);
         }
 
         setLoading(false);
@@ -258,6 +281,35 @@ function BucketContentPageContent() {
         </div>
       </header>
       
+      {!isAdmin && balance && (
+          <Card>
+              <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                      <Wallet />
+                      Balance Summary
+                  </CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                      <div>
+                          <p className="text-sm text-muted-foreground">Bucket Price</p>
+                          <p className="text-xl font-bold">LKR {parseFloat(balance.course_bucket_price).toLocaleString()}</p>
+                      </div>
+                      <div>
+                          <p className="text-sm text-muted-foreground">Total Paid</p>
+                          <p className="text-xl font-bold text-green-600">LKR {balance.total_pay_amount.toLocaleString()}</p>
+                      </div>
+                      <div>
+                          <p className="text-sm text-muted-foreground">Balance</p>
+                          <p className={`text-xl font-bold ${balance.balance <= 0 ? 'text-destructive' : 'text-foreground'}`}>
+                              LKR {Math.abs(balance.balance).toLocaleString()}
+                          </p>
+                      </div>
+                  </div>
+              </CardContent>
+          </Card>
+      )}
+
       {!isAdmin && !isPaid && (
           <div className="space-y-4">
             {pendingRequest && (
