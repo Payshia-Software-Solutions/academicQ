@@ -171,7 +171,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                   </div>
                    <div>
                       <p className="text-muted-foreground">Course / Bucket</p>
-                      <p className="font-semibold">{order.course_name || 'N/A'} / {order.bucket_name || order.course_bucket_name || 'N/A'}</p>
+                      <p className="font-semibold">{order.course_name || 'N/A'} / {order.course_bucket_name || order.bucket_name || 'N/A'}</p>
                   </div>
                    <div className="grid grid-cols-2 gap-4">
                      <div>
