@@ -81,11 +81,15 @@ async function getCourseDetails(id: string): Promise<Course | null> {
     }
 }
 
-async function getBucketDetails(id: string): Promise<Bucket | null> {
+async function getBucketDetails(courseId: string, bucketId: string): Promise<Bucket | null> {
     try {
-        const response = await api.get(`/course_buckets/${id}`);
-        if (!response.data || response.data.status !== 'success') return null;
-        return { ...response.data.data, name: response.data.data.bucket_name };
+        const response = await api.get(`/courses/full/details/?id=${courseId}`);
+        if (!response.data || response.data.status !== 'success' || !response.data.data.buckets) return null;
+        
+        const bucket = response.data.data.buckets.find((b: any) => b.id.toString() === bucketId.toString());
+        if (!bucket) return null;
+
+        return { ...bucket, name: bucket.name };
     } catch (error) {
         console.error("Failed to fetch bucket details:", error);
         return null;
@@ -159,7 +163,7 @@ function BucketContentPageContent() {
 
         const [courseData, bucketData] = await Promise.all([
             getCourseDetails(courseId),
-            getBucketDetails(bucketId),
+            getBucketDetails(courseId, bucketId),
         ]);
         setCourse(courseData);
         setBucket(bucketData);
