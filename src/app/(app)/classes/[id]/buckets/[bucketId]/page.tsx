@@ -83,10 +83,10 @@ async function getCourseDetails(id: string): Promise<Course | null> {
 
 async function getBucketDetails(courseId: string, bucketId: string): Promise<Bucket | null> {
     try {
-        const response = await api.get(`/courses/full/details/?id=${courseId}`);
-        if (!response.data || response.data.status !== 'success' || !response.data.data.buckets) return null;
+        const response = await api.get(`/course_buckets/course/${courseId}`);
+        if (!response.data || response.data.status !== 'success' || !Array.isArray(response.data.data)) return null;
         
-        const bucket = response.data.data.buckets.find((b: any) => b.id.toString() === bucketId.toString());
+        const bucket = response.data.data.find((b: any) => b.id.toString() === bucketId.toString());
         if (!bucket) return null;
 
         return { ...bucket, name: bucket.name };
