@@ -11,9 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Package, ChevronDown, Loader2, Eye, Users } from 'lucide-react';
+import { BookOpen, Inbox, Package, ChevronDown, Loader2, Eye, Users, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OrderDetailsDialog } from './order-details-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 type OrderStatus = 'pending' | 'packed' | 'handed over' | 'delivered' | 'returned' | 'cancelled';
 
@@ -155,15 +159,63 @@ export function OrdersList() {
         (currentPage - 1) * ROWS_PER_PAGE,
         currentPage * ROWS_PER_PAGE
     );
+    
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        (doc as any).autoTable({
+            head: [['Order ID', 'Student No.', 'Item', 'Address', 'Status', 'Date']],
+            body: orders.map(order => [
+                `#${order.id}`,
+                order.student_number,
+                order.orderable_item_name || `Item #${order.orderable_item_id}`,
+                `${order.address_line_1}, ${order.city}`,
+                order.order_status,
+                format(new Date(order.created_at), 'yyyy-MM-dd')
+            ]),
+        });
+        doc.save('all-orders.pdf');
+    }
+
+    const handleExportExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(orders.map(order => ({
+            'Order ID': `#${order.id}`,
+            'Student No.': order.student_number,
+            'Item': order.orderable_item_name || `Item #${order.orderable_item_id}`,
+            'Address': `${order.address_line_1}, ${order.city}`,
+            'Status': order.order_status,
+            'Date': format(new Date(order.created_at), 'yyyy-MM-dd'),
+            'Tracking Number': order.tracking_number || 'N/A'
+        })));
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'All Orders');
+        XLSX.writeFile(workbook, 'all-orders.xlsx');
+    }
 
     return (
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Filter Orders</CardTitle>
-                    <CardDescription>
-                        Use the filters below to view specific sets of orders.
-                    </CardDescription>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <CardTitle>Filter Orders</CardTitle>
+                            <CardDescription>
+                                Use the filters below to view specific sets of orders.
+                            </CardDescription>
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    <FileDown className="mr-2 h-4 w-4" />
+                                    Export
+                                    <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={handleExportPDF}>Export to PDF</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleExportExcel}>Export to Excel</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

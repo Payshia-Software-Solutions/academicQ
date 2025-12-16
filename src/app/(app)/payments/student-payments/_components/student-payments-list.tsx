@@ -10,8 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Users, DollarSign, Percent, BadgeCheck } from 'lucide-react';
+import { BookOpen, Inbox, Users, DollarSign, Percent, BadgeCheck, FileDown, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+
 
 interface StudentPayment {
     id: string;
@@ -155,6 +160,38 @@ export function StudentPaymentsList() {
         (currentPage - 1) * ROWS_PER_PAGE,
         currentPage * ROWS_PER_PAGE
     );
+    
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        (doc as any).autoTable({
+            head: [['ID', 'Student No.', 'Course', 'Bucket', 'Amount', 'Discount', 'Date']],
+            body: payments.map(p => [
+                `#${p.id}`,
+                p.student_number,
+                p.course_name || 'N/A',
+                p.course_bucket_name || 'N/A',
+                `LKR ${parseFloat(p.payment_amount).toFixed(2)}`,
+                `LKR ${parseFloat(p.discount_amount || '0').toFixed(2)}`,
+                format(new Date(p.created_at), 'yyyy-MM-dd')
+            ]),
+        });
+        doc.save('student-payments.pdf');
+    }
+
+    const handleExportExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(payments.map(p => ({
+            'Payment ID': `#${p.id}`,
+            'Student No.': p.student_number,
+            'Course': p.course_name || 'N/A',
+            'Bucket': p.course_bucket_name || 'N/A',
+            'Amount (LKR)': parseFloat(p.payment_amount).toFixed(2),
+            'Discount (LKR)': parseFloat(p.discount_amount || '0').toFixed(2),
+            'Date': format(new Date(p.created_at), 'yyyy-MM-dd'),
+        })));
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Student Payments');
+        XLSX.writeFile(workbook, 'student-payments.xlsx');
+    }
 
     return (
         <div className="space-y-6">
@@ -189,10 +226,27 @@ export function StudentPaymentsList() {
             </div>
             <Card>
                 <CardHeader>
-                    <CardTitle>Filter Payments</CardTitle>
-                    <CardDescription>
-                        Use the dropdowns to filter student payment records.
-                    </CardDescription>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                             <CardTitle>Filter Payments</CardTitle>
+                            <CardDescription>
+                                Use the dropdowns to filter student payment records.
+                            </CardDescription>
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    <FileDown className="mr-2 h-4 w-4" />
+                                    Export
+                                    <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={handleExportPDF}>Export to PDF</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleExportExcel}>Export to Excel</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

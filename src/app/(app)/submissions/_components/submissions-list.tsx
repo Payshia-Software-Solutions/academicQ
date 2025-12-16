@@ -11,13 +11,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, Inbox, Users, Download, ChevronDown, Loader2, Edit, CheckSquare } from 'lucide-react';
+import { BookOpen, Inbox, Users, Download, ChevronDown, Loader2, Edit, CheckSquare, FileDown } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 interface Submission {
     id: string;
@@ -274,14 +277,59 @@ export function SubmissionsList() {
         (currentPage - 1) * ROWS_PER_PAGE,
         currentPage * ROWS_PER_PAGE
     );
+    
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        (doc as any).autoTable({
+            head: [['Student', 'Assignment', 'Status', 'Grade', 'Date']],
+            body: submissions.map(sub => [
+                getStudentName(sub.student_number),
+                getAssignmentTitle(sub.assigment_id),
+                sub.sub_status || 'N/A',
+                sub.grade || 'N/A',
+                format(new Date(sub.created_at), 'yyyy-MM-dd HH:mm')
+            ]),
+        });
+        doc.save('submissions.pdf');
+    }
+
+    const handleExportExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(submissions.map(sub => ({
+            'Student': getStudentName(sub.student_number),
+            'Assignment': getAssignmentTitle(sub.assigment_id),
+            'Status': sub.sub_status || 'N/A',
+            'Grade': sub.grade || 'N/A',
+            'Date': format(new Date(sub.created_at), 'yyyy-MM-dd HH:mm')
+        })));
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Submissions');
+        XLSX.writeFile(workbook, 'submissions.xlsx');
+    }
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Filter Submissions</CardTitle>
-                <CardDescription>
-                    Select filters to narrow down the list of submissions.
-                </CardDescription>
+                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <CardTitle>Filter Submissions</CardTitle>
+                        <CardDescription>
+                            Select filters to narrow down the list of submissions.
+                        </CardDescription>
+                    </div>
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <FileDown className="mr-2 h-4 w-4" />
+                                Export
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={handleExportPDF}>Export to PDF</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={handleExportExcel}>Export to Excel</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

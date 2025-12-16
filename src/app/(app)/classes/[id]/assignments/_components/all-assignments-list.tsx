@@ -9,9 +9,13 @@ import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { Eye, FileDown, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { Preloader } from '@/components/ui/preloader';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 interface Submission {
     id: string;
@@ -96,6 +100,34 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
             default: return 'outline';
         }
     }
+    
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        (doc as any).autoTable({
+            head: [['Student', 'Assignment', 'Submitted On', 'Status', 'Grade']],
+            body: allSubmissions.map(sub => [
+                sub.student_number,
+                sub.assignmentTitle,
+                format(new Date(sub.created_at), 'PP p'),
+                sub.sub_status || 'N/A',
+                sub.grade || 'Not Graded'
+            ]),
+        });
+        doc.save('all-assignments.pdf');
+    }
+
+    const handleExportExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(allSubmissions.map(sub => ({
+            'Student': sub.student_number,
+            'Assignment': sub.assignmentTitle,
+            'Submitted On': format(new Date(sub.created_at), 'PP p'),
+            'Status': sub.sub_status || 'N/A',
+            'Grade': sub.grade || 'Not Graded'
+        })));
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'All Assignments');
+        XLSX.writeFile(workbook, 'all-assignments.xlsx');
+    }
 
 
     if (isLoading) {
@@ -105,10 +137,27 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Submissions</CardTitle>
-                <CardDescription>
-                    {allSubmissions.length} submission(s) found for this course.
-                </CardDescription>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <CardTitle>Submissions</CardTitle>
+                        <CardDescription>
+                            {allSubmissions.length} submission(s) found for this course.
+                        </CardDescription>
+                    </div>
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <FileDown className="mr-2 h-4 w-4" />
+                                Export
+                                <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={handleExportPDF}>Export to PDF</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={handleExportExcel}>Export to Excel</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </CardHeader>
             <CardContent>
                  <div className="overflow-x-auto">
