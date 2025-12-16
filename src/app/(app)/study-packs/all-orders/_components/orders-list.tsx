@@ -239,11 +239,13 @@ export function OrdersList() {
 
         (doc as any).autoTable({
             startY: companyDetails ? 45 : 20,
-            head: [['Order ID', 'Student No.', 'Item', 'Address', 'Status', 'Date']],
+            head: [['Order ID', 'Student No.', 'Item', 'Course', 'Bucket', 'Address', 'Status', 'Date']],
             body: orders.map(order => [
                 `#${order.id}`,
                 order.student_number,
-                order.orderable_item_name || `Item #${order.orderable_item_id}`,
+                order.item_name || order.orderable_item_name || `Item #${order.orderable_item_id}`,
+                order.course_name || 'N/A',
+                order.course_bucket_name || 'N/A',
                 `${order.address_line_1}, ${order.city}`,
                 order.order_status,
                 format(new Date(order.created_at), 'yyyy-MM-dd')
@@ -266,7 +268,9 @@ export function OrdersList() {
         const data = orders.map(order => ({
             'Order ID': `#${order.id}`,
             'Student No.': order.student_number,
-            'Item': order.orderable_item_name || `Item #${order.orderable_item_id}`,
+            'Item': order.item_name || order.orderable_item_name || `Item #${order.orderable_item_id}`,
+            'Course': order.course_name || 'N/A',
+            'Bucket': order.course_bucket_name || 'N/A',
             'Address': `${order.address_line_1}, ${order.city}`,
             'Status': order.order_status,
             'Date': format(new Date(order.created_at), 'yyyy-MM-dd'),
@@ -381,9 +385,10 @@ export function OrdersList() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Order ID</TableHead>
-                                    <TableHead>Student No.</TableHead>
+                                    <TableHead>Student</TableHead>
                                     <TableHead>Item</TableHead>
-                                    <TableHead>Address</TableHead>
+                                    <TableHead>Course</TableHead>
+                                    <TableHead>Bucket</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Action</TableHead>
@@ -393,7 +398,7 @@ export function OrdersList() {
                                 {isLoading ? (
                                     Array.from({ length: 5 }).map((_, i) => (
                                         <TableRow key={i}>
-                                            <TableCell colSpan={7}>
+                                            <TableCell colSpan={8}>
                                                 <Skeleton className="h-8 w-full" />
                                             </TableCell>
                                         </TableRow>
@@ -404,11 +409,10 @@ export function OrdersList() {
                                             <TableCell className="font-mono text-xs">#{order.id}</TableCell>
                                             <TableCell className="font-mono text-xs">{order.student_number}</TableCell>
                                             <TableCell>
-                                                {order.orderable_item_name || `Item #${order.orderable_item_id}`}
+                                                {order.item_name || order.orderable_item_name || `Item #${order.orderable_item_id}`}
                                             </TableCell>
-                                            <TableCell className="text-xs">
-                                                {order.address_line_1}, {order.city}
-                                            </TableCell>
+                                            <TableCell className="text-xs">{order.course_name || 'N/A'}</TableCell>
+                                            <TableCell className="text-xs">{order.course_bucket_name || 'N/A'}</TableCell>
                                             <TableCell>
                                                 <StatusBadge status={order.order_status} />
                                             </TableCell>
@@ -423,7 +427,7 @@ export function OrdersList() {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                                        <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
                                             {filterTrigger > 0 ? 'No orders found for the selected filters.' : 'Please apply filters to see orders.'}
                                         </TableCell>
                                     </TableRow>
