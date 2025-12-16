@@ -143,7 +143,7 @@ export default function ClassDetailsPage() {
                 ...assignment,
                 courseId: courseId,
                 bucketId: bucket.id,
-                contentId: assignment.content_id || ''
+                contentId: assignment.id
             }))
         );
     }, [buckets, courseId]);
