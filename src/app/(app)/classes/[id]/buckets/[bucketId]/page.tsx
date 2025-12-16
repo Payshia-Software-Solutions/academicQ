@@ -20,7 +20,7 @@ import { Dialog, DialogClose } from '@/components/ui/dialog';
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 
 interface CurrentUser {
   user_status: 'admin' | 'student';
@@ -308,10 +308,46 @@ function BucketContentPageContent() {
                           <p className={`text-xl font-bold ${balance.balance <= 0 ? 'text-green-600' : 'text-destructive'}`}>
                               LKR {Math.abs(balance.balance).toLocaleString()}
                           </p>
-                          <p className="text-sm text-muted-foreground">{balance.balance <= 0 ? 'Paid' : 'Balance Due'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {balance.balance < 0 ? 'Overpaid' : balance.balance > 0 ? 'Balance Due' : 'Fully Paid'}
+                          </p>
                       </div>
                   </div>
               </CardContent>
+                {balance.balance > 0 && (
+                    <CardFooter className="justify-center">
+                         <AlertDialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+                            <AlertDialogTrigger asChild>
+                                <Button>
+                                    <DollarSign className="mr-2 h-4 w-4" />
+                                    Pay Again
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="sm:max-w-[425px]">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Upload Payment Slip</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        To make another payment, please upload your new proof of payment.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <div className="py-4">
+                                    <PaymentSlipUploadForm 
+                                        bucketAmount={String(balance.balance)}
+                                        courseId={courseId}
+                                        bucketId={bucketId}
+                                        onSuccess={async () => {
+                                            setIsPaymentDialogOpen(false);
+                                            await loadData();
+                                        }}
+                                    />
+                                </div>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Close</AlertDialogCancel>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </CardFooter>
+                )}
           </Card>
       )}
 
