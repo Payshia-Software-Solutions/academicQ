@@ -59,7 +59,7 @@ export function InstituteSettingsForm() {
     if (!filePath) return '';
     if (filePath.startsWith('http')) return filePath;
     const baseUrl = process.env.NEXT_PUBLIC_FILE_BASE_URL || '';
-    return `${baseUrl}${filePath}`;
+    return `${baseUrl}/${filePath}`;
   };
 
   useEffect(() => {
