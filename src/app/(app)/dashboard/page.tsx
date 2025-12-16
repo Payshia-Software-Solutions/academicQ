@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { users } from "@/lib/data";
 import { Users, BookOpen, AlertCircle, ArrowRight, Building, Settings } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -36,10 +35,29 @@ interface InstituteDetails {
     [key: string]: any;
 }
 
+interface PaymentRequest {
+    id: string;
+    student_number: string;
+    request_status: 'pending' | 'approved' | 'rejected';
+    [key: string]: any;
+}
+
+interface Student {
+    id: string;
+    student_number: string;
+    f_name: string;
+    l_name: string;
+    email: string;
+    avatarUrl?: string; // Assuming avatarUrl can be part of student data
+}
+
+
 export default function DashboardPage() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [counts, setCounts] = useState<DashboardCounts | null>(null);
   const [institute, setInstitute] = useState<InstituteDetails | null>(null);
+  const [pendingPayments, setPendingPayments] = useState<PaymentRequest[]>([]);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
   const router = useRouter();
@@ -56,9 +74,12 @@ export default function DashboardPage() {
   useEffect(() => {
     async function checkProfileAndFetchCounts() {
       if (user) {
+        setLoading(true);
         try {
           const countPromise = api.get('/dashboard/counts');
           const institutePromise = api.get('/company/1');
+          const pendingPaymentsPromise = api.get('/payment_requests/filter/?request_status=pending');
+          const studentsPromise = api.get('/users?status=student');
 
           let profilePromise;
           if (user.student_number) {
@@ -67,7 +88,13 @@ export default function DashboardPage() {
             profilePromise = Promise.resolve(null);
           }
           
-          const [countResponse, instituteResponse, profileResponse] = await Promise.all([countPromise, institutePromise, profilePromise]);
+          const [
+              countResponse, 
+              instituteResponse, 
+              profileResponse, 
+              pendingPaymentsResponse,
+              studentsResponse
+            ] = await Promise.all([countPromise, institutePromise, profilePromise, pendingPaymentsPromise, studentsPromise]);
 
           if (countResponse.data.status === 'success') {
             setCounts(countResponse.data.data);
@@ -82,6 +109,15 @@ export default function DashboardPage() {
           } else {
             setProfileIncomplete(false);
           }
+
+          if (pendingPaymentsResponse.data.status === 'success') {
+            setPendingPayments(pendingPaymentsResponse.data.data || []);
+          }
+
+           if (studentsResponse.data.status === 'success') {
+            setAllStudents(studentsResponse.data.data || []);
+          }
+
         } catch (error) {
           console.error("Failed to fetch dashboard data:", error);
         } finally {
@@ -94,7 +130,18 @@ export default function DashboardPage() {
 
   }, [user]);
 
-  const pendingPayments = users.filter(s => s.paymentStatus === 'Pending');
+  const studentMap = new Map(allStudents.map(s => [s.student_number, s]));
+
+  const pendingPaymentsWithStudentData = pendingPayments.map(req => {
+      const student = studentMap.get(req.student_number);
+      return {
+          ...req,
+          studentName: student ? `${student.f_name} ${student.l_name}` : 'Unknown Student',
+          studentEmail: student?.email || 'N/A',
+          studentAvatar: student?.avatarUrl || '',
+      };
+  });
+
 
   const getDashboardTitle = () => {
     if (!user) return 'Dashboard';
@@ -212,23 +259,23 @@ export default function DashboardPage() {
             <CardContent>
             {/* Mobile View - Cards */}
             <div className="md:hidden">
-                {pendingPayments.length > 0 ? (
+                {pendingPaymentsWithStudentData.length > 0 ? (
                     <div className="space-y-4">
-                    {pendingPayments.map((student) => (
-                        <div key={student.id} className="border rounded-lg p-4 flex items-center justify-between gap-4">
+                    {pendingPaymentsWithStudentData.map((req) => (
+                        <div key={req.id} className="border rounded-lg p-4 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <Avatar>
-                            <AvatarImage src={student.avatarUrl} alt={student.name} />
-                            <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={req.studentAvatar} alt={req.studentName} />
+                            <AvatarFallback>{req.studentName.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                            <p className="font-medium">{student.name}</p>
-                            <p className="text-sm text-muted-foreground">{student.email}</p>
-                            <Badge variant="destructive" className="mt-2">{student.paymentStatus}</Badge>
+                            <p className="font-medium">{req.studentName}</p>
+                            <p className="text-sm text-muted-foreground">{req.studentEmail}</p>
+                            <Badge variant="destructive" className="mt-2 capitalize">{req.request_status}</Badge>
                             </div>
                         </div>
                         <Button asChild variant="ghost" size="icon">
-                            <Link href={`/students/${student.id}`} aria-label={`View ${student.name}`}>
+                            <Link href={`/students/${req.student_number}`} aria-label={`View ${req.studentName}`}>
                             <ArrowRight className="h-4 w-4" />
                             </Link>
                         </Button>
@@ -252,17 +299,17 @@ export default function DashboardPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {pendingPayments.length > 0 ? (
-                    pendingPayments.map((student) => (
-                        <TableRow key={student.id}>
-                        <TableCell className="font-medium">{student.name}</TableCell>
-                        <TableCell>{student.email}</TableCell>
+                    {pendingPaymentsWithStudentData.length > 0 ? (
+                    pendingPaymentsWithStudentData.map((req) => (
+                        <TableRow key={req.id}>
+                        <TableCell className="font-medium">{req.studentName}</TableCell>
+                        <TableCell>{req.studentEmail}</TableCell>
                         <TableCell className="text-center">
-                            <Badge variant="destructive">{student.paymentStatus}</Badge>
+                            <Badge variant="destructive" className="capitalize">{req.request_status}</Badge>
                         </TableCell>
                         <TableCell className="text-right">
                             <Button asChild variant="ghost" size="sm">
-                            <Link href={`/students/${student.id}`}>View Student</Link>
+                            <Link href={`/students/${req.student_number}`}>View Student</Link>
                             </Button>
                         </TableCell>
                         </TableRow>
