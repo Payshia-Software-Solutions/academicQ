@@ -167,7 +167,7 @@ export function OrderDetailsDialog({ order, isOpen, onOpenChange, onOrderUpdate 
                   <h3 className="font-semibold text-base border-b pb-2">Order Info</h3>
                    <div>
                       <p className="text-muted-foreground">Order Item</p>
-                      <p className="font-semibold">{order.orderable_item_name || 'N/A'}</p>
+                      <p className="font-semibold">{order.item_name || order.orderable_item_name || 'N/A'}</p>
                   </div>
                    <div>
                       <p className="text-muted-foreground">Course / Bucket</p>
