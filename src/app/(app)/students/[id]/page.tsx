@@ -7,14 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { List, User, Mail, Smartphone, Hash } from 'lucide-react';
+import { List, User, Mail, Smartphone, Hash, Download, DollarSign, BookOpen, Inbox } from 'lucide-react';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
 import { Preloader } from '@/components/ui/preloader';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Submission {
     id: string;
@@ -32,11 +32,35 @@ interface Assignment {
     submissions: Submission[];
 }
 
+interface Payment {
+    id: string;
+    payment_amount: string;
+    discount_amount: string;
+    created_at: string;
+}
+
+interface PaymentDetails {
+    course_bucket_price: number;
+    total_paid_amount: number;
+    balance: number;
+    payments: Payment[];
+}
+
+interface Bucket {
+    id: string;
+    name: string;
+    description: string;
+    payment_amount: string;
+    payment_details: PaymentDetails;
+}
+
+
 interface Course {
     id: string;
     course_name: string;
     course_description: string;
     assignments: Assignment[];
+    buckets: Bucket[];
 }
 
 interface StudentData {
@@ -195,42 +219,63 @@ function StudentProfilePageContent() {
                                                 {course.course_name}
                                             </AccordionTrigger>
                                             <AccordionContent>
-                                                <div className="pl-4 space-y-4">
-                                                    <h4 className="font-semibold mt-2">Assignments</h4>
-                                                    {course.assignments && course.assignments.length > 0 ? (
-                                                        <ul className="space-y-3">
-                                                            {course.assignments.map(assignment => (
-                                                                <li key={assignment.id} className="border-l-2 pl-3">
-                                                                    <p className="font-medium">{assignment.content_title}</p>
-                                                                    {assignment.deadline_date && <p className="text-xs text-muted-foreground">Deadline: {format(new Date(assignment.deadline_date), 'PP p')}</p>}
-                                                                    
-                                                                    <div className="mt-2 space-y-2">
-                                                                        {assignment.submissions.map(sub => (
-                                                                             <div key={sub.id} className="flex items-center justify-between text-xs p-2 rounded-md bg-muted/50">
-                                                                                <div className="flex items-center gap-2">
-                                                                                     <Button asChild variant="ghost" size="icon" className="h-6 w-6">
-                                                                                        <a href={getFullFileUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
-                                                                                            <Download className="h-3 w-3" />
-                                                                                        </a>
-                                                                                    </Button>
-                                                                                    <span>Submission on {format(new Date(sub.created_at), 'PP')}</span>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-2">
-                                                                                     <StatusBadge status={sub.sub_status} />
-                                                                                    {sub.grade && (
-                                                                                        <Badge variant="secondary" className="font-mono">{sub.grade}</Badge>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                        ))}
-                                                                         {assignment.submissions.length === 0 && <p className="text-xs text-muted-foreground">No submissions yet.</p>}
+                                                <div className="pl-4 space-y-6">
+                                                   
+                                                    {course.buckets && course.buckets.length > 0 && (
+                                                         <div>
+                                                            <h4 className="font-semibold mt-2 flex items-center gap-2"><Inbox className="h-4 w-4 text-muted-foreground"/> Payment Buckets</h4>
+                                                            <div className="space-y-3 mt-2">
+                                                                {course.buckets.map(bucket => (
+                                                                    <div key={bucket.id} className="border-l-2 pl-3">
+                                                                        <p className="font-medium">{bucket.name}</p>
+                                                                        <div className="text-xs text-muted-foreground grid grid-cols-2 gap-x-4">
+                                                                            <p>Total Paid: <span className="font-semibold">LKR {bucket.payment_details.total_paid_amount.toLocaleString()}</span></p>
+                                                                            <p>Balance: <span className={`font-semibold ${bucket.payment_details.balance <= 0 ? 'text-green-600' : 'text-destructive'}`}>LKR {Math.abs(bucket.payment_details.balance).toLocaleString()}</span></p>
+                                                                        </div>
                                                                     </div>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    ) : (
-                                                         <p className="text-sm text-muted-foreground text-center py-4">No assignments for this course.</p>
+                                                                ))}
+                                                            </div>
+                                                        </div>
                                                     )}
+                                                    
+                                                     <div>
+                                                        <h4 className="font-semibold mt-2 flex items-center gap-2"><BookOpen className="h-4 w-4 text-muted-foreground" /> Assignments</h4>
+                                                        {course.assignments && course.assignments.length > 0 ? (
+                                                            <div className="space-y-3 mt-2">
+                                                                {course.assignments.map(assignment => (
+                                                                    <div key={assignment.id} className="border-l-2 pl-3">
+                                                                        <p className="font-medium">{assignment.content_title}</p>
+                                                                        {assignment.deadline_date && <p className="text-xs text-muted-foreground">Deadline: {format(new Date(assignment.deadline_date), 'PP p')}</p>}
+                                                                        
+                                                                        <div className="mt-2 space-y-2">
+                                                                            {assignment.submissions && assignment.submissions.length > 0 ? assignment.submissions.map(sub => (
+                                                                                <div key={sub.id} className="flex items-center justify-between text-xs p-2 rounded-md bg-muted/50">
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <Button asChild variant="ghost" size="icon" className="h-6 w-6">
+                                                                                            <a href={getFullFileUrl(sub.file_path)} target="_blank" rel="noopener noreferrer">
+                                                                                                <Download className="h-3 w-3" />
+                                                                                            </a>
+                                                                                        </Button>
+                                                                                        <span>Submission on {format(new Date(sub.created_at), 'PP')}</span>
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <StatusBadge status={sub.sub_status} />
+                                                                                        {sub.grade && (
+                                                                                            <Badge variant="secondary" className="font-mono">{sub.grade}</Badge>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )) : (
+                                                                                <p className="text-xs text-muted-foreground">No submissions yet.</p>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-sm text-muted-foreground text-center py-4">No assignments for this course.</p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </AccordionContent>
                                         </AccordionItem>
