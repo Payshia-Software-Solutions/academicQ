@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { Combobox } from '@/components/ui/combobox';
 
 interface Submission {
     id: string;
@@ -379,40 +380,28 @@ export function SubmissionsList() {
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                     <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-                        <SelectTrigger>
-                            <BookOpen className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Select a course..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {courses.map(course => (
-                                <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                     <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={!selectedCourse || courseBuckets.length === 0}>
-                        <SelectTrigger>
-                            <Inbox className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {courseBuckets.map(bucket => (
-                                <SelectItem key={bucket.id} value={bucket.id}>{bucket.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                     <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                        <SelectTrigger>
-                            <Users className="mr-2 h-4 w-4" />
-                            <SelectValue placeholder="Filter by student..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                             <SelectItem value="all-students">All Students</SelectItem>
-                            {students.map(student => (
-                                <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name} ({student.student_number})</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <Combobox
+                        options={courses.map(course => ({ value: course.id, label: course.course_name }))}
+                        value={selectedCourse}
+                        onChange={setSelectedCourse}
+                        placeholder="Select a course..."
+                        searchPlaceholder="Search courses..."
+                    />
+                    <Combobox
+                        options={courseBuckets.map(bucket => ({ value: bucket.id, label: bucket.name }))}
+                        value={selectedBucket}
+                        onChange={setSelectedBucket}
+                        placeholder={!selectedCourse ? 'Select course first' : 'Select a bucket...'}
+                        searchPlaceholder="Search buckets..."
+                        disabled={!selectedCourse || courseBuckets.length === 0}
+                    />
+                    <Combobox
+                        options={[{ value: 'all-students', label: 'All Students' }, ...students.map(s => ({ value: s.student_number, label: `${s.f_name} ${s.l_name} (${s.student_number})` }))]}
+                        value={selectedStudent}
+                        onChange={setSelectedStudent}
+                        placeholder="Filter by student..."
+                        searchPlaceholder="Search students..."
+                    />
                     <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as any)}>
                         <SelectTrigger>
                             <CheckSquare className="mr-2 h-4 w-4" />
