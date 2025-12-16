@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -55,6 +54,14 @@ interface Assignment {
     content_title: string;
 }
 
+interface CompanyDetails {
+    company_name: string;
+    address: string;
+    phone: string;
+    email: string;
+    website: string;
+}
+
 const statusOptions: Submission['sub_status'][] = ['submitted', 'graded', 'rejected'];
 const ROWS_PER_PAGE = 10;
 
@@ -78,20 +85,25 @@ export function SubmissionsList() {
     const [currentGrade, setCurrentGrade] = useState('');
     const [updatingGrade, setUpdatingGrade] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
 
 
     useEffect(() => {
         async function fetchInitialData() {
             try {
-                const [coursesRes, usersRes, assignmentsRes] = await Promise.all([
+                const [coursesRes, usersRes, assignmentsRes, companyRes] = await Promise.all([
                     api.get('/courses'),
                     api.get('/users?status=student'),
                     api.get('/assignments'),
+                    api.get('/company/1')
                 ]);
                 
                 setCourses(coursesRes.data.data || []);
                 setAssignments(assignmentsRes.data.data || []);
                 setStudents(usersRes.data.data || []);
+                if (companyRes.data) {
+                    setCompanyDetails(companyRes.data);
+                }
 
             } catch (error) {
                 toast({
@@ -280,7 +292,20 @@ export function SubmissionsList() {
     
     const handleExportPDF = () => {
         const doc = new jsPDF();
+        
+        if (companyDetails) {
+            doc.setFontSize(16);
+            doc.text(companyDetails.company_name, 14, 15);
+            doc.setFontSize(10);
+            doc.text(companyDetails.address, 14, 22);
+            doc.text(`Phone: ${companyDetails.phone} | Email: ${companyDetails.email}`, 14, 29);
+        }
+
+        doc.setFontSize(12);
+        doc.text("Submissions Report", 14, companyDetails ? 40 : 15);
+
         (doc as any).autoTable({
+            startY: companyDetails ? 45 : 20,
             head: [['Student', 'Assignment', 'Status', 'Grade', 'Date']],
             body: submissions.map(sub => [
                 getStudentName(sub.student_number),
@@ -294,13 +319,28 @@ export function SubmissionsList() {
     }
 
     const handleExportExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(submissions.map(sub => ({
+        const header: any[][] = [];
+        if (companyDetails) {
+            header.push([companyDetails.company_name]);
+            header.push([companyDetails.address]);
+            header.push([`Phone: ${companyDetails.phone}`, `Email: ${companyDetails.email}`]);
+            header.push([]); // Spacer row
+        }
+        header.push(["Submissions Report"]);
+        header.push([]); // Spacer row
+
+        const data = submissions.map(sub => ({
             'Student': getStudentName(sub.student_number),
             'Assignment': getAssignmentTitle(sub.assigment_id),
             'Status': sub.sub_status || 'N/A',
             'Grade': sub.grade || 'N/A',
             'Date': format(new Date(sub.created_at), 'yyyy-MM-dd HH:mm')
-        })));
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet([]);
+        XLSX.utils.sheet_add_aoa(worksheet, header, { origin: 'A1' });
+        XLSX.utils.sheet_add_json(worksheet, data, { origin: -1, skipHeader: false });
+        
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Submissions');
         XLSX.writeFile(workbook, 'submissions.xlsx');
@@ -528,3 +568,5 @@ export function SubmissionsList() {
         </Card>
     );
 }
+
+    

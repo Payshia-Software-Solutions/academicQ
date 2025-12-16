@@ -37,6 +37,14 @@ interface AllAssignmentsListProps {
     courseId: string;
 }
 
+interface CompanyDetails {
+    company_name: string;
+    address: string;
+    phone: string;
+    email: string;
+    website: string;
+}
+
 const ROWS_PER_PAGE = 10;
 
 export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
@@ -44,6 +52,26 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
     const [currentPage, setCurrentPage] = useState(1);
+    const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
+
+     useEffect(() => {
+        async function fetchCompanyDetails() {
+            try {
+                const response = await api.get('/company/1');
+                if (response.data) {
+                    setCompanyDetails(response.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch company details:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Could not fetch company details for exporting.",
+                });
+            }
+        }
+        fetchCompanyDetails();
+    }, [toast]);
 
     useEffect(() => {
         if (!courseId) return;
@@ -103,7 +131,20 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
     
     const handleExportPDF = () => {
         const doc = new jsPDF();
+        
+        if (companyDetails) {
+            doc.setFontSize(16);
+            doc.text(companyDetails.company_name, 14, 15);
+            doc.setFontSize(10);
+            doc.text(companyDetails.address, 14, 22);
+            doc.text(`Phone: ${companyDetails.phone} | Email: ${companyDetails.email}`, 14, 29);
+        }
+        
+        doc.setFontSize(12);
+        doc.text("All Assignment Submissions", 14, companyDetails ? 40 : 15);
+
         (doc as any).autoTable({
+            startY: companyDetails ? 45 : 20,
             head: [['Student', 'Assignment', 'Submitted On', 'Status', 'Grade']],
             body: allSubmissions.map(sub => [
                 sub.student_number,
@@ -117,13 +158,27 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
     }
 
     const handleExportExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(allSubmissions.map(sub => ({
+        const header: any[][] = [];
+        if (companyDetails) {
+            header.push([companyDetails.company_name]);
+            header.push([companyDetails.address]);
+            header.push([`Phone: ${companyDetails.phone}`, `Email: ${companyDetails.email}`]);
+            header.push([]); // Spacer row
+        }
+        header.push(["All Assignment Submissions"]);
+        header.push([]); // Spacer row
+        
+        const data = allSubmissions.map(sub => ({
             'Student': sub.student_number,
             'Assignment': sub.assignmentTitle,
             'Submitted On': format(new Date(sub.created_at), 'PP p'),
             'Status': sub.sub_status || 'N/A',
             'Grade': sub.grade || 'Not Graded'
-        })));
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.sheet_add_aoa(worksheet, header, { origin: 'A1' });
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'All Assignments');
         XLSX.writeFile(workbook, 'all-assignments.xlsx');
@@ -235,3 +290,5 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
         </Card>
     )
 }
+
+    

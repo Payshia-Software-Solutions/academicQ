@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -49,6 +48,14 @@ interface Student {
   l_name: string;
 }
 
+interface CompanyDetails {
+    company_name: string;
+    address: string;
+    phone: string;
+    email: string;
+    website: string;
+}
+
 const ROWS_PER_PAGE = 10;
 
 export function StudentPaymentsList() {
@@ -64,17 +71,22 @@ export function StudentPaymentsList() {
     const [selectedBucket, setSelectedBucket] = useState('');
     const [selectedStudent, setSelectedStudent] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
+    const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
 
 
     useEffect(() => {
         async function fetchFilters() {
             try {
-                const [coursesRes, studentsRes] = await Promise.all([
+                const [coursesRes, studentsRes, companyRes] = await Promise.all([
                     api.get('/courses'),
-                    api.get('/users?status=student')
+                    api.get('/users?status=student'),
+                    api.get('/company/1')
                 ]);
                 setCourses(coursesRes.data.data || []);
                 setStudents(studentsRes.data.data || []);
+                if (companyRes.data) {
+                    setCompanyDetails(companyRes.data);
+                }
             } catch(e) {
                 toast({ variant: 'destructive', title: 'Error', description: 'Could not load filter options.' });
             }
@@ -163,7 +175,20 @@ export function StudentPaymentsList() {
     
     const handleExportPDF = () => {
         const doc = new jsPDF();
+        
+        if (companyDetails) {
+            doc.setFontSize(16);
+            doc.text(companyDetails.company_name, 14, 15);
+            doc.setFontSize(10);
+            doc.text(companyDetails.address, 14, 22);
+            doc.text(`Phone: ${companyDetails.phone} | Email: ${companyDetails.email}`, 14, 29);
+        }
+        
+        doc.setFontSize(12);
+        doc.text("Student Payments Report", 14, companyDetails ? 40 : 15);
+
         (doc as any).autoTable({
+            startY: companyDetails ? 45 : 20,
             head: [['ID', 'Student No.', 'Course', 'Bucket', 'Amount', 'Discount', 'Date']],
             body: payments.map(p => [
                 `#${p.id}`,
@@ -179,7 +204,17 @@ export function StudentPaymentsList() {
     }
 
     const handleExportExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(payments.map(p => ({
+        const header: any[][] = [];
+        if (companyDetails) {
+            header.push([companyDetails.company_name]);
+            header.push([companyDetails.address]);
+            header.push([`Phone: ${companyDetails.phone}`, `Email: ${companyDetails.email}`]);
+            header.push([]); // Spacer row
+        }
+        header.push(["Student Payments Report"]);
+        header.push([]); // Spacer row
+        
+        const data = payments.map(p => ({
             'Payment ID': `#${p.id}`,
             'Student No.': p.student_number,
             'Course': p.course_name || 'N/A',
@@ -187,7 +222,12 @@ export function StudentPaymentsList() {
             'Amount (LKR)': parseFloat(p.payment_amount).toFixed(2),
             'Discount (LKR)': parseFloat(p.discount_amount || '0').toFixed(2),
             'Date': format(new Date(p.created_at), 'yyyy-MM-dd'),
-        })));
+        }));
+        
+        const worksheet = XLSX.utils.json_to_sheet([]);
+        XLSX.utils.sheet_add_aoa(worksheet, header, { origin: 'A1' });
+        XLSX.utils.sheet_add_json(worksheet, data, { origin: -1, skipHeader: false });
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Student Payments');
         XLSX.writeFile(workbook, 'student-payments.xlsx');
@@ -357,3 +397,5 @@ export function StudentPaymentsList() {
         </div>
     );
 }
+
+    

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -66,6 +65,14 @@ interface DuplicateHashData {
     data: PaymentRequest[];
 }
 
+interface CompanyDetails {
+    company_name: string;
+    address: string;
+    phone: string;
+    email: string;
+    website: string;
+}
+
 const statusOptions: PaymentRequest['request_status'][] = ['pending', 'approved', 'rejected'];
 const ROWS_PER_PAGE = 10;
 
@@ -91,6 +98,7 @@ export function FilteredPaymentRequestsList() {
     const [currentPage, setCurrentPage] = useState(1);
     const [duplicateData, setDuplicateData] = useState<DuplicateHashData | null>(null);
     const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
+    const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
 
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
@@ -106,14 +114,18 @@ export function FilteredPaymentRequestsList() {
 
     const fetchFilters = async () => {
         try {
-            const [coursesRes, studentsRes] = await Promise.all([
+            const [coursesRes, studentsRes, companyRes] = await Promise.all([
                 api.get('/courses'),
-                api.get('/users?status=student')
+                api.get('/users?status=student'),
+                api.get('/company/1')
             ]);
             setCourses(coursesRes.data.data || []);
             setStudents(studentsRes.data.data || []);
+            if (companyRes.data) {
+                setCompanyDetails(companyRes.data);
+            }
         } catch(e) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not load filter options.' });
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load filter options or company details.' });
         }
     };
     
@@ -257,7 +269,20 @@ export function FilteredPaymentRequestsList() {
     
     const handleExportPDF = () => {
         const doc = new jsPDF();
+        
+        if (companyDetails) {
+            doc.setFontSize(16);
+            doc.text(companyDetails.company_name, 14, 15);
+            doc.setFontSize(10);
+            doc.text(companyDetails.address, 14, 22);
+            doc.text(`Phone: ${companyDetails.phone} | Email: ${companyDetails.email}`, 14, 29);
+        }
+        
+        doc.setFontSize(12);
+        doc.text("Filtered Payment Requests", 14, companyDetails ? 40 : 15);
+
         (doc as any).autoTable({
+            startY: companyDetails ? 45 : 20,
             head: [['Request ID', 'Student No.', 'Course', 'Bucket', 'Amount', 'Status', 'Payment For', 'Ref ID']],
             body: requests.map(req => [
                 `#${req.id}`,
@@ -274,7 +299,17 @@ export function FilteredPaymentRequestsList() {
     }
 
     const handleExportExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(requests.map(req => ({
+        const header: any[][] = [];
+        if (companyDetails) {
+            header.push([companyDetails.company_name]);
+            header.push([companyDetails.address]);
+            header.push([`Phone: ${companyDetails.phone}`, `Email: ${companyDetails.email}`]);
+            header.push([]); // Spacer row
+        }
+        header.push(["Filtered Payment Requests"]);
+        header.push([]); // Spacer row
+        
+        const data = requests.map(req => ({
             'Request ID': `#${req.id}`,
             'Student No.': req.student_number,
             'Course': req.course_name || 'N/A',
@@ -283,7 +318,12 @@ export function FilteredPaymentRequestsList() {
             'Status': req.request_status,
             'Payment For': req.payment_status?.replace('_', ' ') || 'N/A',
             'Ref ID': req.ref_id || 'N/A'
-        })));
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet([]);
+        XLSX.utils.sheet_add_aoa(worksheet, header, { origin: 'A1' });
+        XLSX.utils.sheet_add_json(worksheet, data, { origin: -1, skipHeader: false });
+        
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Payment Requests');
         XLSX.writeFile(workbook, 'payment-requests.xlsx');
@@ -663,3 +703,4 @@ export function FilteredPaymentRequestsList() {
     );
 }
 
+    

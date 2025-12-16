@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -56,6 +55,14 @@ interface Student {
   l_name: string;
 }
 
+interface CompanyDetails {
+    company_name: string;
+    address: string;
+    phone: string;
+    email: string;
+    website: string;
+}
+
 
 const statusOptions: OrderStatus[] = ['pending', 'packed', 'handed over', 'delivered', 'returned', 'cancelled'];
 const ROWS_PER_PAGE = 10;
@@ -74,14 +81,21 @@ export function OrdersList() {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
 
 
     useEffect(() => {
         async function fetchFilterData() {
             try {
-                const studentsRes = await api.get('/users?status=student');
+                const [studentsRes, companyRes] = await Promise.all([
+                    api.get('/users?status=student'),
+                    api.get('/company/1')
+                ]);
                 if (studentsRes.data.status === 'success') {
                     setStudents(studentsRes.data.data || []);
+                }
+                if (companyRes.data) {
+                    setCompanyDetails(companyRes.data);
                 }
 
             } catch (error: any) {
@@ -162,7 +176,20 @@ export function OrdersList() {
     
     const handleExportPDF = () => {
         const doc = new jsPDF();
+        
+        if (companyDetails) {
+            doc.setFontSize(16);
+            doc.text(companyDetails.company_name, 14, 15);
+            doc.setFontSize(10);
+            doc.text(companyDetails.address, 14, 22);
+            doc.text(`Phone: ${companyDetails.phone} | Email: ${companyDetails.email}`, 14, 29);
+        }
+
+        doc.setFontSize(12);
+        doc.text("All Student Orders", 14, companyDetails ? 40 : 15);
+
         (doc as any).autoTable({
+            startY: companyDetails ? 45 : 20,
             head: [['Order ID', 'Student No.', 'Item', 'Address', 'Status', 'Date']],
             body: orders.map(order => [
                 `#${order.id}`,
@@ -177,7 +204,17 @@ export function OrdersList() {
     }
 
     const handleExportExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(orders.map(order => ({
+        const header: any[][] = [];
+        if (companyDetails) {
+            header.push([companyDetails.company_name]);
+            header.push([companyDetails.address]);
+            header.push([`Phone: ${companyDetails.phone}`, `Email: ${companyDetails.email}`]);
+            header.push([]); // Spacer row
+        }
+        header.push(["All Student Orders"]);
+        header.push([]); // Spacer row
+
+        const data = orders.map(order => ({
             'Order ID': `#${order.id}`,
             'Student No.': order.student_number,
             'Item': order.orderable_item_name || `Item #${order.orderable_item_id}`,
@@ -185,7 +222,12 @@ export function OrdersList() {
             'Status': order.order_status,
             'Date': format(new Date(order.created_at), 'yyyy-MM-dd'),
             'Tracking Number': order.tracking_number || 'N/A'
-        })));
+        }));
+        
+        const worksheet = XLSX.utils.json_to_sheet([]);
+        XLSX.utils.sheet_add_aoa(worksheet, header, { origin: 'A1' });
+        XLSX.utils.sheet_add_json(worksheet, data, { origin: -1, skipHeader: false });
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'All Orders');
         XLSX.writeFile(workbook, 'all-orders.xlsx');
@@ -348,3 +390,5 @@ export function OrdersList() {
         </div>
     );
 }
+
+    
