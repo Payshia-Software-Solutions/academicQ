@@ -48,6 +48,19 @@ interface Order {
     bucket_name?: string;
 }
 
+interface Course {
+  id: string;
+  course_name: string;
+}
+
+interface Bucket {
+  id: string;
+  bucket_name: string;
+  name?: string;
+  course_id: string;
+}
+
+
 interface Student {
   id: string;
   student_number: string;
@@ -73,9 +86,13 @@ export function OrdersList() {
     const { toast } = useToast();
 
     const [students, setStudents] = useState<Student[]>([]);
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [buckets, setBuckets] = useState<Bucket[]>([]);
     
     const [selectedStudent, setSelectedStudent] = useState('all');
     const [selectedStatus, setSelectedStatus] = useState<OrderStatus | 'all'>('all');
+    const [selectedCourse, setSelectedCourse] = useState('all');
+    const [selectedBucket, setSelectedBucket] = useState('all');
     
     const [filterTrigger, setFilterTrigger] = useState(0);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -87,12 +104,16 @@ export function OrdersList() {
     useEffect(() => {
         async function fetchFilterData() {
             try {
-                const [studentsRes, companyRes] = await Promise.all([
+                const [studentsRes, companyRes, coursesRes] = await Promise.all([
                     api.get('/users?status=student'),
-                    api.get('/company/1')
+                    api.get('/company/1'),
+                    api.get('/courses'),
                 ]);
                 if (studentsRes.data.status === 'success') {
                     setStudents(studentsRes.data.data || []);
+                }
+                 if (coursesRes.data.status === 'success') {
+                    setCourses(coursesRes.data.data || []);
                 }
                 if (companyRes.data) {
                     setCompanyDetails(companyRes.data);
@@ -110,12 +131,40 @@ export function OrdersList() {
     }, [toast]);
     
     useEffect(() => {
+        if (!selectedCourse || selectedCourse === 'all') {
+            setBuckets([]);
+            setSelectedBucket('all');
+            return;
+        }
+
+        async function fetchBucketsForCourse() {
+            try {
+                const response = await api.get(`/courses/full/details/?id=${selectedCourse}`);
+                if (response.data.status === 'success' && response.data.data.buckets) {
+                    setBuckets(response.data.data.buckets.map((b: any) => ({ ...b, bucket_name: b.name })));
+                } else {
+                    setBuckets([]);
+                }
+            } catch(err) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not load buckets for the selected course.'});
+                setBuckets([]);
+            } finally {
+                setSelectedBucket('all');
+            }
+        }
+        fetchBucketsForCourse();
+    }, [selectedCourse, toast]);
+
+
+    useEffect(() => {
         async function fetchOrders() {
             setIsLoading(true);
             try {
                 const params = new URLSearchParams();
                 if (selectedStudent !== 'all') params.append('student_number', selectedStudent);
                 if (selectedStatus !== 'all') params.append('order_status', selectedStatus);
+                if (selectedCourse !== 'all') params.append('course_id', selectedCourse);
+                if (selectedBucket !== 'all') params.append('course_bucket_id', selectedBucket);
 
                 const response = await api.get(`/student-orders/records/filter/?${params.toString()}`);
                 if (response.data.status === 'success' && Array.isArray(response.data.data)) {
@@ -137,7 +186,7 @@ export function OrdersList() {
         if (filterTrigger > 0) {
             fetchOrders();
         }
-    }, [toast, filterTrigger, selectedStudent, selectedStatus]);
+    }, [toast, filterTrigger, selectedStudent, selectedStatus, selectedCourse, selectedBucket]);
 
 
     const handleApplyFilters = () => {
@@ -260,7 +309,7 @@ export function OrdersList() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                         <Select value={selectedStudent} onValueChange={setSelectedStudent}>
                             <SelectTrigger>
                                 <Users className="mr-2 h-4 w-4" />
@@ -270,6 +319,32 @@ export function OrdersList() {
                                 <SelectItem value="all">All Students</SelectItem>
                                 {students.map(student => (
                                     <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                         <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                            <SelectTrigger>
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Select a course..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Courses</SelectItem>
+                                {courses.map(course => (
+                                    <SelectItem key={course.id} value={course.id}>{course.course_name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={selectedBucket} onValueChange={setSelectedBucket} disabled={buckets.length === 0 || !selectedCourse || selectedCourse === 'all'}>
+                            <SelectTrigger>
+                                <Inbox className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder={!selectedCourse || selectedCourse === 'all' ? 'Select course first' : 'Select a bucket...'} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                 <SelectItem value="all">All Buckets</SelectItem>
+                                {buckets.map(bucket => (
+                                    <SelectItem key={bucket.id} value={bucket.id}>{bucket.bucket_name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -286,7 +361,7 @@ export function OrdersList() {
                                 ))}
                             </SelectContent>
                         </Select>
-                         <Button onClick={handleApplyFilters} disabled={isLoading}>
+                         <Button onClick={handleApplyFilters} disabled={isLoading} className="lg:col-span-3">
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Apply Filters
                         </Button>
@@ -390,5 +465,3 @@ export function OrdersList() {
         </div>
     );
 }
-
-    
