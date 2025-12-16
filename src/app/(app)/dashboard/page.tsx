@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { users } from "@/lib/data";
-import { Users, BookOpen, AlertCircle, ArrowRight, Building } from "lucide-react";
+import { Users, BookOpen, AlertCircle, ArrowRight, Building, Settings } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -291,8 +291,10 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">
                    Admin: {institute?.email}
                 </p>
-                <Button variant="outline" size="sm" className="w-full mt-2">
-                    Manage Institute Settings
+                <Button variant="outline" size="sm" className="w-full mt-2" asChild>
+                    <Link href="/settings">
+                        <Settings className="mr-2 h-4 w-4" /> Manage Institute Settings
+                    </Link>
                 </Button>
             </CardContent>
         </Card>

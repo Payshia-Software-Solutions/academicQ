@@ -17,7 +17,7 @@ import {
   SidebarSubMenuButton,
 } from '@/components/ui/sidebar';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck, Package, History, User as UserIcon } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Users, CreditCard, LogOut, ChevronDown, ListChecks, UserCheck, Package, History, User as UserIcon, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { useToast } from '@/hooks/use-toast';
@@ -285,6 +285,20 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   </SidebarSubMenu>
                 ) : null}
             </SidebarMenuItem>
+              {isAdmin && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive('/settings')}
+                  tooltip="Settings"
+                >
+                  <Link href="/settings">
+                    <Settings />
+                    <span className="group-data-[state=collapsed]:hidden">Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className={cn('p-4 space-y-4 bg-sidebar-footer', state === 'collapsed' && 'p-2')}>
@@ -369,5 +383,3 @@ export default function AppLayout({
     </SidebarProvider>
   );
 }
-
-    
