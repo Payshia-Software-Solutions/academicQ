@@ -330,7 +330,7 @@ export function OrdersList() {
                             <SelectContent>
                                 <SelectItem value="all">All Students</SelectItem>
                                 {students.map(student => (
-                                    <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name}</SelectItem>
+                                    <SelectItem key={student.id} value={student.student_number}>{student.f_name} {student.l_name} ({student.student_number})</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
