@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import api from '@/lib/api';
 import Image from 'next/image';
 import { Preloader } from '@/components/ui/preloader';
+import { Label } from '@/components/ui/label';
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
@@ -151,14 +152,14 @@ export function InstituteSettingsForm() {
                  <FormField control={form.control} name="company_name" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Institute Name</FormLabel>
-                        <FormControl><Input icon={Building} placeholder="e.g. TechNova Solutions" {...field} /></FormControl>
+                        <FormControl><Input placeholder="e.g. TechNova Solutions" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                  )} />
                  <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Email</FormLabel>
-                        <FormControl><Input icon={Mail} type="email" placeholder="e.g. info@technova.com" {...field} /></FormControl>
+                        <FormControl><Input type="email" placeholder="e.g. info@technova.com" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />
@@ -168,14 +169,14 @@ export function InstituteSettingsForm() {
                  <FormField control={form.control} name="phone" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Phone Number</FormLabel>
-                        <FormControl><Input icon={Phone} placeholder="e.g. +94-77-1234567" {...field} /></FormControl>
+                        <FormControl><Input placeholder="e.g. +94-77-1234567" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                  )} />
                  <FormField control={form.control} name="website" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Website</FormLabel>
-                        <FormControl><Input icon={LinkIcon} placeholder="e.g. https://www.technova.com" {...field} /></FormControl>
+                        <FormControl><Input placeholder="e.g. https://www.technova.com" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )} />
@@ -193,7 +194,7 @@ export function InstituteSettingsForm() {
                  <FormField control={form.control} name="registration_number" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Registration Number</FormLabel>
-                        <FormControl><Input icon={Hash} placeholder="e.g. REG-2025-001" {...field} /></FormControl>
+                        <FormControl><Input placeholder="e.g. REG-2025-001" {...field} /></FormControl>
                         <FormMessage />
                     </FormItem>
                  )} />
@@ -209,7 +210,7 @@ export function InstituteSettingsForm() {
              <FormField control={form.control} name="vision" render={({ field }) => (
                 <FormItem>
                     <FormLabel>Vision</FormLabel>
-                    <FormControl><Textarea icon={Eye} placeholder="e.g. To innovate and lead the digital future." {...field} /></FormControl>
+                    <FormControl><Textarea placeholder="e.g. To innovate and lead the digital future." {...field} /></FormControl>
                     <FormMessage />
                 </FormItem>
             )} />
@@ -217,7 +218,7 @@ export function InstituteSettingsForm() {
              <FormField control={form.control} name="mission" render={({ field }) => (
                 <FormItem>
                     <FormLabel>Mission</FormLabel>
-                    <FormControl><Textarea icon={Globe} placeholder="e.g. Deliver high-quality tech products..." {...field} /></FormControl>
+                    <FormControl><Textarea placeholder="e.g. Deliver high-quality tech products..." {...field} /></FormControl>
                     <FormMessage />
                 </FormItem>
             )} />
@@ -225,7 +226,7 @@ export function InstituteSettingsForm() {
              <FormField control={form.control} name="founder_message" render={({ field }) => (
                 <FormItem>
                     <FormLabel>Founder's Message</FormLabel>
-                    <FormControl><Textarea icon={MessageSquare} placeholder="e.g. Thank you for supporting our journey..." {...field} /></FormControl>
+                    <FormControl><Textarea placeholder="e.g. Thank you for supporting our journey..." {...field} /></FormControl>
                     <FormMessage />
                 </FormItem>
             )} />
@@ -245,7 +246,7 @@ export function InstituteSettingsForm() {
                     <FormItem>
                         <FormLabel>New Logo</FormLabel>
                         <FormControl>
-                            <Input icon={UploadCloud} type="file" accept="image/*" {...logoRef} />
+                            <Input type="file" accept="image/*" {...logoRef} />
                         </FormControl>
                         <FormDescription>Upload a new logo to replace the current one.</FormDescription>
                         <FormMessage />
