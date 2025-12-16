@@ -13,10 +13,14 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw, Package, CreditCard, Hash, DollarSign, AlertCircle, Clock, FileWarning } from 'lucide-react';
+import { BookOpen, Users, Inbox, Loader2, Eye, Building, GitBranch, Info, Calendar, CheckCircle, ZoomIn, ZoomOut, RotateCcw, Package, CreditCard, Hash, DollarSign, AlertCircle, Clock, FileWarning, ChevronDown, FileDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { CoursePaymentForm } from '../../course-payment/_components/course-payment-form';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 
 interface PaymentRequest {
@@ -251,6 +255,40 @@ export function FilteredPaymentRequestsList() {
         setIsDetailsOpen(true);
     }
     
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        (doc as any).autoTable({
+            head: [['Request ID', 'Student No.', 'Course', 'Bucket', 'Amount', 'Status', 'Payment For', 'Ref ID']],
+            body: requests.map(req => [
+                `#${req.id}`,
+                req.student_number,
+                req.course_name || 'N/A',
+                req.course_bucket_name || 'N/A',
+                `LKR ${parseFloat(req.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                req.request_status,
+                req.payment_status?.replace('_', ' ') || 'N/A',
+                req.ref_id || 'N/A'
+            ]),
+        });
+        doc.save('payment-requests.pdf');
+    }
+
+    const handleExportExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(requests.map(req => ({
+            'Request ID': `#${req.id}`,
+            'Student No.': req.student_number,
+            'Course': req.course_name || 'N/A',
+            'Bucket': req.course_bucket_name || 'N/A',
+            'Amount': `LKR ${parseFloat(req.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            'Status': req.request_status,
+            'Payment For': req.payment_status?.replace('_', ' ') || 'N/A',
+            'Ref ID': req.ref_id || 'N/A'
+        })));
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Payment Requests');
+        XLSX.writeFile(workbook, 'payment-requests.xlsx');
+    }
+
     const hasAppliedFilters = requests.length > 0 || isLoading;
     
     const totalPages = Math.ceil(requests.length / ROWS_PER_PAGE);
@@ -302,10 +340,27 @@ export function FilteredPaymentRequestsList() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Filter Requests</CardTitle>
-                    <CardDescription>
-                        Use the dropdowns to filter the payment requests. Click "Apply" to see results.
-                    </CardDescription>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <CardTitle>Filter Requests</CardTitle>
+                            <CardDescription>
+                                Use the dropdowns to filter the payment requests. Click "Apply" to see results.
+                            </CardDescription>
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    <FileDown className="mr-2 h-4 w-4" />
+                                    Export
+                                    <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={handleExportPDF}>Export to PDF</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleExportExcel}>Export to Excel</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
