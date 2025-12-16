@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { users, classes, institutes } from "@/lib/data";
+import { users, institutes } from "@/lib/data";
 import { Users, BookOpen, AlertCircle, ArrowRight, Building } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -23,8 +23,15 @@ interface CurrentUser {
   [key: string]: any;
 }
 
+interface DashboardCounts {
+  student_count: number;
+  course_count: number;
+  pending_payment_request_count: number;
+}
+
 export default function DashboardPage() {
   const [user, setUser] = useState<CurrentUser | null>(null);
+  const [counts, setCounts] = useState<DashboardCounts | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
   const router = useRouter();
@@ -39,32 +46,41 @@ export default function DashboardPage() {
   }, [router]);
   
   useEffect(() => {
-    async function checkProfile() {
-      if (user?.student_number) {
+    async function checkProfileAndFetchCounts() {
+      if (user) {
         try {
-          const response = await api.get(`/user-full-details/get/student/?student_number=${user.student_number}`);
-          if (response.data && response.data.message === "User not found.") {
+          const countPromise = api.get('/dashboard/counts');
+
+          let profilePromise;
+          if (user.student_number) {
+            profilePromise = api.get(`/user-full-details/get/student/?student_number=${user.student_number}`);
+          } else {
+            profilePromise = Promise.resolve(null);
+          }
+          
+          const [countResponse, profileResponse] = await Promise.all([countPromise, profilePromise]);
+
+          if (countResponse.data.status === 'success') {
+            setCounts(countResponse.data.data);
+          }
+
+          if (profileResponse && profileResponse.data && profileResponse.data.message === "User not found.") {
             setProfileIncomplete(true);
           } else {
             setProfileIncomplete(false);
           }
         } catch (error) {
-          console.error("Failed to check user details:", error);
-          // Assume profile is fine if check fails, to avoid blocking user
-          setProfileIncomplete(false);
+          console.error("Failed to fetch dashboard data:", error);
+        } finally {
+          setLoading(false);
         }
       }
-      setLoading(false);
     }
     
-    if (user) {
-        checkProfile();
-    }
+    checkProfileAndFetchCounts();
 
   }, [user]);
 
-  const totalStudents = users.length;
-  const totalClasses = classes.length;
   const pendingPayments = users.filter(s => s.paymentStatus === 'Pending');
   const institute = institutes[0]; // In a real app, this would come from the user's session
 
@@ -139,7 +155,7 @@ export default function DashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalStudents}</div>
+              <div className="text-2xl font-bold">{counts?.student_count || 0}</div>
               <p className="text-xs text-muted-foreground">Currently enrolled</p>
             </CardContent>
           </Card>
@@ -150,7 +166,7 @@ export default function DashboardPage() {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalClasses}</div>
+            <div className="text-2xl font-bold">{counts?.course_count || 0}</div>
             <p className="text-xs text-muted-foreground">Across all subjects</p>
           </CardContent>
         </Card>
@@ -160,7 +176,7 @@ export default function DashboardPage() {
             <AlertCircle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingPayments.length}</div>
+            <div className="text-2xl font-bold">{counts?.pending_payment_request_count || 0}</div>
             <p className="text-xs text-muted-foreground">Students with outstanding balances</p>
           </CardContent>
         </Card>
@@ -272,5 +288,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
