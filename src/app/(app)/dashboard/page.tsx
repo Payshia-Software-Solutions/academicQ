@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { users, institutes } from "@/lib/data";
+import { users } from "@/lib/data";
 import { Users, BookOpen, AlertCircle, ArrowRight, Building } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -29,9 +29,17 @@ interface DashboardCounts {
   pending_payment_request_count: number;
 }
 
+interface InstituteDetails {
+    id: string;
+    company_name: string;
+    email: string;
+    [key: string]: any;
+}
+
 export default function DashboardPage() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [counts, setCounts] = useState<DashboardCounts | null>(null);
+  const [institute, setInstitute] = useState<InstituteDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileIncomplete, setProfileIncomplete] = useState(false);
   const router = useRouter();
@@ -50,6 +58,7 @@ export default function DashboardPage() {
       if (user) {
         try {
           const countPromise = api.get('/dashboard/counts');
+          const institutePromise = api.get('/company/1');
 
           let profilePromise;
           if (user.student_number) {
@@ -58,10 +67,14 @@ export default function DashboardPage() {
             profilePromise = Promise.resolve(null);
           }
           
-          const [countResponse, profileResponse] = await Promise.all([countPromise, profilePromise]);
+          const [countResponse, instituteResponse, profileResponse] = await Promise.all([countPromise, institutePromise, profilePromise]);
 
           if (countResponse.data.status === 'success') {
             setCounts(countResponse.data.data);
+          }
+          
+          if (instituteResponse.data) {
+            setInstitute(instituteResponse.data);
           }
 
           if (profileResponse && profileResponse.data && profileResponse.data.message === "User not found.") {
@@ -82,17 +95,16 @@ export default function DashboardPage() {
   }, [user]);
 
   const pendingPayments = users.filter(s => s.paymentStatus === 'Pending');
-  const institute = institutes[0]; // In a real app, this would come from the user's session
 
   const getDashboardTitle = () => {
     if (!user) return 'Dashboard';
     if (user.user_status === 'admin') {
-      return `${institute.name} Admin Dashboard`;
+      return `${institute?.company_name || 'Admin'} Dashboard`;
     }
     if (user.user_status === 'student') {
       return `Welcome, ${user.f_name} ${user.l_name}!`;
     }
-    return `${institute.name} Dashboard`;
+    return `${institute?.company_name || ''} Dashboard`;
   };
 
   const getDashboardDescription = () => {
@@ -186,7 +198,7 @@ export default function DashboardPage() {
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold truncate">{institute.name}</div>
+            <div className="text-xl font-bold truncate">{institute?.company_name}</div>
             <p className="text-xs text-muted-foreground">Manage institute settings</p>
           </CardContent>
         </Card>
@@ -275,9 +287,9 @@ export default function DashboardPage() {
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-                <h3 className="font-semibold">{institute.name}</h3>
+                <h3 className="font-semibold">{institute?.company_name}</h3>
                 <p className="text-sm text-muted-foreground">
-                   Admin: {institute.adminEmail}
+                   Admin: {institute?.email}
                 </p>
                 <Button variant="outline" size="sm" className="w-full mt-2">
                     Manage Institute Settings
