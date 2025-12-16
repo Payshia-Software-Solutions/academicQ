@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Users, BookOpen, AlertCircle, ArrowRight, Building, Settings } from "lucide-react";
@@ -261,7 +261,7 @@ export default function DashboardPage() {
             <div className="md:hidden">
                 {pendingPaymentsWithStudentData.length > 0 ? (
                     <div className="space-y-4">
-                    {pendingPaymentsWithStudentData.map((req) => (
+                    {pendingPaymentsWithStudentData.slice(0, 5).map((req) => (
                         <div key={req.id} className="border rounded-lg p-4 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <Avatar>
@@ -300,7 +300,7 @@ export default function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                     {pendingPaymentsWithStudentData.length > 0 ? (
-                    pendingPaymentsWithStudentData.map((req) => (
+                    pendingPaymentsWithStudentData.slice(0, 5).map((req) => (
                         <TableRow key={req.id}>
                         <TableCell className="font-medium">{req.studentName}</TableCell>
                         <TableCell>{req.studentEmail}</TableCell>
@@ -325,6 +325,13 @@ export default function DashboardPage() {
                 </Table>
             </div>
             </CardContent>
+             {pendingPaymentsWithStudentData.length > 5 && (
+                <CardFooter className="justify-center border-t pt-4">
+                    <Button asChild variant="outline">
+                        <Link href="/payments/requests">View All Pending Requests</Link>
+                    </Button>
+                </CardFooter>
+            )}
         </Card>
         <Card className="md:col-span-1">
              <CardHeader>
