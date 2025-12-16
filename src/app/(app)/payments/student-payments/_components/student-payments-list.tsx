@@ -73,6 +73,14 @@ export function StudentPaymentsList() {
     const [currentPage, setCurrentPage] = useState(1);
     const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
 
+    const studentMap = useMemo(() => {
+        const map = new Map<string, string>();
+        students.forEach(s => {
+            map.set(s.student_number, `${s.f_name} ${s.l_name}`);
+        });
+        return map;
+    }, [students]);
+
 
     useEffect(() => {
         async function fetchFilters() {
@@ -189,10 +197,10 @@ export function StudentPaymentsList() {
 
         (doc as any).autoTable({
             startY: companyDetails ? 45 : 20,
-            head: [['ID', 'Student No.', 'Course', 'Bucket', 'Amount', 'Discount', 'Date']],
+            head: [['ID', 'Student', 'Course', 'Bucket', 'Amount', 'Discount', 'Date']],
             body: payments.map(p => [
                 `#${p.id}`,
-                p.student_number,
+                studentMap.get(p.student_number) || p.student_number,
                 p.course_name || 'N/A',
                 p.course_bucket_name || 'N/A',
                 `LKR ${parseFloat(p.payment_amount).toFixed(2)}`,
@@ -216,7 +224,7 @@ export function StudentPaymentsList() {
         
         const data = payments.map(p => ({
             'Payment ID': `#${p.id}`,
-            'Student No.': p.student_number,
+            'Student': studentMap.get(p.student_number) || p.student_number,
             'Course': p.course_name || 'N/A',
             'Bucket': p.course_bucket_name || 'N/A',
             'Amount (LKR)': parseFloat(p.payment_amount).toFixed(2),
@@ -330,7 +338,7 @@ export function StudentPaymentsList() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Payment ID</TableHead>
-                                    <TableHead>Student No.</TableHead>
+                                    <TableHead>Student</TableHead>
                                     <TableHead>Course</TableHead>
                                     <TableHead>Bucket</TableHead>
                                     <TableHead>Hash</TableHead>
@@ -352,7 +360,7 @@ export function StudentPaymentsList() {
                                     paginatedPayments.map((payment) => (
                                         <TableRow key={payment.id}>
                                             <TableCell className="font-mono text-xs">#{payment.id}</TableCell>
-                                            <TableCell>{payment.student_number}</TableCell>
+                                            <TableCell>{studentMap.get(payment.student_number) || payment.student_number}</TableCell>
                                             <TableCell>{payment.course_name || 'N/A'}</TableCell>
                                             <TableCell>{payment.course_bucket_name || 'N/A'}</TableCell>
                                             <TableCell className="font-mono text-xs truncate" style={{ maxWidth: '100px' }}>{payment.hash || 'N/A'}</TableCell>

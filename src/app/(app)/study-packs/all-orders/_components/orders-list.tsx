@@ -100,6 +100,14 @@ export function OrdersList() {
     const [currentPage, setCurrentPage] = useState(1);
     const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
 
+    const studentMap = useMemo(() => {
+        const map = new Map<string, string>();
+        students.forEach(s => {
+            map.set(s.student_number, `${s.f_name} ${s.l_name}`);
+        });
+        return map;
+    }, [students]);
+
 
     useEffect(() => {
         async function fetchFilterData() {
@@ -239,10 +247,10 @@ export function OrdersList() {
 
         (doc as any).autoTable({
             startY: companyDetails ? 45 : 20,
-            head: [['Order ID', 'Student No.', 'Item', 'Course', 'Bucket', 'Address', 'Status', 'Date']],
+            head: [['Order ID', 'Student', 'Item', 'Course', 'Bucket', 'Address', 'Status', 'Date']],
             body: orders.map(order => [
                 `#${order.id}`,
-                order.student_number,
+                studentMap.get(order.student_number) || order.student_number,
                 order.item_name || order.orderable_item_name || `Item #${order.orderable_item_id}`,
                 order.course_name || 'N/A',
                 order.course_bucket_name || 'N/A',
@@ -267,7 +275,7 @@ export function OrdersList() {
 
         const data = orders.map(order => ({
             'Order ID': `#${order.id}`,
-            'Student No.': order.student_number,
+            'Student': studentMap.get(order.student_number) || order.student_number,
             'Item': order.item_name || order.orderable_item_name || `Item #${order.orderable_item_id}`,
             'Course': order.course_name || 'N/A',
             'Bucket': order.course_bucket_name || 'N/A',
@@ -407,7 +415,7 @@ export function OrdersList() {
                                     paginatedOrders.map((order) => (
                                         <TableRow key={order.id}>
                                             <TableCell className="font-mono text-xs">#{order.id}</TableCell>
-                                            <TableCell className="font-mono text-xs">{order.student_number}</TableCell>
+                                            <TableCell>{studentMap.get(order.student_number) || order.student_number}</TableCell>
                                             <TableCell>
                                                 {order.item_name || order.orderable_item_name || `Item #${order.orderable_item_id}`}
                                             </TableCell>
@@ -469,3 +477,5 @@ export function OrdersList() {
         </div>
     );
 }
+
+    

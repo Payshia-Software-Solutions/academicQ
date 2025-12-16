@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookOpen, Inbox, Users, Download, ChevronDown, Loader2, Edit, CheckSquare, FileDown } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -87,6 +86,13 @@ export function SubmissionsList() {
     const [currentPage, setCurrentPage] = useState(1);
     const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
 
+    const studentMap = useMemo(() => {
+        const map = new Map<string, string>();
+        students.forEach(s => {
+            map.set(s.student_number, `${s.f_name} ${s.l_name}`);
+        });
+        return map;
+    }, [students]);
 
     useEffect(() => {
         async function fetchInitialData() {
@@ -308,7 +314,7 @@ export function SubmissionsList() {
             startY: companyDetails ? 45 : 20,
             head: [['Student', 'Assignment', 'Status', 'Grade', 'Date']],
             body: submissions.map(sub => [
-                getStudentName(sub.student_number),
+                studentMap.get(sub.student_number) || sub.student_number,
                 getAssignmentTitle(sub.assigment_id),
                 sub.sub_status || 'N/A',
                 sub.grade || 'N/A',
@@ -330,7 +336,7 @@ export function SubmissionsList() {
         header.push([]); // Spacer row
 
         const data = submissions.map(sub => ({
-            'Student': getStudentName(sub.student_number),
+            'Student': studentMap.get(sub.student_number) || sub.student_number,
             'Assignment': getAssignmentTitle(sub.assigment_id),
             'Status': sub.sub_status || 'N/A',
             'Grade': sub.grade || 'N/A',

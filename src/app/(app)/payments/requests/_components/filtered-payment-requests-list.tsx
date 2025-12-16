@@ -99,6 +99,14 @@ export function FilteredPaymentRequestsList() {
     const [duplicateData, setDuplicateData] = useState<DuplicateHashData | null>(null);
     const [isCheckingDuplicates, setIsCheckingDuplicates] = useState(false);
     const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
+    
+     const studentMap = useMemo(() => {
+        const map = new Map<string, string>();
+        students.forEach(s => {
+            map.set(s.student_number, `${s.f_name} ${s.l_name}`);
+        });
+        return map;
+    }, [students]);
 
     const getFullImageUrl = (slipUrl: string) => {
         if (!slipUrl) return '';
@@ -283,10 +291,10 @@ export function FilteredPaymentRequestsList() {
 
         (doc as any).autoTable({
             startY: companyDetails ? 45 : 20,
-            head: [['Request ID', 'Student No.', 'Course', 'Bucket', 'Amount', 'Status', 'Payment For', 'Ref ID']],
+            head: [['Request ID', 'Student', 'Course', 'Bucket', 'Amount', 'Status', 'Payment For', 'Ref ID']],
             body: requests.map(req => [
                 `#${req.id}`,
-                req.student_number,
+                studentMap.get(req.student_number) || req.student_number,
                 req.course_name || 'N/A',
                 req.course_bucket_name || 'N/A',
                 `LKR ${parseFloat(req.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
@@ -311,10 +319,10 @@ export function FilteredPaymentRequestsList() {
         
         const data = requests.map(req => ({
             'Request ID': `#${req.id}`,
-            'Student No.': req.student_number,
+            'Student': studentMap.get(req.student_number) || req.student_number,
             'Course': req.course_name || 'N/A',
             'Bucket': req.course_bucket_name || 'N/A',
-            'Amount': `LKR ${parseFloat(req.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            'Amount (LKR)': parseFloat(req.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             'Status': req.request_status,
             'Payment For': req.payment_status?.replace('_', ' ') || 'N/A',
             'Ref ID': req.ref_id || 'N/A'
@@ -470,7 +478,7 @@ export function FilteredPaymentRequestsList() {
                                     <CardContent className="p-4">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <p className="font-semibold">{req.student_number}</p>
+                                                <p className="font-semibold">{studentMap.get(req.student_number) || req.student_number}</p>
                                                 <p className="text-xs text-muted-foreground">{req.course_name}</p>
                                             </div>
                                             <Badge variant={req.request_status === 'approved' ? 'secondary' : req.request_status === 'rejected' ? 'destructive' : 'outline'} className="capitalize">{req.request_status}</Badge>
@@ -503,7 +511,7 @@ export function FilteredPaymentRequestsList() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Request ID</TableHead>
-                                    <TableHead>Student No.</TableHead>
+                                    <TableHead>Student</TableHead>
                                     <TableHead>Course</TableHead>
                                     <TableHead>Bucket</TableHead>
                                     <TableHead>Amount</TableHead>
@@ -526,7 +534,7 @@ export function FilteredPaymentRequestsList() {
                                     paginatedRequests.map((req) => (
                                         <TableRow key={req.id}>
                                             <TableCell className="font-mono text-xs">#{req.id}</TableCell>
-                                            <TableCell>{req.student_number}</TableCell>
+                                            <TableCell>{studentMap.get(req.student_number) || req.student_number}</TableCell>
                                             <TableCell>{req.course_name || 'N/A'}</TableCell>
                                             <TableCell>{req.course_bucket_name || 'N/A'}</TableCell>
                                             <TableCell>LKR {parseFloat(req.payment_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
@@ -638,7 +646,7 @@ export function FilteredPaymentRequestsList() {
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between p-2 rounded-md bg-muted">
                                     <span className="text-muted-foreground">Student:</span>
-                                    <span className="font-semibold">{selectedRequest.student_number}</span>
+                                    <span className="font-semibold">{studentMap.get(selectedRequest.student_number) || selectedRequest.student_number}</span>
                                 </div>
                                 <div className="flex justify-between p-2 rounded-md bg-muted">
                                     <span className="text-muted-foreground">Amount:</span>

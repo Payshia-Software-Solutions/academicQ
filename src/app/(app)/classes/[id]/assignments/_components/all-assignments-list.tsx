@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,13 @@ interface Assignment {
     content_id: string;
 }
 
+interface Student {
+    id: string;
+    student_number: string;
+    f_name: string;
+    l_name: string;
+}
+
 interface AllAssignmentsListProps {
     courseId: string;
 }
@@ -53,25 +60,37 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
     const { toast } = useToast();
     const [currentPage, setCurrentPage] = useState(1);
     const [companyDetails, setCompanyDetails] = useState<CompanyDetails | null>(null);
+    const [students, setStudents] = useState<Student[]>([]);
 
      useEffect(() => {
-        async function fetchCompanyDetails() {
+        async function fetchCompanyAndStudents() {
             try {
-                const response = await api.get('/company/1');
-                if (response.data) {
-                    setCompanyDetails(response.data);
+                const [companyRes, studentsRes] = await Promise.all([
+                    api.get('/company/1'),
+                    api.get('/users?status=student')
+                ]);
+
+                if (companyRes.data) {
+                    setCompanyDetails(companyRes.data);
                 }
+                if (studentsRes.data.status === 'success') {
+                    setStudents(studentsRes.data.data || []);
+                }
+
             } catch (error) {
-                console.error("Failed to fetch company details:", error);
-                toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: "Could not fetch company details for exporting.",
-                });
+                console.error("Failed to fetch company or student details:", error);
             }
         }
-        fetchCompanyDetails();
-    }, [toast]);
+        fetchCompanyAndStudents();
+    }, []);
+    
+     const studentMap = useMemo(() => {
+        const map = new Map<string, string>();
+        students.forEach(s => {
+            map.set(s.student_number, `${s.f_name} ${s.l_name}`);
+        });
+        return map;
+    }, [students]);
 
     useEffect(() => {
         if (!courseId) return;
@@ -147,7 +166,7 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
             startY: companyDetails ? 45 : 20,
             head: [['Student', 'Assignment', 'Submitted On', 'Status', 'Grade']],
             body: allSubmissions.map(sub => [
-                sub.student_number,
+                studentMap.get(sub.student_number) || sub.student_number,
                 sub.assignmentTitle,
                 format(new Date(sub.created_at), 'PP p'),
                 sub.sub_status || 'N/A',
@@ -169,15 +188,16 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
         header.push([]); // Spacer row
         
         const data = allSubmissions.map(sub => ({
-            'Student': sub.student_number,
+            'Student': studentMap.get(sub.student_number) || sub.student_number,
             'Assignment': sub.assignmentTitle,
             'Submitted On': format(new Date(sub.created_at), 'PP p'),
             'Status': sub.sub_status || 'N/A',
             'Grade': sub.grade || 'Not Graded'
         }));
 
-        const worksheet = XLSX.utils.json_to_sheet(data);
+        const worksheet = XLSX.utils.json_to_sheet([]);
         XLSX.utils.sheet_add_aoa(worksheet, header, { origin: 'A1' });
+        XLSX.utils.sheet_add_json(worksheet, data, { origin: -1, skipHeader: false });
 
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'All Assignments');
@@ -186,7 +206,7 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
 
 
     if (isLoading) {
-        return <Preloader icon="book"/>;
+        return <Preloader />;
     }
 
     return (
@@ -231,7 +251,10 @@ export function AllAssignmentsList({ courseId }: AllAssignmentsListProps) {
                            {paginatedSubmissions.length > 0 ? (
                                 paginatedSubmissions.map((sub) => (
                                     <TableRow key={sub.id}>
-                                        <TableCell className="font-mono text-xs">{sub.student_number}</TableCell>
+                                        <TableCell>
+                                            <div>{studentMap.get(sub.student_number) || sub.student_number}</div>
+                                            <div className="text-xs text-muted-foreground font-mono">{sub.student_number}</div>
+                                        </TableCell>
                                         <TableCell>{sub.assignmentTitle}</TableCell>
                                         <TableCell>{format(new Date(sub.created_at), 'PP p')}</TableCell>
                                         <TableCell>
